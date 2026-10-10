@@ -46,5 +46,5 @@ Cross-module access only via exported providers — never via another module’s
 
 ### Negative / risks
 - Discipline required to avoid a “ball of mud”
-- Admin UI hosted with Nest needs a clear presentation approach (SSR, static SPA, AdminJS, etc.) — tooling `open`
+- Admin UI presentation closed: Vite + shadcn/ui dark — [ADR-0014](0014-web-ui-shadcn-dark.md)
 - Single deploy unit for API+admin — mitigate with strong module ownership

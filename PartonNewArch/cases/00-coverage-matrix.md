@@ -1,10 +1,11 @@
 # Case coverage matrix
 
 **Source:** [`../../parton_case_tests_tr.json`](../../parton_case_tests_tr.json)  
-**Status:** `proposed`  
-**Last updated:** 2026-10-07  
+**Status:** `accepted` · [agents/10](../agents/10-production-ready.md)  
+**Last updated:** 2026-10-10  
+**UI mandate:** [`03-ui-coverage-mandate.md`](03-ui-coverage-mandate.md) · components [`../shared/02-ui-components.md`](../shared/02-ui-components.md)
 
-Maps all **248** Parton cases to Nest modules and UI surfaces. Missing catalog IDs (not in source): `T-095`, `T-120`, `T-208`, `T-224`.
+Maps all **248** Parton cases to Nest modules and UI surfaces (screens + components). Missing catalog IDs (not in source): `T-095`, `T-120`, `T-208`, `T-224`.
 
 ## Legend
 
@@ -33,10 +34,12 @@ Maps all **248** Parton cases to Nest modules and UI surfaces. Missing catalog I
 | `CASE-FAVORITES` | 8 | mobile+web | `favorites`, `jobs`, `matching`, `notifications` | [groups/CASE-FAVORITES.md](groups/CASE-FAVORITES.md) |
 | `CASE-RATINGS` | 9 | mobile+web | `ratings`, `notifications`, `shifts` | [groups/CASE-RATINGS.md](groups/CASE-RATINGS.md) |
 | `CASE-ABUSE` | 12 | backend+admin | `moderation`, `auth`, `shifts`, `location`, `ratings`, `tokens` | [groups/CASE-ABUSE.md](groups/CASE-ABUSE.md) |
-| `CASE-E2E` | 31 | all | `*` | [groups/CASE-E2E.md](groups/CASE-E2E.md) |
-| `CASE-PERF` | 9 | backend | `matching`, `notifications`, `applications`, `tokens`, `location` | [groups/CASE-PERF.md](groups/CASE-PERF.md) |
-| `CASE-UX` | 9 | mobile+web | `*` | [groups/CASE-UX.md](groups/CASE-UX.md) |
-| `CASE-SECURITY` | 9 | backend | `auth`, `users`, `policies`, `workers` | [groups/CASE-SECURITY.md](groups/CASE-SECURITY.md) |
+| `CASE-E2E` | 31 | all + admin support | `*` | [groups/CASE-E2E.md](groups/CASE-E2E.md) |
+| `CASE-PERF` | 9 | **admin** + backend | `matching`, `notifications`, `applications`, `tokens`, `location` | [groups/CASE-PERF.md](groups/CASE-PERF.md) |
+| `CASE-UX` | 9 | mobile+web+admin config | `*` | [groups/CASE-UX.md](groups/CASE-UX.md) |
+| `CASE-SECURITY` | 9 | backend+admin | `auth`, `users`, `policies`, `workers` | [groups/CASE-SECURITY.md](groups/CASE-SECURITY.md) |
+
+**Admin ops for every group:** [`../web/08-admin-case-coverage.md`](../web/08-admin-case-coverage.md) · ADR-0034 (required; not abuse-only).
 
 ## Full case map
 
@@ -201,7 +204,7 @@ Push/in-app bildirimler, tokenlar, bildirim tetikleri ve bildirim durumları.
 | `T-105` | 10 dakika kala işe geldim bildirimi | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `covered` |  |
 | `T-106` | 24 saat sonra değerlendirme bildirimi | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `covered` |  |
 | `T-107` | Favori işveren ilan bildirimi | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `covered` |  |
-| `T-108` | Sadece favorilere özel bildirim | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `gap` | gap-favorites-only-job |
+| `T-108` | Sadece favorilere özel bildirim | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `covered` | template `job.favorites_only` — [push UX §0](../shared/05-push-notifications-ux.md); product flag still `gap-favorites-only-job` |
 | `T-109` | Bildirim tıklanınca doğru ekrana yönlendirme | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `covered` |  |
 | `T-110` | Çift bildirim oluşmaması | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `covered` |  |
 | `T-111` | Push kapalıysa uygulama içi bildirim | Yüksek | Fonksiyonel | notifications | m.shared.notifications.*, w.employer.notifications | `covered` |  |
@@ -430,4 +433,5 @@ Yetkilendirme, veri koruma, hassas veri, erişim kontrolü ve güvenlik akışla
 | gap | 36 |
 | **total** | **248** |
 
-See [01-gap-backlog.md](01-gap-backlog.md) for remediation of `gap` / `partial` items.
+See [01-gap-backlog.md](01-gap-backlog.md) for remediation of `gap` / `partial` items.  
+UI completeness gate (screens + components for every case): [03-ui-coverage-mandate.md](03-ui-coverage-mandate.md).

@@ -15,7 +15,7 @@ Develop PartOn in a **single monorepo**:
 - `apps/backend` — NestJS modular monolith (REST `/api/v1` + admin panel)
 - `packages/*` — shared contracts and platform-agnostic helpers only
 
-Exact monorepo tool (pnpm workspaces, Nx, Turborepo, etc.) remains `open` ([AO-7](../../01-architecture-decisions.md)). Independent deploy pipelines for mobile vs backend remain `open` ([AO-1](../../01-architecture-decisions.md)).
+Tooling: **pnpm + Turborepo** + locked packages — [ADR-0038](0038-monorepo-tooling.md) (closes AO-7). CI path filters for mobile vs backend — AO-1 **accepted** ([agents/02](../../agents/02-defaults-and-non-asks.md)).
 
 ## Alternatives
 

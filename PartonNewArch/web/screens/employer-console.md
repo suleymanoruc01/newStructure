@@ -1,6 +1,6 @@
 # Web — Employer console screens
 
-**Status:** `proposed`  
+**Status:** `accepted` (catalogued; employer **web** channel optional for v1 — mobile employer primary) · [agents/10](../../agents/10-production-ready.md)
 **Nest modules:** `employers`, `branches`, `jobs`, `applications`, `notifications`, `favorites`, `ratings`, tokens  
 **Shell:** Sidebar + top bar (see IA)
 
@@ -44,10 +44,15 @@
 | **Route** | `/app/jobs/new` |
 | **Purpose** | Multi-step create with live token cost sidebar |
 | **MVP** | P0 |
+| **Recipe** | R3 |
+| **Wizard id** | `create-job` |
+| **State owner** | `WizardShell` (single page step index) or scoped store; controlled steps |
+| **Draft API** | Nest `status: draft` — Back/reload must restore ([wizard state](../../shared/04-wizard-state.md)) |
 | **Layout** | Steps: Position → Details → Review; sticky summary (cost, branch, schedule) |
+| **Components** | `WizardShell`, `JobWizard`, `TokenCostPreview`, `DraftSavedHint`, `FavoritesOnlyToggle` |
 | **Actions** | Save draft; Publish |
 | **States** | insufficient tokens; validation; success → detail |
-| **API** | catalog + `POST /api/v1/jobs` |
+| **API** | catalog + `POST/PATCH /api/v1/jobs` |
 | **Cases** | `CASE-JOB-POSTING`, `CASE-TOKEN` |
 | **Mobile twin** | create step1–3 |
 
@@ -154,6 +159,19 @@
 | **MVP** | P1 |
 | **Purpose** | Ledger of credits/debits/releases |
 | **Cases** | `CASE-TOKEN` |
+
+### `w.employer.tokens.top-up`
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/app/tokens/top-up` |
+| **MVP** | P1 |
+| **Purpose** | Purchase / credit tokens |
+| **Layout** | Amount picker; payment method; confirm |
+| **Components** | `TopUpAmountPicker`, `PaymentMethodList`, `TopUpConfirmSheet` |
+| **Cases** | T-161 |
+| **Mobile twin** | `m.employer.tokens.top-up` |
+| **Detail** | [`case-driven-additions.md`](case-driven-additions.md) |
 
 ---
 

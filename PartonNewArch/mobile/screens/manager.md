@@ -1,6 +1,6 @@
 # Mobile — Manager screens
 
-**Status:** `proposed`  
+**Status:** `accepted` (production coding inventory) · [agents/10](../../agents/10-production-ready.md)  
 **Nest modules:** `branches`, `jobs`, `applications`, `shifts`, `notifications`  
 **Scope rule:** Every query is branch-scoped via JWT / membership.
 

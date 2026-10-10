@@ -19,7 +19,7 @@ Build the mobile app as **bare React Native** (React Native CLI / community CLI 
 - `expo-updates` / EAS Update as the release model
 - Any requirement that the app be an “Expo project”
 
-Native builds, signing, and CI use standard RN + Xcode / Android Gradle (Fastlane or equivalent is fine). React Native **New Architecture** may still be enabled via RN itself when the team chooses — that is independent of Expo.
+Native builds, signing, and store CI use standard RN + Xcode / Android Gradle under **Fastlane** — [ADR-0030](0030-fastlane-mobile-release.md). React Native **New Architecture** may still be enabled via RN itself when the team chooses — that is independent of Expo.
 
 ## Alternatives
 

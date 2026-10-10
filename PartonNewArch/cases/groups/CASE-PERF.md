@@ -13,6 +13,13 @@
 ## Nest modules
 queues, DB indexes, idempotency keys, connection pooling
 
+## Push / notify scale
+| Cases | Architecture |
+| --- | --- |
+| T-226 | Fan-out `job.matched` via outbox → BullMQ `notifications` (Stage B) |
+| T-231 | Queue lag metrics; inbox still correct (T-112) |
+
+Catalog: [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md) §8.1 · FCM: [`../../backend/20-fcm-messaging.md`](../../backend/20-fcm-messaging.md)
 
 ## Case checklist
 

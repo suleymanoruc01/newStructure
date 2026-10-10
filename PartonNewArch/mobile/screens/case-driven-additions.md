@@ -1,6 +1,6 @@
 # Mobile — Case-driven screen additions
 
-**Status:** `proposed`  
+**Status:** `accepted` (production coding inventory) · [agents/10](../../agents/10-production-ready.md)  
 **Why:** Gaps found when mapping all 248 catalog cases.
 
 ---
@@ -82,6 +82,55 @@
 
 ---
 
+## Mandate additions (2026-10-09)
+
+Required so every case has a dedicated UI surface. Components: [`../../shared/02-ui-components.md`](../../shared/02-ui-components.md).
+
+### `m.shared.auth.context-switch`
+
+| | |
+| --- | --- |
+| **Title** | Switch role / membership |
+| **Cases** | AS-3, multi-role / multi-org |
+| **Components** | `RoleSwitcherSheet`, `MembershipListItem`, `ActiveContextBadge` |
+| **API** | `POST /api/v1/auth/context` (or equivalent) |
+
+### `m.worker.jobs.apply-overlap`
+
+| | |
+| --- | --- |
+| **Title** | Schedule overlap warn / block |
+| **Cases** | T-085, T-181 |
+| **Components** | `OverlapConflictCard`, `ConflictShiftRow`, `ApplyBlockedBanner` |
+| **Flow** | From apply-confirm when API returns overlap |
+
+### `m.employer.tokens.top-up`
+
+| | |
+| --- | --- |
+| **Title** | Token top-up |
+| **Cases** | T-161 |
+| **Components** | `TopUpAmountPicker`, `PaymentMethodList`, `TopUpConfirmSheet` |
+| **API** | Token purchase / top-up endpoints |
+
+### `m.shared.system.forbidden`
+
+| | |
+| --- | --- |
+| **Title** | Forbidden / wrong tenant |
+| **Cases** | T-244, T-245, T-246 |
+| **Components** | `ForbiddenState`, `TenantMismatchExplain` |
+
+### `m.shared.system.session-expired`
+
+| | |
+| --- | --- |
+| **Title** | Session expired |
+| **Cases** | T-247 |
+| **Components** | `SessionExpiredCard`, `ReauthCta` |
+
+---
+
 ## Catalog flags on existing screens
 
 | Screen | Add |
@@ -90,6 +139,6 @@
 | Job detail (worker) | Required documents checklist (T-045, T-066) |
 | Availability editor | Night shift / cross-midnight (T-019) |
 | Profile edit | Age + gender fields (T-027, T-028) |
-| Apply confirm | Overlap warning/block (T-085) |
+| Apply confirm | Overlap warning/block → sheet `m.worker.jobs.apply-overlap` (T-085) |
 | 3h confirm | Change-mind + no-response messaging (T-117, T-118) |
-| Tokens | Hold vs capture explainer (T-243) |
+| Tokens | Hold vs capture explainer (T-243) + link to top-up |

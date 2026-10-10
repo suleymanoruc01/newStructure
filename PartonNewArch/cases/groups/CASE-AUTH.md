@@ -18,6 +18,11 @@
 ## Nest modules
 `auth`, `users`, `policies`, `employers`, `branches`
 
+## Architecture
+- App architecture §10: [`../../04-application-architecture.md`](../../04-application-architecture.md)
+- Auth & RBAC: [`../../backend/18-auth-rbac.md`](../../backend/18-auth-rbac.md) · [ADR-0011](../../backend/adr/0011-auth-rbac.md)
+- Checklist: [`../../backend/07-auth-security.md`](../../backend/07-auth-security.md)
+
 ## Screens
 `m.auth.*`, `w.auth.*`, onboarding wizards
 

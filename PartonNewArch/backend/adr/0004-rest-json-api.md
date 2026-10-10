@@ -30,8 +30,8 @@ Internal module-to-module calls stay in-process. Real-time push remains **FCM/AP
 
 ### gRPC / Connect-RPC to mobile
 - **Pros:** Strong typing, efficient binary  
-- **Cons:** Tooling friction for RN + shared JSON schemas  
-- **Why not:** REST + shared TS schemas preferred
+- **Cons:** Tooling friction for RN + shared JSON schemas; remaps case catalog; weaker curl/QA DX  
+- **Why not:** REST + shared TS schemas preferred — full comparison in [ADR-0009](0009-rest-vs-grpc.md) / [`../16-rest-vs-grpc.md`](../16-rest-vs-grpc.md)
 
 ### Firebase / BaaS-style SDK again
 - **Pros:** Fast client bootstrap  
@@ -46,4 +46,4 @@ Internal module-to-module calls stay in-process. Real-time push remains **FCM/AP
 - AuthZ at route/guard level remains straightforward
 
 ### Negative / risks
-- Envelope / pagination / OpenAPI details still TBD — avoid treating draft conventions as immutable until AO-6/AO-8 close
+- Envelope / pagination / OpenAPI **accepted** — [ADR-0027](0027-api-contracts-baseline.md) · [shared/12](../../shared/12-api-contracts.md)

@@ -1,6 +1,6 @@
 # Mobile — Auth & onboarding screens
 
-**Status:** `proposed`  
+**Status:** `accepted` (production coding inventory) · [agents/10](../../agents/10-production-ready.md)  
 **Nest modules:** `auth`, `users`, `policies`, `workers`, `employers`, `branches`
 
 ---
@@ -106,6 +106,11 @@
 | **MVP** | P0 |
 | **Entry** | Role select → worker; incomplete profile gate |
 | **Layout** | Multi-step wizard: personal → skills/sectors → availability preview → confirm |
+| **Recipe** | R3 |
+| **Wizard id** | `worker-onboarding` |
+| **State owner** | `WizardShell` (lifted values); progressive `PATCH /api/v1/workers/me` |
+| **Components** | `WizardShell`, `DemographicsFields`, `SectorChipMulti`, `AvailabilityWeekGrid`, `ProfileCompletionMeter` |
+| **Notes** | Back must restore fields — [wizard state](../../shared/04-wizard-state.md) |
 | **Actions** | Next / Back / Save & finish |
 | **States** | field validation; incomplete blocks apply later |
 | **API** | `PATCH /api/v1/workers/me`; availability endpoints |

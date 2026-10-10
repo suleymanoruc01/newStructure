@@ -19,8 +19,10 @@
 `jobs`, `tokens`, `favorites`, `job-catalog`
 
 ## Screens
-Create wizard mobile+web; favorites-only toggle on summary step
+Create wizard mobile+web; favorites-only toggle on summary step.
 
+## Wizard state
+Back must not clear fields — [`../../shared/04-wizard-state.md`](../../shared/04-wizard-state.md) · [ADR-0020](../../backend/adr/0020-wizard-state.md): `WizardShell` / scoped store + Nest `draft` (T-051, T-161).
 
 ## Case checklist
 

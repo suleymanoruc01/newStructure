@@ -1,6 +1,6 @@
 # Mobile — Worker screens
 
-**Status:** `proposed`  
+**Status:** `accepted` (production coding inventory) · [agents/10](../../agents/10-production-ready.md)  
 **Nest modules:** `workers`, `jobs`, `matching`, `applications`, `shifts`, `location`, `favorites`, `notifications`, `ratings`
 
 ---
@@ -13,6 +13,9 @@
 | **Role** | Worker |
 | **Purpose** | Today snapshot: upcoming shift, confirmations due, matched job teaser |
 | **MVP** | P0 |
+| **Recipe** | R1 (tab root) — max one sticky alert |
+| **Primary CTA** | Next shift / confirm due → `Confirm3hCard` or check-in |
+| **Components** | `Confirm3hCard`, `JobCard`, `EmptyState`, `SkeletonList`, `FirstRunCoachmarks` |
 | **Entry** | Worker tab root |
 | **Layout** | Header (name/rating); alert cards; next shift CTA; horizontal matched jobs; shortcuts |
 | **Actions** | Open check-in / 3h confirm; Open job; Open notifications |
@@ -27,6 +30,9 @@
 
 | Field | Detail |
 | --- | --- |
+| **Recipe** | R1 — feed clarity (T-238) |
+| **Primary CTA** | Open job detail (row tap) |
+| **Components** | `JobFeedList`, `JobCard`, `MatchReasonChips`, `DistanceLabel`, `EmptyState`, `SkeletonList` |
 | **Route** | `/worker/jobs` |
 | **Role** | Worker |
 | **Purpose** | Browse server-ranked eligible jobs |
@@ -68,6 +74,9 @@
 | **Role** | Worker |
 | **Purpose** | Confirm application with summary of commitments |
 | **MVP** | P0 |
+| **Recipe** | R4 (confirm sheet) |
+| **Primary CTA** | Confirm apply — `ApplyConfirmSheet` |
+| **Components** | `ApplyConfirmSheet`, `OverlapWarnDialog`, `ProfileIncompleteGate` |
 | **Entry** | Job detail Apply |
 | **Layout** | Summary card; conflict warnings; confirm CTA |
 | **Actions** | Confirm apply; Cancel |
@@ -75,6 +84,21 @@
 | **API** | `POST /api/v1/jobs/:id/applications` (+ `Idempotency-Key`) |
 | **Cases** | `CASE-APPLICATION`, `CASE-ABUSE` |
 | **Legacy** | inline in job detail / process |
+| **Related** | Overlap → `m.worker.jobs.apply-overlap` sheet |
+
+---
+
+## `m.worker.jobs.apply-overlap` — Overlap warn / block
+
+| Field | Detail |
+| --- | --- |
+| **Route** | Sheet on apply-confirm |
+| **Role** | Worker |
+| **Purpose** | Show conflicting shifts; warn or hard-block apply |
+| **MVP** | P0 |
+| **Components** | `OverlapConflictCard`, `ConflictShiftRow`, `ApplyBlockedBanner` |
+| **Cases** | T-085, T-181 |
+| **Detail** | [`case-driven-additions.md`](case-driven-additions.md) |
 
 ---
 
@@ -173,6 +197,9 @@
 | **Role** | Worker |
 | **Purpose** | “İşe geldim” with location verification |
 | **MVP** | P0 |
+| **Recipe** | R5 (day-of) — T-240 / T-241 |
+| **Primary CTA** | Check-in — `CheckInButton` (solid, high-contrast) |
+| **Components** | `CheckInButton`, `GeofenceStatus`, `AccuracyMeter`, `PermissionExplainer`, `LocationDeniedState` |
 | **Entry** | Push 10m; prep; home |
 | **Layout** | Permission status; live distance to branch; primary Check-in; help if outside radius |
 | **Actions** | Check-in; Open settings for location; Cancel |

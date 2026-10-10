@@ -51,11 +51,13 @@ flowchart TB
 | Moving check-in | Require stable sample or short dwell | T-145 |
 | No background loc | Foreground only for v1 check-in | T-146 |
 
-## Persistence & privacy (CASE-SECURITY)
+## Persistence & privacy (CASE-SECURITY · KVKK)
 
-- Store check-in event: lat/lng/accuracy/timestamp/device flags — not continuous tracks (T-250)
-- Signed access only; not in public logs (T-252)
-- Retention policy `open`
+- Store check-in event: lat/lng/accuracy/timestamp/device flags — **not** continuous tracks (T-250)
+- Signed access only; not in public logs (T-252); round/omit coords in application logs
+- Purpose: attendance verification unless legal expands purpose
+- Retention: raw geo **90 days** then anonymize — locked matrix in [`17-privacy-kvkk-gdpr.md`](17-privacy-kvkk-gdpr.md)
+- Dispute: keep evidence window, then anonymize coordinates
 
 ## REST APIs
 

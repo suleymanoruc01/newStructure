@@ -1,7 +1,9 @@
 # Shared screen conventions
 
 **Status:** `accepted`  
-**Last updated:** 2026-10-07
+**Last updated:** 2026-10-09  
+**UX layouts:** [`03-screen-ux-layout.md`](03-screen-ux-layout.md) · [ADR-0019](../backend/adr/0019-screen-ux-layout.md)  
+**Components:** [`02-ui-components.md`](02-ui-components.md)
 
 Conventions used by both [`../mobile/`](../mobile/) and [`../web/`](../web/) screen notes.
 
@@ -34,8 +36,11 @@ Every screen note uses this block:
 | **MVP** | `P0` / `P1` / `P2` |
 | **Entry** | How users arrive |
 | **Layout** | Zones / primary UI |
+| **Recipe** | `R1`–`R8` from [03-screen-ux-layout](03-screen-ux-layout.md) |
+| **Primary CTA** | Single primary action label + component |
+| **Components** | Named list from [02-ui-components](02-ui-components.md) |
 | **Actions** | Primary + secondary |
-| **States** | loading / empty / error / blocked |
+| **States** | loading / empty / error / blocked (copy + next step) |
 | **API** | Nest REST paths under `/api/v1` (+ owning module) |
 | **Cases** | `CASE-*` groups |
 | **Legacy** | Old Kotlin screen if any |
@@ -71,8 +76,25 @@ Every screen note uses this block:
 | `blocked` | Restriction / maintenance / force-update |
 | `partial` | Show available sections; mark failed ones |
 
+## UX gate
+
+A screen is incomplete without **Recipe**, **Primary CTA**, **Components**, and **States** — see [03-screen-ux-layout](03-screen-ux-layout.md) and [UI mandate](../cases/03-ui-coverage-mandate.md).
+
+## Wizard / multi-step gate
+
+R3 screens must declare **Wizard id**, **State owner** (`WizardShell` / scoped store), and **Draft API** (or `—`) — [04-wizard-state](04-wizard-state.md) · [ADR-0020](../backend/adr/0020-wizard-state.md). Answers must not live only in step-local state.
+
+## Accessibility gate
+
+P0 screens must meet [06-accessibility-wcag](06-accessibility-wcag.md) · [ADR-0022](../backend/adr/0022-accessibility-wcag.md): labeled controls, contrast tokens, keyboard (web), SR-friendly names, solid chrome when transparency reduced.
+
+## i18n gate
+
+User-facing copy uses locale keys with **`tr-TR` primary** — [07-i18n](07-i18n.md) · [ADR-0023](../backend/adr/0023-i18n-turkish-primary.md). No hardcoded UI strings in P0 screens.
+
 ## Cross-links
 
+- Screen UX & layout: [`03-screen-ux-layout.md`](03-screen-ux-layout.md)
 - Backend modules: [`../backend/04-domain-modules.md`](../backend/04-domain-modules.md)
 - API style: [`../backend/06-api-conventions.md`](../backend/06-api-conventions.md)
 - Case catalog: [`../../parton_case_tests_tr.json`](../../parton_case_tests_tr.json)

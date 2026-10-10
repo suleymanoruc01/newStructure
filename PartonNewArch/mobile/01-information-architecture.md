@@ -1,7 +1,8 @@
 # 01 — Mobile information architecture
 
-**Status:** `proposed`  
-**Last updated:** 2026-10-07
+**Status:** `accepted` · [agents/10](../agents/10-production-ready.md)
+**Last updated:** 2026-10-09  
+**Routing:** [ADR-0024](../backend/adr/0024-fluid-routing.md) · [`../shared/08-routing.md`](../shared/08-routing.md)
 
 ## High-level graph
 

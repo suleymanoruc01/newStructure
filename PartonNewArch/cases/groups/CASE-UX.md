@@ -11,8 +11,17 @@
 - Favorites UX (T-242); token mental model (T-243)
 
 ## Screens
-All P0 flows need empty/loading/error copy review checklist
+All P0 flows need empty/loading/error copy review checklist. Layout recipes + CASE-UX mapping: [`../../shared/03-screen-ux-layout.md`](../../shared/03-screen-ux-layout.md) · [ADR-0019](../../backend/adr/0019-screen-ux-layout.md).  
+**UX principles (Sept 2026):** [`../../shared/10-modern-ux-principles.md`](../../shared/10-modern-ux-principles.md) · [ADR-0026](../../backend/adr/0026-modern-ux-principles.md).
 
+## Architecture
+- Screen UX & layout (R1–R8): [`../../shared/03-screen-ux-layout.md`](../../shared/03-screen-ux-layout.md)
+- Wizard state (T-236/T-237 Back): [`../../shared/04-wizard-state.md`](../../shared/04-wizard-state.md)
+- Accessibility WCAG (clarity + operable UI): [`../../shared/06-accessibility-wcag.md`](../../shared/06-accessibility-wcag.md)
+- i18n (Turkish primary copy): [`../../shared/07-i18n.md`](../../shared/07-i18n.md)
+- Components: [`../../shared/02-ui-components.md`](../../shared/02-ui-components.md)
+- UI mandate: [`../03-ui-coverage-mandate.md`](../03-ui-coverage-mandate.md)
+- App architecture §15.3: [`../../04-application-architecture.md`](../../04-application-architecture.md)
 
 ## Case checklist
 
@@ -31,4 +40,5 @@ All P0 flows need empty/loading/error copy review checklist
 ## Traceability
 
 - Coverage matrix: [`../00-coverage-matrix.md`](../00-coverage-matrix.md)
-- Gap backlog: [`../01-gap-backlog.md`](../01-gap-backlog.md)
+- Gap backlog: [`../01-gap-backlog.md`](../01-gap-backlog.md) (`ux-acceptance`)
+- Layout → case table: [`../../shared/03-screen-ux-layout.md`](../../shared/03-screen-ux-layout.md) §5

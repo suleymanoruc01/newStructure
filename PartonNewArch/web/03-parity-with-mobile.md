@@ -1,6 +1,6 @@
 # 03 — Web ↔ mobile parity
 
-**Status:** `proposed`  
+**Status:** `accepted` · [agents/10](../agents/10-production-ready.md)
 **Last updated:** 2026-10-07
 
 Same Nest domain rules; mobile uses **REST** `/api/v1`. Admin UI is hosted in the Nest app. Separate employer web console is not a locked v1 boundary.
@@ -32,9 +32,11 @@ Same Nest domain rules; mobile uses **REST** `/api/v1`. Admin UI is hosted in th
 | `m.employer.applicants.*` | `w.employer.applicants.*` |
 | `m.employer.branches.*` | `w.employer.branches.*` |
 | `m.employer.tokens.root` | `w.employer.tokens.overview` |
+| `m.employer.tokens.top-up` | `w.employer.tokens.top-up` |
 | `m.auth.phone` / `otp` | `w.auth.login` / `otp` |
-| — | `w.admin.*` (no mobile twin) |
+| — | `w.admin.*` (no mobile twin); `w.admin.perf.metrics` ops-only |
 | `m.worker.*` | — (no web twin v1) |
+| `m.shared.system.forbidden` / `session-expired` | Shared patterns on web auth errors |
 
 ## Shared rules
 

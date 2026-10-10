@@ -60,7 +60,7 @@ flowchart TB
 | `AuthModule` | OTP, JWT issue/validate, strategies |
 | `CommonModule` | filters, logging, correlation id |
 | `HealthModule` | liveness / readiness |
-| `QueueModule` | BullMQ / similar (when enabled) |
+| `QueueModule` | BullMQ + Redis when Stage B enabled — not RabbitMQ ([14](14-bullmq-vs-rabbitmq.md)) |
 
 ## Import graph (target)
 

@@ -14,6 +14,14 @@
 ## Nest modules
 `shifts`, `notifications`, `applications`, `tokens`
 
+## Push templates
+| Cases | `type` |
+| --- | --- |
+| T-114, T-122 | `shift.confirm_3h` |
+| T-116–T-119, T-121 | `shift.cannot_come` |
+| T-117 | `shift.confirm_timeout` |
+
+Catalog: [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md) · FCM: [`../../backend/20-fcm-messaging.md`](../../backend/20-fcm-messaging.md)
 
 ## Case checklist
 

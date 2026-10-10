@@ -1,6 +1,6 @@
 # Mobile — Employer screens
 
-**Status:** `proposed`  
+**Status:** `accepted` (production coding inventory) · [agents/10](../../agents/10-production-ready.md)  
 **Nest modules:** `employers`, `branches`, `jobs`, `applications`, `notifications`, `favorites`, tokens (within `jobs`/`employers`)
 
 Dense applicant review & multi-branch job creation are **also** designed for web ([`../../web/`](../../web/)). Mobile covers full P0 paths for on-the-go ops.
@@ -145,6 +145,10 @@ Dense applicant review & multi-branch job creation are **also** designed for web
 
 ## Create job wizard
 
+**Recipe:** R3 · **Wizard id:** `create-job` · **State owner:** `WizardShell` + scoped `createJobWizardStore` (answers must survive Back) · **Draft API:** `POST/PATCH /api/v1/jobs` (`status: draft`) · Detail: [`../../shared/04-wizard-state.md`](../../shared/04-wizard-state.md) · [ADR-0020](../../backend/adr/0020-wizard-state.md)
+
+Steps are **controlled** views of the shared draft. Do not keep job fields only in step `useState`.
+
 ### `m.employer.jobs.create.step1` — Positions
 
 | Field | Detail |
@@ -152,7 +156,10 @@ Dense applicant review & multi-branch job creation are **also** designed for web
 | **Route** | `/employer/jobs/create/positions` |
 | **Purpose** | Pick sector / occupation / headcount |
 | **MVP** | P0 |
-| **API** | catalog read `GET /api/v1/job-catalog` |
+| **Recipe** | R3 |
+| **State owner** | `createJobWizardStore` / shell |
+| **Components** | `WizardShell`, `CatalogPicker`, `HeadcountStepper` |
+| **API** | catalog read `GET /api/v1/job-catalog`; draft PATCH |
 | **Cases** | `CASE-JOB-POSTING` |
 | **Legacy** | `Step1PositionsScreen`, `CreateJobTabScreen` |
 
@@ -163,6 +170,9 @@ Dense applicant review & multi-branch job creation are **also** designed for web
 | **Route** | `/employer/jobs/create/details` |
 | **Purpose** | Schedule, pay, branch, requirements, notes |
 | **MVP** | P0 |
+| **Recipe** | R3 |
+| **State owner** | same wizard store (hydrate from shell/draft on mount) |
+| **Components** | `WizardShell`, branch picker, requirement fields |
 | **Cases** | `CASE-JOB-POSTING`, `CASE-LOCATION` |
 | **Legacy** | `Step2DetailsScreen`, `EmployerJobFormScreen` |
 
@@ -173,9 +183,12 @@ Dense applicant review & multi-branch job creation are **also** designed for web
 | **Route** | `/employer/jobs/create/summary` |
 | **Purpose** | Review + token cost + publish |
 | **MVP** | P0 |
+| **Recipe** | R3 |
+| **State owner** | same wizard store; reset on publish success |
+| **Components** | `TokenCostPreview`, `PublishGateBanner`, `FavoritesOnlyToggle`, `DraftSavedHint` |
 | **Actions** | Publish; Save draft |
 | **States** | insufficient tokens → tokens screen; success |
-| **API** | `POST /api/v1/jobs` (reserves tokens server-side) |
+| **API** | `POST /api/v1/jobs` publish (or promote draft); reserves tokens server-side |
 | **Cases** | `CASE-JOB-POSTING`, `CASE-TOKEN` |
 | **Legacy** | `Step3SummaryScreen` |
 
@@ -233,6 +246,20 @@ Dense applicant review & multi-branch job creation are **also** designed for web
 | **API** | `GET /api/v1/employers/me/tokens` |
 | **Cases** | `CASE-TOKEN` |
 | **Legacy** | token-related UI (may have been light in Kotlin) |
+| **Related** | Top-up → `m.employer.tokens.top-up` |
+
+---
+
+## `m.employer.tokens.top-up` — Token top-up
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/employer/tokens/top-up` |
+| **Purpose** | Purchase / credit tokens |
+| **MVP** | P1 |
+| **Components** | `TopUpAmountPicker`, `PaymentMethodList`, `TopUpConfirmSheet` |
+| **Cases** | T-161 |
+| **Detail** | [`case-driven-additions.md`](case-driven-additions.md) |
 
 ---
 

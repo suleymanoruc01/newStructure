@@ -1,18 +1,18 @@
 # 05 — Data layer (PostgreSQL)
 
-**Status:** `proposed`  
-**Last updated:** 2026-10-07
+**Status:** `accepted` — production coding ([agents/10](../agents/10-production-ready.md))  
+**Last updated:** 2026-10-10
 
 ## Decisions
 
 | Topic | Choice | Status |
 | --- | --- | --- |
-| Database | PostgreSQL 18+ (self-managed / managed instance we control) | `accepted` (major 18 **proposed** in [radar](../03-tech-radar-2026.md)) |
-| ORM | Prisma 7+ schema-first + driver adapter — pending confirm | `proposed` → [ADR-0003](adr/0003-orm-choice.md) |
-| Public IDs | UUIDv7 (`uuidv7()` or app-side) for ordered entities | `proposed` |
+| Database | PostgreSQL **18+** (self-managed / managed instance we control) | `accepted` |
+| ORM | Prisma **latest stable** schema-first + `@prisma/adapter-pg` | `accepted` — [ADR-0003](adr/0003-orm-choice.md) |
+| Public IDs | UUIDv7 (`uuidv7()` or app-side) for ordered entities | `accepted` |
 | Migrations | Versioned, CI-applied; no prod `db push` / sync | `accepted` |
-| UUID PKs | `uuid` / `ulid` for public IDs | `proposed` |
-| Soft delete | Prefer `deleted_at` for user-facing entities | `proposed` |
+| UUID PKs | `uuid` (UUIDv7 where ordered) for public IDs | `accepted` |
+| Soft delete | Prefer `deleted_at` for user-facing entities | `accepted` |
 | Multi-tenancy | Shared DB, row-level scoping by employer/branch | `accepted` |
 
 ## Principles
@@ -20,17 +20,19 @@
 1. **PostgreSQL is the system of record** — not mobile cache, not Firestore.
 2. **Schema in git** — every change is a migration + review.
 3. **Integrity over denormalization** — denormalize only with a measured read path (e.g. feed).
-4. **PII minimization** — store what product needs; encrypt/hash where required (OTP secrets, tokens).
-5. **Geo** — use `PostGIS` when location queries need it; start with lat/lng + radius helpers if simpler for v1 (`open`).
-6. **Mobile never imports models** — ORM entities/schema stay in `apps/backend`; clients use shared API schemas only.
+4. **PII minimization (KVKK / GDPR-ready)** — store what product needs; encrypt/hash where required (OTP secrets, tokens); classify new fields before ship — [17-privacy-kvkk-gdpr](17-privacy-kvkk-gdpr.md).
+5. **Retention & erasure** — soft-delete for user-facing entities; scheduled purge/anonymize per retention matrix; keep policy acceptances for accountability.
+6. **Geo** — lat/lng + Haversine/radius helpers for v1; add **PostGIS** when query volume warrants (Assess); **event-based** check-in only (no tracks).
+7. **Mobile never imports models** — ORM entities/schema stay in `apps/backend`; clients use shared API schemas only.
 
 ## Logical schemas (namespaces)
 
-Use PostgreSQL schemas or clear table prefixes — pick one at scaffold time.
+Use **PostgreSQL schemas** (`auth`, `jobs`, …) matching Nest modules where practical; table-prefix fallback OK if simpler at scaffold.
 
 | Area | Example tables |
 | --- | --- |
-| Identity | `users`, `user_roles`, `otp_challenges`, `refresh_sessions`, `auth_bans`, `device_fingerprints` |
+| Identity | `users`, `otp_challenges`, `refresh_sessions`, `auth_bans`, `device_fingerprints` |
+| Memberships | `employer_memberships`, `branch_managers`, `platform_admins` (see [18-auth-rbac](18-auth-rbac.md)) |
 | Org | `employers` (+ `tax_id`, `verification_status`), `branches`, `branch_managers` |
 | Worker | `worker_profiles` (+ age/gender/home_geo), `availability_windows`, `worker_sectors`, `worker_occupations`, `worker_documents` |
 | Jobs | `job_catalog_items`, `jobs` (+ `favorites_only`, `gender_filter`, headcount), `job_required_documents` |
@@ -38,8 +40,8 @@ Use PostgreSQL schemas or clear table prefixes — pick one at scaffold time.
 | Hiring | `applications`, `application_events` |
 | Day-of | `shifts`, `availability_confirms`, `check_ins`, `check_in_disputes`, `location_events` |
 | Social | `ratings`, `favorites` |
-| Comms | `notifications`, `device_push_tokens` |
-| Compliance | `policy_documents`, `policy_acceptances` |
+| Comms | `notifications` (inbox + `dedupe_key`), `device_push_tokens` — [20-fcm](20-fcm-messaging.md) |
+| Compliance | `policy_documents`, `policy_acceptances`, `privacy_export_requests`, `privacy_erasure_requests`, `legal_audit_events` (append-only — ADR-0037) |
 | Ops | `outbox_events`, `abuse_reports`, `risk_events` |
 
 ## Transaction guidelines

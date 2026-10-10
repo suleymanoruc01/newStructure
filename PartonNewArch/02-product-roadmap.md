@@ -1,9 +1,9 @@
 # 02 — Product roadmap (state of the art · Sep 2026)
 
 **Status:** `proposed`  
-**Last updated:** 2026-10-07  
+**Last updated:** 2026-10-10  
 **Horizon:** Foundation → Turkey MVP → Scale  
-**Anchors:** [`01-architecture-decisions.md`](01-architecture-decisions.md) · [`03-tech-radar-2026.md`](03-tech-radar-2026.md) · [`cases/`](cases/)
+**Anchors:** [`04-application-architecture.md`](04-application-architecture.md) · [`01-architecture-decisions.md`](01-architecture-decisions.md) · [`03-tech-radar-2026.md`](03-tech-radar-2026.md) · [`cases/`](cases/)
 
 This roadmap turns locked architecture into a **delivery plan**. Feature detail still comes from the 248-case catalog; phases below sequence *what ships when* and *which modern stack enables it*.
 
@@ -55,9 +55,9 @@ Suggested calendar (team-size agnostic): **P0 ~4–6 wks · P1 ~6–8 · P2 ~6�
 
 | Workstream | Deliverable | Tech (Sep 2026) |
 | --- | --- | --- |
-| Monorepo | `apps/mobile`, `apps/backend`, `packages/api-contracts` | **pnpm** workspaces + **Turborepo** (AO-7 proposed) |
-| Backend shell | Nest modular monolith, global prefix `/api/v1`, health | **NestJS 11.x** (Node ≥20), `@nestjs/swagger` |
-| Contracts | Shared request/response schemas + TS types | **Zod 4** in `packages/api-contracts`; Nest validates via nestjs-zod / Standard Schema (AO-8 proposed) |
+| Monorepo | `apps/mobile`, `apps/backend`, `apps/admin`, `apps/marketing`, `apps/devops-mcp`, packages | **pnpm** + **Turborepo** — [ADR-0038](backend/adr/0038-monorepo-tooling.md) |
+| Backend shell | Nest modular monolith, global prefix `/api/v1`, health | **NestJS 12.x latest** (Node per Nest 12 floor), TS **6**, `@nestjs/swagger` — ADR-0028 |
+| Contracts | Shared request/response schemas + TS types | **Zod 4** in `packages/api-contracts`; Nest validates via nestjs-zod — **ADR-0027** (AO-6/8 closed) |
 | Data | Postgres + migrations + Prisma module | **PostgreSQL 18** (`uuidv7()`), **Prisma 7+** driver adapters (ADR-0003) |
 | Auth vertical | OTP request/verify + JWT access/refresh | CASE-AUTH critical path |
 | Mobile shell | Bare RN app, secure token store, typed API client | **Bare React Native** (owned `ios/`/`android/`); **no Expo** — [ADR-0006](backend/adr/0006-bare-react-native-no-expo.md) |
@@ -73,7 +73,7 @@ Suggested calendar (team-size agnostic): **P0 ~4–6 wks · P1 ~6–8 · P2 ~6�
 - [ ] Mobile boots on iOS + Android development builds  
 - [ ] No secrets in shared packages; mobile cannot import Prisma  
 
-**Closes / advances:** AO-2 (bare RN / no Expo — accepted); AO-7, AO-8 (as proposed); BQ-1 done; scaffolding for AO-1 (path filters).
+**Closes / advances:** AO-2 (bare RN); AO-6/AO-8 (ADR-0027); AO-7 partial (`api-contracts` locked); BQ-1 done; scaffolding for AO-1 (path filters).
 
 ---
 
@@ -89,7 +89,7 @@ Suggested calendar (team-size agnostic): **P0 ~4–6 wks · P1 ~6–8 · P2 ~6�
 | Matching feed | CASE-MATCHING hard filters (subset) | `matching` |
 | Apply / withdraw | CASE-APPLICATION | `applications` |
 | Employer review accept/reject | CASE-EMPLOYER-REVIEW | `applications` |
-| Push + inbox basics | CASE-NOTIFICATIONS | `notifications` |
+| Push + inbox basics | CASE-NOTIFICATIONS | `notifications` + FCM HTTP v1 — [20](backend/20-fcm-messaging.md) |
 
 **Exit checklist**
 
@@ -137,12 +137,15 @@ Suggested calendar (team-size agnostic): **P0 ~4–6 wks · P1 ~6–8 · P2 ~6�
 | Ratings window + moderation | CASE-RATINGS | |
 | Abuse / ban / risk | CASE-ABUSE, CASE-SECURITY | Admin queues |
 | UX polish | CASE-UX T-235–T-243 | Token explainer copy |
+| Privacy DSR + retention | CASE-SECURITY, ADR-0010 | Export/erase APIs, retention jobs, subprocessor register — [17](backend/17-privacy-kvkk-gdpr.md) |
 
 **Exit checklist**
 
 - [ ] P0 gaps in [`cases/01-gap-backlog.md`](cases/01-gap-backlog.md) closed or explicitly deferred with owners  
 - [ ] Admin can restrict users, resolve disputes, edit remote geofence config  
 - [ ] Privacy: no continuous location tracks (T-250)  
+- [ ] Privacy: DSR export/erasure MVP + retention job dry-run in staging  
+- [ ] Privacy: subprocessor register published for ops; notice versioning live via `policies`  
 
 ---
 
@@ -154,9 +157,10 @@ Suggested calendar (team-size agnostic): **P0 ~4–6 wks · P1 ~6–8 · P2 ~6�
 | --- | --- | --- |
 | Performance | Feed pagination, matching re-index, notify fan-out | CASE-PERF T-226–T-234 |
 | Cache / pool | PgBouncer / managed pooler; Redis if proven | Pool saturation / p95 |
-| Background worker | Extract outbox drain to separate process | AO-3 — only after load evidence |
+| Background jobs | Promote outbox → **BullMQ + managed Redis** (`noeviction` + AOF) | AO-3 / CASE-PERF — ADR-0007/0008 |
+| Background worker | Extract BullMQ workers to separate process if needed | After BullMQ in-process still saturates API |
 | Client lifecycle | API deprecation window; force-update via policies | AO-12 |
-| Mobile release | Fastlane / CI → App Store & Play; store ASO | Soft launch → public |
+| Mobile release | **Fastlane** → App Store & Play (ADR-0030 · [mobile/07](mobile/07-fastlane.md)); store ASO | Soft launch → public |
 | Multi-region | Still later; Turkey region pick (AO-4, AO-10) | Compliance / latency |
 
 **Exit checklist**
@@ -172,11 +176,15 @@ Suggested calendar (team-size agnostic): **P0 ~4–6 wks · P1 ~6–8 · P2 ~6�
 | Stream | Practice |
 | --- | --- |
 | **Contract-first** | Change Zod schemas in `packages/api-contracts` → regenerate OpenAPI + mobile types in same PR |
-| **AuthZ** | Role + branch guards on every mutating route; admin uses same services |
+| **AuthZ / RBAC** | Role + employer/branch scope on every protected route; context switch for multi-membership; admin uses same services — [18](backend/18-auth-rbac.md) |
+| **Push (FCM)** | Inbox + outbox → FCM; token register; deep links; never Firestore SoR — [20](backend/20-fcm-messaging.md) |
+| **Admin Web UI** | Vite + shadcn/ui dark SPA Nest-hosted; queues via `/api/v1` — [web/04](web/04-shadcn-dark-ui.md) |
+| **Mobile UI** | NativeWind + Liquid Glass principles; shared color tokens — [mobile/04](mobile/04-nativewind-ui.md) · [shared/01](shared/01-color-system.md) |
+| **Color system** | Cream/forest/orange tokens on Web + Mobile; mode defaults — [ADR-0017](backend/adr/0017-color-system.md) |
 | **Idempotency** | Apply, OTP verify, check-in, token hold/capture |
 | **Security** | Rate limits, ban list, secrets in cloud KMS/env — never shared packages |
 | **Quality** | Nest unit + HTTP e2e; RN detox/maestro critical paths; case IDs in PRs |
-| **Privacy (KVKK)** | Turkey launch: retention, consent, DSR process — track as compliance epic in P3 |
+| **Privacy (KVKK + GDPR-ready)** | Eng baseline ADR-0010 / [17](backend/17-privacy-kvkk-gdpr.md): notice/accept + log redaction in P0–P1; geo minimize in P2; **DSR export/erasure + retention jobs + subprocessor register in P3**; **retention defaults locked** (no TODOs) · legal audit CSV/PDF ADR-0037 |
 
 ## Milestone → case mapping (summary)
 

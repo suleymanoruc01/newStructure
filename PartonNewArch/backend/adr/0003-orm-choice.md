@@ -1,23 +1,24 @@
 # ADR-0003: ORM choice
 
 **Date:** 2026-10-07  
-**Status:** proposed  
-**Radar:** [`../../03-tech-radar-2026.md`](../../03-tech-radar-2026.md)
+**Status:** Accepted (2026-10-10)  
+**Radar:** [`../../03-tech-radar-2026.md`](../../03-tech-radar-2026.md)  
+**Related:** [ADR-0028](0028-latest-stable-stack.md) · [agents/10-production-ready.md](../../agents/10-production-ready.md)
 
 ## Context
 
-NestJS needs a typed data access layer over PostgreSQL with first-class migrations. As of mid/late 2026, Prisma ORM 7 is Rust-free, uses driver adapters, and generates the client into the project (NestJS 11 + CommonJS friendly with `moduleFormat = "cjs"`). PostgreSQL 18 adds `uuidv7()` and stronger index/scan behavior for marketplace feeds.
+NestJS needs a typed data access layer over PostgreSQL with first-class migrations. Prisma with driver adapters is the locked greenfield path for PartOn production coding.
 
-## Decision (proposed)
+## Decision
 
-Use **Prisma ORM 7+** with:
+Use **Prisma** (**latest stable** major compatible with Nest 12 — verify at scaffold via `npm view`; historically 7.x line) with:
 
 - Checked-in Prisma schema + Prisma Migrate
 - `@prisma/adapter-pg` (or current Postgres driver adapter) against **PostgreSQL 18**
 - Nest `PrismaService` lifecycle in `DatabaseModule`
 - Public IDs via UUIDv7 where ordering/index locality helps (jobs, applications, events)
 
-Confirm before scaffolding the API repo. Revisit Prisma 8 only after a dedicated migration spike (Assess ring).
+**Accepted for production coding** — do not re-ask. Revisit a newer Prisma major only after registry verification per ADR-0028 (not a blocker).
 
 ## Alternatives
 
@@ -50,5 +51,5 @@ Confirm before scaffolding the API repo. Revisit Prisma 8 only after a dedicated
 
 ## Follow-up
 
-- If accepted: document Nest `PrismaService` lifecycle in [`../05-data-layer.md`](../05-data-layer.md)
-- If rejected for TypeORM/Drizzle: supersede this ADR and update data-layer notes
+- Nest `PrismaService` lifecycle documented in [`../05-data-layer.md`](../05-data-layer.md)  
+- Supersede only via ADR if TypeORM/Drizzle chosen later

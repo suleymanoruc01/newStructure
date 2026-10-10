@@ -10,10 +10,19 @@
 - In-app inbox when push disabled (T-111)
 - Delayed/queued delivery observability (T-112)
 - Strict user targeting (T-113)
+- **Full-catalog alignment:** overlapping notify cases outside this group (T-096–T-099, T-114, T-119, T-123, T-133–T-135, T-172, T-226, T-231, …) use the same templates — matrix in [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md) §0
 
 ## Nest modules
-`notifications` + outbox; push token registry
+`notifications` + outbox; push token registry; `FcmDispatcher`
 
+## Architecture
+- **User-centered push catalog** (copy, prefs, timing): [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md) · [ADR-0021](../../backend/adr/0021-push-notifications-ux.md)
+- App architecture §12: [`../../04-application-architecture.md`](../../04-application-architecture.md)
+- FCM transport: [`../../backend/20-fcm-messaging.md`](../../backend/20-fcm-messaging.md) · [ADR-0013](../../backend/adr/0013-fcm-push.md)
+- Async/outbox: [`../../backend/08-async-events.md`](../../backend/08-async-events.md)
+- Deep links: [`../../mobile/03-flows-and-deep-links.md`](../../mobile/03-flows-and-deep-links.md)
+- SSE (foreground, not push): [`../../backend/19-sse.md`](../../backend/19-sse.md)
+- Inbox UI: [`../../mobile/screens/shared-system.md`](../../mobile/screens/shared-system.md)
 
 ## Case checklist
 

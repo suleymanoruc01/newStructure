@@ -14,6 +14,12 @@
 ## Nest modules
 `ratings`, `notifications`, `moderation` (text filter)
 
+## Push templates
+| Cases | `type` |
+| --- | --- |
+| T-172 (= T-106) | `rating.pending` |
+
+Catalog: [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md)
 
 ## Case checklist
 

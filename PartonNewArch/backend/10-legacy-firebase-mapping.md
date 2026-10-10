@@ -13,7 +13,7 @@ Use this when reading [`parton-codebase-wiki`](../../parton-codebase-wiki/) so w
 | Firestore listeners | Explicit REST fetch (`/api/v1`); push for events |
 | Firebase Auth | Nest OTP + JWT over REST |
 | Firestore security rules | Nest REST guards + SQL constraints |
-| FCM via Firebase project | Still FCM/APNs, tokens registered through REST |
+| FCM via Firebase project | Still **FCM HTTP v1** + APNs; tokens/inbox in Postgres via REST — [20-fcm-messaging.md](20-fcm-messaging.md) |
 | Remote Config | `policies` / app-config REST + tables |
 | Client SDK as contract | OpenAPI from Nest REST controllers |
 

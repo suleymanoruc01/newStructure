@@ -1,0 +1,85 @@
+# Stitch coverage — Mobile (75 screens)
+
+**Project:** `12785901164400200423` · DS `assets/82020ca97a4c4985ba46bcfd07a5e5fc`  
+**Done:** 75 / 75  
+**Note:** Extra canvas screen `12f9163906c94272b486efa72499c56e` (“Eksik İşlem”) is not a catalog ID — ignore for coverage.  
+**Updated:** 2026-10-10  
+**Policy:** sequential generates only — see [`../shared/13-stitch-projects.md`](../shared/13-stitch-projects.md)
+
+| Catalog ID | Status | Stitch screen id |
+| --- | --- | --- |
+| `m.auth.tutorial` | done | `db16daa5740c489c95d70740cf04f90d` |
+| `m.auth.phone` | done | `3249113d15554a51a0f7a9f8ea61aea2` |
+| `m.auth.otp` | done | `70ee5f947b4f4914814e5ef0a656a4b0` |
+| `m.auth.role-select` | done | `270cf373fb25456c83c7abfea12c05aa` |
+| `m.auth.policies` | done | `27e2f66293284a7aa94ca91ec0a0cd0f` |
+| `m.auth.email` | done | `fefb52d96f36409bb53f49020195e280` |
+| `m.auth.password-set` | done | `cbb1629fbb6845fcb29c0f513c9dd540` |
+| `m.auth.password-reset` | done | `a97344616ee4497380f939e2777962ef` |
+| `m.worker.onboarding.profile` | done | `69a2c7faba774652be134d4b54bce740` |
+| `m.employer.onboarding.business` | done | `21f2f82e896848668af91977bfb305bf` |
+| `m.employer.onboarding.checklist` | done | `c125ba5244c847b4a97c2ef9620262ae` |
+| `m.manager.onboarding.join` | done | `55e7972be9bc446eb6beb5ea722fbc97` |
+| `m.worker.home.root` | done | `6ae695fd27724f7496ce975bc977ee0a` |
+| `m.worker.jobs.list` | done | `34f936694be144978d3825c3843401f7` |
+| `m.worker.jobs.detail` | done | `d8826d21fc6a45b8af176a3170d1aad8` |
+| `m.worker.jobs.apply-confirm` | done | `4ce1f13f6335425095301da6cfe0f782` |
+| `m.worker.jobs.apply-overlap` | done | `a74a9b8c702d466ca207820cffbebf99` |
+| `m.worker.applications.list` | done | `cae1220275ff4edb9fdb37044e7f03c2` |
+| `m.worker.calendar.root` | done | `7a78f4f058cb41b1ad77a515c7949eae` |
+| `m.worker.availability.edit` | done | `b6975b3d3dc94883b8ce1b2b4e902383` |
+| `m.worker.shift.prep` | done | `05408113644e4b3ba08c45a61b56b88a` |
+| `m.worker.shift.availability-confirm` | done | `c2add6ed46df4388ab9b8ae2d18c2222` |
+| `m.worker.shift.check-in` | done | `48746d9eda12444887ce09fea85b2e2f` |
+| `m.worker.shift.dispute` | done | `aba8c080335d45fe926f11277d45149e` |
+| `m.worker.shift.in-shift` | done | `f7383bafe86d45f9b9f555f22f1303fb` |
+| `m.worker.shift.check-out` | done | `6bac3e07d0cc4edf9575295f191b14e6` |
+| `m.worker.documents.list` | done | `ccf353ea54734f0b970c5219e362eb7c` |
+| `m.worker.documents.upload` | done | `b80a6f177f394d0681b96b99611638cb` |
+| `m.worker.profile.root` | done | `63f2c738a7e44659b0d9bdfda6836f27` |
+| `m.worker.profile.edit` | done | `a5f8c4d5a1cb4a4b87be2eeb1c85e0b7` |
+| `m.worker.revenue.root` | done | `00c9a2dc72344ae18fa5d4db4e990fc2` |
+| `m.worker.favorites.list` | done | `5994427619a549cbb947318b0a43026e` |
+| `m.worker.push-prefs` | done | `d69179c8ceb54728a9bb5e971fca2d5e` |
+| `m.employer.home.root` | done | `cd7ac0b4f5ce40d9a6c3fe9adba52073` |
+| `m.employer.dashboard` | done | `aadf7259ec0e4499affdfb7811c264c1` |
+| `m.employer.business.root` | done | `8c9c96e6cbc4491f95f5e1d0d331949b` |
+| `m.employer.industry.manage` | done | `de829a4576eb4b31936e177435729eed` |
+| `m.employer.branches.list` | done | `df70ddc342b04d45907b30edaf707f76` |
+| `m.employer.branches.detail` | done | `7c2540c2b3a3463693425eb6e9e11f05` |
+| `m.employer.branches.form` | done | `197b7f45ea0b47a0bbda2bc9f0cd5fe8` |
+| `m.employer.jobs.list` | done | `3a842f87e99448288875a5d7cadd9876` |
+| `m.employer.jobs.detail` | done | `f974795816324a8285671d7a28a0dd5a` |
+| `m.employer.jobs.create.step1` | done | `b8ac6eff206c4e4ab827a87262dd1437` |
+| `m.employer.jobs.create.step2` | done | `8965dc69fde4487c8a193a9258995008` |
+| `m.employer.jobs.create.step3` | done | `cc164ea6d2f94dbe9cce695991a712c5` |
+| `m.employer.jobs.form` | done | `835f3f49771947e1954df960769d8612` |
+| `m.employer.applicants.list` | done | `f6a3a52410224ddebf451f3c531fe10e` |
+| `m.employer.applicants.detail` | done | `66e65ac1e47f4af1aae85eefe14d85a2` |
+| `m.employer.tokens.root` | done | `0eea62f5ea1944edbf0f1a0e8b1152b7` |
+| `m.employer.tokens.top-up` | done | `fcc2986b1e054cf59047f7d39e59fb59` |
+| `m.employer.verification.status` | done | `f637a2ae3aa244f7a839f0476a9cc688` |
+| `m.employer.shift.manual-confirm` | done | `3a953a7fe81a42b4b7cafa4a8db5555c` |
+| `m.employer.ops.settings` | done | `8fda3dbf5ab04bee81b146235f2906d9` |
+| `m.employer.favorites.workers` | done | `8b107d8e4cd749d08e801ddd6b2a444f` |
+| `m.employer.profile.root` | done | `1f2878de80a54634887b6ed1d7861e8f` |
+| `m.manager.home.root` | done | `3d1d40716ded49a59c190c9fd9b68d84` |
+| `m.manager.jobs.list` | done | `66a8c1aaf72c4e7b8ba4263a0a34f8fc` |
+| `m.manager.jobs.form` | done | `711c37af80a94289aeb83c418bdeb262` |
+| `m.manager.applicants.list` | done | `ad1912d06984492ab01692a1cbef6187` |
+| `m.manager.notifications.list` | done | `f910af8db3044220ad76faba3bb1af2b` |
+| `m.manager.profile.root` | done | `67ce04317a0a4e43b15d09bb53ed5b57` |
+| `m.shared.notifications.list` | done | `487566a16d6c47c990c665727eaea1b7` |
+| `m.shared.notifications.detail` | done | `9ddf7d8bec65499599ab93f6217cb187` |
+| `m.shared.notifications.push-prefs` | done | `8ea77d4fdf1b437da14b2815748fe4de` |
+| `m.shared.ratings.compose` | done | `3ee234d2f481447983b4ba5ef16831ff` |
+| `m.shared.ratings.pending` | done | `6c67c11692ca453c95d2c5a53a2f3af4` |
+| `m.shared.job-process.detail` | done | `1e587822a86046fd8e12e4f6562e5bdb` |
+| `m.shared.profile.settings` | done | `fb99bf2e47ac4b659826e4b61a4f98b1` |
+| `m.shared.auth.context-switch` | done | `c5fa590a223b44c7bb0bbb037fc68091` |
+| `m.shared.abuse.report` | done | `babad69d352e4a9f99a23186f0f72398` |
+| `m.shared.system.maintenance` | done | `39681efa0f61425f9288479e4d876773` |
+| `m.shared.system.restriction` | done | `3a66fc212c784b5dbdc712d481a39aac` |
+| `m.shared.system.blocking` | done | `00b5da5251d048b985c2914bb95636ef` |
+| `m.shared.system.forbidden` | done | `a5cab436183d47758de8efac1df74b16` |
+| `m.shared.system.session-expired` | done | `edc7548575784862abd0888e1296b5e7` |

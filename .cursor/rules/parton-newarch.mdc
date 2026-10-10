@@ -1,0 +1,25 @@
+---
+description: PartOn NewArch — AI agents build from architecture docs with minimal user questions
+alwaysApply: true
+---
+
+# PartOn NewArch (agent mode)
+
+When implementing PartOn or working under `PartonNewArch/` / `apps/` / `packages/`:
+
+1. Read `PartonNewArch/AGENTS.md`, `PartonNewArch/DESIGN.md` (visual SoR — ADR-0039), `agents/10-production-ready.md`, `agents/07-anti-hallucination.md`, `agents/08-no-mocks-fully-functional.md`, and `agents/09-latest-stack-policy.md` first. Docs are **production-ready for full-stack coding**.
+2. **No hallucination:** every route, screen ID (`m.*`/`w.*`), case `T-###`, error code, and ADR citation must come from an opened/grepped file — not model memory. Legacy Firebase wiki is not SoR.
+3. **No mocks:** No Noop/Console/Fake providers; fully functional paths against real Postgres + SMS/FCM sandbox. Fail boot if required env missing. Ask once for sandbox creds — never stub.
+4. **Latest stable:** NestJS 12, TypeScript 6, current Node LTS, latest bare RN / Zod 4 / Prisma — verify with `npm view` or ctx7. Do not pin stale majors. Hold fence still applies (no Expo/GraphQL/etc.).
+5. **Mobile:** First-class **iOS and Android**; QA on latest stable OS; CI builds both; see `mobile/06-ios-android-platforms.md` (ADR-0029). No iOS-only slices. **Fastlane** for build/sign/store — `mobile/07-fastlane.md` (ADR-0030); no EAS.
+6. Follow `PartonNewArch/agents/01-implementation-playbook.md` slices S0→S9; do not ask “should I continue?” — continue to the next slice when deps are functional.
+7. Use frozen defaults in `PartonNewArch/agents/02-defaults-and-non-asks.md` for all gap-* / AO-* forks. Do not re-ask locked ADR decisions.
+8. Hard bans: Expo/Expo Router/EAS, GraphQL, gRPC-to-clients, RabbitMQ, Next.js admin, Firestore SoR, Prisma in mobile, secrets in shared packages, mock/noop integrations, stale majors, single-platform mobile.
+9. Stack: Nest 12 modular monolith (PM2 + NGINX staging/prod) + bare RN latest on iOS+Android (NativeWind + Fastlane) + Postgres + REST `/api/v1` + Zod `api-contracts` + Vite shadcn dark admin + Vite `apps/marketing` (production: all public screens, prerender — no MVP gaps).
+10. Every feature: Nest rule + REST + Zod + screen(s) + components + recipe + case IDs + tests on real DB paths. Admin must expose ops UI for every CASE-* group (`web/08`, ADR-0034), DevOps error/release tracking (`web/09`, ADR-0035), authenticated DevOps MCP (`web/10`, ADR-0036), and legal audit logger with CSV/PDF reports (`web/11`, `backend/22`, ADR-0037).
+11. Ask the user only for missing sandbox/prod credentials or explicit ADR supersede — never for stack choice.
+12. Acceptance: `parton_case_tests_tr.json` + `PartonNewArch/cases/`.
+13. UI: Turkish i18n primary; Sept 2026 UI/UX principles; no AI-generic purple glow UI.
+14. Never claim tests/build passed unless you ran the command; say “not run” otherwise.
+15. Production-ready: no MVP stubs, no eng TODOs; pnpm+Turborepo (ADR-0038); Prisma accepted (ADR-0003); AO-10 cloud vendor brand does not block Compose+PM2+NGINX.
+16. UI/UX: implement from `PartonNewArch/DESIGN.md` (Stitch/awesome-design-md format); cream/forest/orange tokens only; no purple-glow AI UI; ADR-0039.

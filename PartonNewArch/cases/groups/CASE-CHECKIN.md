@@ -21,6 +21,15 @@
 ## Screens
 Existing check-in + **new** `m.worker.shift.dispute`, employer confirm UI on web/mobile
 
+## Push templates
+| Cases | `type` |
+| --- | --- |
+| T-123 | `shift.checkin_due` |
+| T-133 | `shift.worker_checked_in` |
+| T-134 | `shift.manual_confirmed` |
+| T-135 | `shift.dispute_update` |
+
+Catalog: [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md)
 
 ## Case checklist
 

@@ -1,6 +1,6 @@
 # Mobile — Shared & system screens
 
-**Status:** `proposed`  
+**Status:** `accepted` (production coding inventory) · [agents/10](../../agents/10-production-ready.md)  
 Used across roles; keep UI consistent.
 
 ---
@@ -11,12 +11,16 @@ Used across roles; keep UI consistent.
 | --- | --- |
 | **Route** | `/notifications` |
 | **Role** | Any authenticated |
-| **Purpose** | In-app notification center |
+| **Purpose** | In-app notification center (source of truth when push off — T-111) |
 | **MVP** | P0 |
-| **Layout** | Grouped by day; unread markers; swipe mark-read |
-| **Actions** | Open target (deep link); Mark all read |
+| **Recipe** | R1 |
+| **Primary CTA** | Open notification target (`DeepLinkRouter`) |
+| **Components** | `NotificationRow`, `InboxEmpty`, `SkeletonList`; push-denied banner → settings |
+| **Layout** | Grouped Today/Yesterday/Earlier; unread dots; swipe mark-read; optional denied-push strip |
+| **Actions** | Open target (same map as FCM); Mark all read; open push prefs |
 | **API** | `GET /api/v1/notifications`; `POST .../read` |
 | **Cases** | `CASE-NOTIFICATIONS` |
+| **UX catalog** | [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md) |
 | **Legacy** | employee/employer/manager notification screens (unify shell) |
 
 ---
@@ -27,9 +31,27 @@ Used across roles; keep UI consistent.
 | --- | --- |
 | **Route** | `/notifications/:id` |
 | **MVP** | P1 |
-| **Purpose** | Long body when push payload truncated |
+| **Purpose** | Long `inboxBody` when tray truncated; stale-target fallback CTA |
+| **Recipe** | R2 |
+| **Primary CTA** | Continue to entity screen or home |
+| **Components** | Detail body; `PrimaryButton` deep link |
 | **API** | `GET /api/v1/notifications/:id` |
 | **Cases** | `CASE-NOTIFICATIONS` |
+
+---
+
+## `m.shared.notifications.push-prefs` — Push preferences
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/settings/notifications` |
+| **MVP** | P1 |
+| **Purpose** | Category toggles; marketing opt-in; open OS settings |
+| **Recipe** | R6 |
+| **Components** | `PushPrefToggles`, `PermissionExplainer` |
+| **API** | `GET/PATCH /api/v1/notifications/preferences` |
+| **Cases** | T-111, KVKK marketing |
+| **Categories** | shifts · applications · matching · favorites · marketing (OFF default) |
 
 ---
 
@@ -87,6 +109,22 @@ Used across roles; keep UI consistent.
 | **API** | `POST /api/v1/auth/logout`; account delete endpoint later |
 | **Cases** | `CASE-AUTH`, `CASE-SECURITY` |
 | **Legacy** | `ProfileSettingsScreen` |
+| **Related** | Entry to `m.shared.auth.context-switch` when multi-membership |
+
+---
+
+## `m.shared.auth.context-switch` — Switch role / membership
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/auth/context` (sheet or full screen) |
+| **Role** | Any with ≥2 memberships |
+| **Purpose** | Pick active role / employer / branch context (AS-3) |
+| **MVP** | P0 |
+| **Components** | `RoleSwitcherSheet`, `MembershipListItem`, `ActiveContextBadge` |
+| **API** | `POST /api/v1/auth/context` |
+| **Cases** | AS-3, multi-role |
+| **Detail** | [`case-driven-additions.md`](case-driven-additions.md) |
 
 ---
 
@@ -133,3 +171,25 @@ Used across roles; keep UI consistent.
 | **Purpose** | Soft/hard blocks: unpaid, unverified tax, etc. |
 | **MVP** | P1 |
 | **Legacy** | `BlockingStatusScreen` |
+
+### `m.shared.system.forbidden`
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/system/forbidden` |
+| **Purpose** | 403 / wrong-tenant / cross-user deny (user-visible) |
+| **MVP** | P0 |
+| **Components** | `ForbiddenState`, `TenantMismatchExplain` |
+| **Cases** | T-244, T-245, T-246 |
+| **Detail** | [`case-driven-additions.md`](case-driven-additions.md) |
+
+### `m.shared.system.session-expired`
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/system/session-expired` (or global modal) |
+| **Purpose** | Re-auth after JWT expiry / forced logout |
+| **MVP** | P0 |
+| **Components** | `SessionExpiredCard`, `ReauthCta` |
+| **Cases** | T-247 |
+| **Detail** | [`case-driven-additions.md`](case-driven-additions.md) |

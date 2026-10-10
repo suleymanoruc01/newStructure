@@ -1,6 +1,6 @@
 # 02 — E2E journeys (CASE-E2E)
 
-**Status:** `proposed`  
+**Status:** `accepted` · [agents/10](../agents/10-production-ready.md)
 **Cases:** T-193–T-225 (catalog skips T-208, T-224)
 
 Use these as architecture acceptance scripts across Nest + mobile + web.

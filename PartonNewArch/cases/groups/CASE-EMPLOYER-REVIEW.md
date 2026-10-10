@@ -15,6 +15,15 @@
 ## Nest modules
 `applications`, `jobs`, `notifications`, `tokens`, `shifts`
 
+## Push templates
+| Cases | `type` |
+| --- | --- |
+| T-096, T-103 | `application.rejected` |
+| T-097, T-102 | `application.accepted` |
+| T-098 | `application.accept_revoked` |
+| T-099 | `job.closed_with_accepts` |
+
+Catalog: [`../../shared/05-push-notifications-ux.md`](../../shared/05-push-notifications-ux.md) §0
 
 ## Case checklist
 

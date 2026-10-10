@@ -1,6 +1,6 @@
 # Web — Public & auth screens
 
-**Status:** `proposed`  
+**Status:** `accepted` (production coding inventory) · [agents/10](../../agents/10-production-ready.md)  
 **Nest modules:** `auth`, `users`, `policies`, `employers`
 
 ---
@@ -12,11 +12,11 @@
 | **Route** | `/` |
 | **Role** | Public |
 | **Purpose** | Brand + value props for workers & employers; CTA into console / store |
-| **MVP** | P1 |
+| **MVP** | **P0** (required — ADR-0033) |
 | **Layout** | Hero, dual CTA (İşveren girişi / Uygulamayı indir), feature sections, footer legal |
 | **Actions** | Employer login; App store badges; Contact |
 | **Cases** | `CASE-UX` |
-| **Notes** | Follow brand-first landing rules when designed; no dashboard clutter in first viewport |
+| **Notes** | Production marketing — [07-marketing](../07-marketing.md); brand-first viewport; prerender; no dashboard clutter; `apps/marketing` |
 
 ---
 
@@ -26,8 +26,9 @@
 | --- | --- |
 | **Route** | `/pricing` |
 | **Purpose** | Explain token / provision model |
-| **MVP** | P2 |
+| **MVP** | **P0** (required with marketing — ADR-0033; production, not deferred) |
 | **Cases** | `CASE-TOKEN` |
+| **Notes** | Live in `apps/marketing`; prerendered; linked from landing/footer — [07-marketing](../07-marketing.md) |
 
 ---
 

@@ -1,6 +1,6 @@
 # 03 — Mobile flows & deep links
 
-**Status:** `proposed`  
+**Status:** `accepted` · [agents/10](../agents/10-production-ready.md)
 **Last updated:** 2026-10-07
 
 ## Deep link scheme (proposed)
@@ -68,25 +68,40 @@ Full E2E tables: [`../cases/02-e2e-journeys.md`](../cases/02-e2e-journeys.md)
 
 ## Push payload → screen
 
+**User-centered catalog:** [`../shared/05-push-notifications-ux.md`](../shared/05-push-notifications-ux.md) · Transport: [`../backend/20-fcm-messaging.md`](../backend/20-fcm-messaging.md) · app §12.
+
 | `type` | Params | Screen ID |
 | --- | --- | --- |
 | `job.matched` | `jobId` | `m.worker.jobs.detail` |
-| `application.received` | `jobId` | `m.employer.applicants.list` |
-| `application.decision` | `applicationId` | `m.shared.job-process.detail` |
+| `application.received` | `jobId`, `applicationId` | `m.employer.applicants.detail` (fallback list) |
+| `application.accepted` | `applicationId` | `m.shared.job-process.detail` |
+| `application.rejected` | `applicationId` | `m.shared.job-process.detail` |
+| `application.accept_revoked` | `applicationId` | `m.shared.job-process.detail` |
+| `job.closed_with_accepts` | `jobId`, `applicationId?` | `m.shared.job-process.detail` |
 | `shift.confirm_3h` | `shiftId` | `m.worker.shift.availability-confirm` |
+| `shift.cannot_come` | `shiftId`, `jobId` | `m.employer.applicants.detail` / attendance |
+| `shift.confirm_timeout` | `shiftId`, `jobId` | employer attendance / applicants |
 | `shift.checkin_due` | `shiftId` | `m.worker.shift.check-in` |
+| `shift.worker_checked_in` | `shiftId` | employer attendance / shift detail |
+| `shift.manual_confirmed` | `shiftId` | `m.shared.job-process.detail` |
 | `shift.dispute_update` | `shiftId` | `m.worker.shift.dispute` / employer confirm |
 | `rating.pending` | `shiftId` | `m.shared.ratings.compose` |
+| `job.favorite_employer` | `jobId` | `m.worker.jobs.detail` |
 | `job.favorites_only` | `jobId` | `m.worker.jobs.detail` |
+| `job.audience_empty` | `jobId` | `m.employer.jobs.form` / favorites |
 | `generic` | `notificationId` | `m.shared.notifications.detail` |
 
-Invalid/expired targets fall back to role home.
+Full template ↔ case matrix: [`../shared/05-push-notifications-ux.md`](../shared/05-push-notifications-ux.md) §0.
+
+Invalid/expired targets → friendly inbox detail or role home (T-109). Gates: session → role/context → onboarding → AuthZ → screen.
+
+**Navigator baseline:** React Navigation native stack + tabs + linking — [ADR-0024](../backend/adr/0024-fluid-routing.md) · [`../shared/08-routing.md`](../shared/08-routing.md).
 
 ## Permission UX
 
 | Permission | First ask | Hard requirement |
 | --- | --- | --- |
-| Notifications | After role home once | Soft; features degrade |
+| Notifications | After role home once + in-app rationale ([push UX §1](../shared/05-push-notifications-ux.md)) | Soft; inbox remains (T-111) |
 | Location when-in-use | Before first check-in / distance filter | Check-in blocked without it |
 | Background location | Avoid v1 | — |
 
