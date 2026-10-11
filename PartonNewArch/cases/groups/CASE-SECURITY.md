@@ -20,6 +20,7 @@
 - App architecture §10 Auth/RBAC · §11 Privacy · §15.2 Client security: [`../../04-application-architecture.md`](../../04-application-architecture.md)
 - Auth & RBAC: [`../../backend/18-auth-rbac.md`](../../backend/18-auth-rbac.md) · [ADR-0011](../../backend/adr/0011-auth-rbac.md)
 - Client security (Web + Mobile): [`../../backend/21-client-security.md`](../../backend/21-client-security.md) · [ADR-0018](../../backend/adr/0018-client-security.md)
+- Audit method (coverage units, not extra test cases): [`../../backend/23-security-audit-program.md`](../../backend/23-security-audit-program.md)
 - KVKK + GDPR-ready: [`../../backend/17-privacy-kvkk-gdpr.md`](../../backend/17-privacy-kvkk-gdpr.md) · [ADR-0010](../../backend/adr/0010-privacy-kvkk-gdpr.md)
 - Legal audit logger + admin reports: [`../../backend/22-legal-audit-logger.md`](../../backend/22-legal-audit-logger.md) · [`../../web/11-legal-audit-reports.md`](../../web/11-legal-audit-reports.md) · [ADR-0037](../../backend/adr/0037-legal-audit-logger.md)
 - Location minimization: [`../../backend/13-location-policy.md`](../../backend/13-location-policy.md)

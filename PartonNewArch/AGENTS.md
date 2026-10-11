@@ -30,8 +30,9 @@
 | 11 | [`agents/01-implementation-playbook.md`](agents/01-implementation-playbook.md) | Ordered build slices |
 | 12 | [`agents/03-scaffold-spec.md`](agents/03-scaffold-spec.md) | Exact repo tree + versions |
 | 13 | [`agents/04-coding-conventions.md`](agents/04-coding-conventions.md) | Nest / RN / Vite patterns |
-| 14 | [`cases/`](cases/) + [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json) | Acceptance (248 cases) |
+| 14 | [`cases/`](cases/) + [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json) + NewArch catalogs [`cases/parton_case_tests_newarch_en.json`](cases/parton_case_tests_newarch_en.json) / [`cases/parton_case_tests_newarch_tr.json`](cases/parton_case_tests_newarch_tr.json) | Acceptance (248 cases) |
 | 15 | [`DOC-INDEX.md`](DOC-INDEX.md) · [`DOC-COHESION.md`](DOC-COHESION.md) | Find docs; keep hubs/spokes in sync |
+| 16 | [`agents/11-ponytail-integration.md`](agents/11-ponytail-integration.md) | Ponytail skills, hooks, precedence vs production gates |
 
 **Do not** load the entire tree into context. Use DOC-INDEX and pull deep-dives **per slice**.
 
@@ -52,6 +53,8 @@
 | Purple-glow AI UI / glass on cards / invented palette | [`DESIGN.md`](DESIGN.md) · [09](shared/09-modern-ui-principles.md) · [01 colors](shared/01-color-system.md) |
 | Mocks / Noop / Console / Fake providers | Real sandbox integrations — [08](agents/08-no-mocks-fully-functional.md) |
 | Stale majors / invented version pins | **Latest stable** of Adopt stack — [09](agents/09-latest-stack-policy.md) · ADR-0028 |
+| **Bun** under `apps/mobile` (`bun install` / `bun run`) | **npm** in `apps/mobile` only — ADR-0040 |
+| pnpm / Yarn as primary root PM | **Bun** at repo root — ADR-0040 |
 | iOS-only or Android-only mobile slices | **Both** platforms + latest OS QA — [mobile/06](mobile/06-ios-android-platforms.md) · ADR-0029 |
 
 ---
@@ -62,7 +65,7 @@
 2. **Ground every artifact** — routes, screens, cases, error codes — per [`agents/07-anti-hallucination.md`](agents/07-anti-hallucination.md).  
 3. **No mocks — fully functional** — per [`agents/08-no-mocks-fully-functional.md`](agents/08-no-mocks-fully-functional.md).  
 4. **Latest stable libraries** — Nest **12**, TS **6**, current Node LTS, latest RN/Zod/Prisma — per [`agents/09-latest-stack-policy.md`](agents/09-latest-stack-policy.md); verify with `npm view`/ctx7 (never invent versions).  
-5. **Mobile = iOS + Android** — latest stable OS QA; both CI builds; write `PLATFORM.md` — [`mobile/06-ios-android-platforms.md`](mobile/06-ios-android-platforms.md). **Fastlane** for release — [`mobile/07-fastlane.md`](mobile/07-fastlane.md) · ADR-0030. **Web = PM2 + NGINX** for Nest staging/prod — [`web/05-pm2.md`](web/05-pm2.md) · [`web/06-nginx.md`](web/06-nginx.md) · ADR-0031/0032. **Marketing** = `apps/marketing` — [`web/07-marketing.md`](web/07-marketing.md) · ADR-0033.  
+5. **Monorepo tooling** — **Bun** + Turborepo at root (ADR-0040); **`apps/mobile` = npm only** (no Bun). **Mobile = iOS + Android** — latest stable OS QA; both CI builds; write `PLATFORM.md` — [`mobile/06-ios-android-platforms.md`](mobile/06-ios-android-platforms.md). **Fastlane** for release — [`mobile/07-fastlane.md`](mobile/07-fastlane.md) · ADR-0030. **Web = PM2 + NGINX** for Nest staging/prod — [`web/05-pm2.md`](web/05-pm2.md) · [`web/06-nginx.md`](web/06-nginx.md) · ADR-0031/0032. **Marketing** = `apps/marketing` — [`web/07-marketing.md`](web/07-marketing.md) · ADR-0033.  
 6. **Open product forks** → use [`agents/02-defaults-and-non-asks.md`](agents/02-defaults-and-non-asks.md). Do not ask the user for stack. 
 7. **Ask the user only for:** missing **sandbox** SMS/FCM (or prod) credentials, Apple/Google store accounts, or explicit “stop” — never for stack choice; **never** replace missing creds with Noop.  
 8. **One slice at a time** from the playbook; finish DoD before the next.  

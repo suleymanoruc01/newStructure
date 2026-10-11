@@ -1,0 +1,31 @@
+{
+  "name": "parton",
+  "private": true,
+  "packageManager": "bun@1.4.3",
+  "workspaces": [
+    "apps/backend",
+    "apps/admin",
+    "apps/devops-mcp",
+    "apps/marketing",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "bun run --filter '@parton/backend' db:generate",
+    "db:migrate": "bun run --filter '@parton/backend' db:migrate",
+    "pm2:start": "bun run --filter '@parton/backend' build && cd apps/backend && bunx pm2 start ecosystem.config.cjs",
+    "pm2:reload": "cd apps/backend && bunx pm2 reload parton-api",
+    "ponytail:hooks:install": "node vendor/ponytail/scripts/cursor-hooks.js install --project",
+    "ponytail:hooks:uninstall": "node vendor/ponytail/scripts/cursor-hooks.js uninstall --project",
+    "ponytail:sync": "bash scripts/sync-ponytail-agents.sh",
+    "ponytail:verify": "bash scripts/verify-ponytail-integration.sh"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.1",
+    "typescript": "^6.0.3"
+  }
+}

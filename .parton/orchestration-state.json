@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "repoRoot": "/root/PartOnUpdated",
+  "updatedAt": "2026-10-11T00:00:00Z",
+  "runtimeNotes": "Bun root; mobile npm; PM2 + host Postgres; no Docker",
+  "currentSlice": "S9",
+  "slices": {
+    "S0": { "status": "completed", "owner": "agent", "exit": "health ready" },
+    "S1": { "status": "completed", "owner": "agent", "exit": "OTP verify + /me" },
+    "S2": { "status": "completed", "owner": "agent", "exit": "mobile+admin+marketing shells" },
+    "S3": { "status": "completed", "owner": "agent", "exit": "onboarding wizards + manager join" },
+    "S4": { "status": "completed", "owner": "agent", "exit": "jobs publish, token hold, feed" },
+    "S5": { "status": "completed", "owner": "agent", "exit": "apply accept notify FCM" },
+    "S6": { "status": "completed", "owner": "agent", "exit": "3h confirm, check-in geofence, dispute, manual confirm, scheduler, mobile day-of screens" },
+    "S7": {
+      "status": "completed",
+      "owner": "agent",
+      "exit": "favorites REST+matching; ratings pending/POST+24h scheduler+profanity queue; worker documents S3 presign; migration 20261011000005; e2e s7"
+    },
+    "S8": {
+      "status": "completed",
+      "owner": "agent",
+      "exit": "admin SPA nav §3 wired to /api/v1/admin/*; devops-mcp @parton/devops-mcp; legal audit CSV/PDF; e2e s8; AdminGuardsModule exports AuthModule"
+    },
+    "S9": {
+      "status": "completed",
+      "owner": "agent",
+      "exit": "platform remote-config + SSE ticket/stream; BullMQ flag; OpenAPI CI artifact; k6 load skeleton; NGINX SSE; CASE-UX T-235–243 mobile copy/screens; e2e s9"
+    }
+  }
+}

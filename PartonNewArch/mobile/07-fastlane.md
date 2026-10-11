@@ -6,7 +6,7 @@
 **Platforms:** [06-ios-android-platforms.md](06-ios-android-platforms.md) · [ADR-0029](../backend/adr/0029-dual-platform-ios-android.md)  
 **Bare RN:** [ADR-0006](../backend/adr/0006-bare-react-native-no-expo.md) — **no EAS**
 
-> PartOn mobile uses **Fastlane** for CI builds, signing, and App Store / Play uploads. Both platforms share one Fastlane project under `apps/mobile/`.
+> PartOn mobile uses **Fastlane** for CI builds, signing, and App Store / Play uploads. Both platforms share one Fastlane project under `apps/mobile/`. **Bun is not used** under `apps/mobile` — install/run with **npm**; monorepo root uses Bun ([ADR-0040](../backend/adr/0040-bun-monorepo-exclude-mobile.md)).
 
 ---
 

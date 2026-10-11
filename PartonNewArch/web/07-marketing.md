@@ -123,7 +123,7 @@ try_files $uri $uri/ /index.html;   # SPA fallback only for client nav; prerende
 # index.html / legal HTML: short cache or must-revalidate
 ```
 
-Deploy: `pnpm --filter marketing build` (prerender) → sync `dist` → `nginx -t && reload`. Same release train as soft/public launch — not a follow-up ticket.
+Deploy: `bun --filter @parton/marketing run build` (prerender) → sync `dist` → `nginx -t && reload`. Same release train as soft/public launch — not a follow-up ticket.
 
 ---
 

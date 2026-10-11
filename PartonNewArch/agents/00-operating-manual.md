@@ -8,7 +8,7 @@
 
 ## Mission
 
-Turn `PartonNewArch/` + `parton_case_tests_tr.json` into a **running monorepo** (`apps/*`, `packages/*`) that passes case-tagged tests, with **zero unnecessary user interaction**.
+Turn `PartonNewArch/` + `parton_case_tests_tr.json` + NewArch catalogs (`cases/parton_case_tests_newarch_en.json` / `_tr.json`) into a **running monorepo** (`apps/*`, `packages/*`) that passes case-tagged tests, with **zero unnecessary user interaction**.
 
 ---
 

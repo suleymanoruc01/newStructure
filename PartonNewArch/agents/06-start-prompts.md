@@ -13,7 +13,7 @@ Read AGENTS.md, DESIGN.md, agents/10, agents/07, 08, 09, mobile/06, mobile/07, a
 Use agents/02 defaults — do not ask me to decide stack or gaps. No eng TODOs. No MVP stubs.
 UI/UX from DESIGN.md (cream/forest/orange — no purple-glow AI UI). Ground routes/screens/cases in files.
 No mocks/noops — real Postgres + SMS/FCM sandbox; fail boot if unset. Ask once if sandbox creds missing.
-Latest stable Nest 12 / TS 6 / Node LTS / RN / Zod / Prisma (npm view or ctx7). pnpm + Turborepo (ADR-0038).
+Latest stable Nest 12 / TS 6 / Node LTS / RN / Zod / Prisma (npm view or ctx7). Bun + Turborepo; mobile npm (ADR-0040).
 Mobile latest iOS+Android + Fastlane. Nest web PM2 + NGINX. Marketing production (web/07).
 Admin CASE-* (web/08), DevOps (web/09), MCP (web/10), legal audit CSV/PDF (web/11 / backend/22).
 Start S0→S9. Report after each slice; do not ask whether to continue.

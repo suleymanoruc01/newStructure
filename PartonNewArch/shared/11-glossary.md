@@ -75,6 +75,8 @@ Canonical terms for PartOn docs and code. Prefer these names in ADRs, cases, Ope
 | **RBAC** | Role-based access control |
 | **Resource scope** | Employer/branch/ownership filter on every protected route |
 | **AuthZ** | Authorization (server-enforced; UI may hide only) |
+| **Trust boundary** | Where a lower-trust principal’s input meets a control that must hold ([23](../backend/23-security-audit-program.md)) |
+| **Audit verdict** | `confirmed` (has severity), `needs_validation` (one missing fact, no severity), or `rejected` |
 
 ## Architecture shorthand
 

@@ -1,0 +1,156 @@
+{
+  "jobs": {
+    "title": "Uygun işler",
+    "untitled": "Vardiya",
+    "empty": "Şu an size uygun ilan yok. Profilinizi ve müsaitlik saatlerinizi güncel tutun.",
+    "distance": "{{km}} km",
+    "eligible": "Bu ilana başvurabilirsiniz.",
+    "notEligible": "Bu ilan için uygun değilsiniz.",
+    "apply": "Başvur",
+    "matchReasonsTitle": "Neden listede?",
+    "matchReasons": {
+      "sector_match": "Sektörünüzle uyumlu",
+      "occupation_match": "Mesleğinizle uyumlu",
+      "favorites_match": "Favori işveren ilişkisi",
+      "availability_match": "Müsaitlik saatlerinize uyuyor",
+      "distance_ranked": "Konumunuza yakın"
+    },
+    "navApplications": "Başvurularım",
+    "navAvailability": "Müsaitlik",
+    "navFavorites": "Favoriler",
+    "navDocuments": "Belgeler",
+    "navRatings": "Değerlendir",
+    "navProfile": "Profil"
+  },
+  "profile": {
+    "title": "Profilim",
+    "unnamed": "İş arayan",
+    "complete": "Profiliniz tamam — ilanlarla eşleşmeye hazırsınız.",
+    "incomplete": "Profilinizi tamamlayın",
+    "editCta": "Profili düzenle",
+    "editTitle": "Profili düzenle",
+    "editLead": "Kişisel bilgiler, konum ve sektörler eşleşmeyi doğrudan etkiler.",
+    "shortcuts": "Kısayollar",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "birthDate": "Doğum tarihi",
+    "homeLat": "Ev enlem",
+    "homeLng": "Ev boylam",
+    "sectors": "Sektör kodları (virgülle)",
+    "occupations": "Meslek kodları (virgülle)",
+    "nightShift": "Gece vardiyasına uygun",
+    "save": "Kaydet",
+    "invalidCoords": "Geçerli enlem ve boylam girin.",
+    "gender": {
+      "female": "Kadın",
+      "male": "Erkek",
+      "other": "Diğer",
+      "unspecified": "Belirtmek istemiyorum"
+    },
+    "missing": {
+      "name": "Ad ve soyad",
+      "birthDate": "Doğum tarihi",
+      "gender": "Cinsiyet",
+      "homeLocation": "Ev konumu",
+      "sectors": "Sektör",
+      "availability": "Müsaitlik"
+    }
+  },
+  "applications": {
+    "title": "Başvurularım",
+    "lead": "Her başvurunun durumu burada görünür; onay sonrası vardiya adımları açılır.",
+    "empty": "Henüz başvuru yok.",
+    "status": {
+      "pending": "İşveren incelemesinde",
+      "accepted": "Onaylandı — vardiya planlandı",
+      "rejected": "Reddedildi",
+      "withdrawn": "Geri çekildi",
+      "cancelled": "İptal edildi"
+    }
+  },
+  "favorites": {
+    "title": "Favoriler",
+    "lead": "Favori işverenlerinizin ilanları öncelikli gösterilir; karşılıklı favoriler özel ilanlara açılır.",
+    "empty": "Henüz favori eklemediniz.",
+    "employer": "İşveren",
+    "worker": "İş arayan",
+    "mutual": "Karşılıklı favori"
+  },
+  "shift": {
+    "availabilityTitle": "Gelebilir misiniz?",
+    "availabilityLead": "Vardiya başlamadan yaklaşık 3 saat önce gelişinizi teyit ediyoruz. Cevap vermezseniz koltuk serbest kalabilir.",
+    "canCome": "Gelebilirim",
+    "cannotCome": "Gelemiyorum",
+    "checkInTitle": "İşe geldim",
+    "checkInLead": "Check-in, vardiya başlangıcına yakın ve şube çevresinde yapılmalıdır. Konumunuz yalnızca doğrulama için kullanılır.",
+    "checkInCta": "Check-in yap",
+    "locationMissing": "Şube konumu yüklenemedi.",
+    "locationRationale": "Konum izni, şubede olduğunuzu doğrulamak için gereklidir; sürekli takip yapılmaz.",
+    "inShiftTitle": "Aktif vardiya",
+    "inShiftLead": "Vardiya süresince bu ekrandan check-out yapabilirsiniz.",
+    "checkedInAt": "Check-in: {{time}}",
+    "checkOutCta": "Check-out yap",
+    "checkOutTitle": "Vardiyayı bitir",
+    "checkOutLead": "Vardiyayı tamamladığınızı onaylayın; ardından değerlendirme adımı açılır.",
+    "checkOutNotes": "Not (isteğe bağlı)",
+    "checkOutConfirm": "Vardiyayı tamamla"
+  },
+  "availability": {
+    "title": "Müsaitlik saatleri",
+    "lead": "Eşleşme ve vardiya teyidi bu saatlere göre yapılır. Aynı günde çakışan aralık kaydedilemez.",
+    "addTitle": "Yeni aralık",
+    "dayOfWeek": "Haftanın günü (0=Pazar … 6=Cumartesi)",
+    "dayHint": "Örnek: 1 = Pazartesi",
+    "startTime": "Başlangıç (HH:MM)",
+    "endTime": "Bitiş (HH:MM)",
+    "crossesMidnight": "Gece yarısını geçiyor",
+    "overnight": "gece",
+    "addWindow": "Listeye ekle",
+    "remove": "Sil",
+    "save": "Kaydet",
+    "empty": "En az bir müsaitlik aralığı ekleyin.",
+    "overlapError": "Çakışan saat aralıkları kaydedilemez.",
+    "invalidDay": "Gün 0–6 arasında olmalı."
+  },
+  "dispute": {
+    "title": "Check-in itirazı",
+    "lead": "Konum doğrulaması başarısız olduysa kısa bir açıklama yazın; işveren manuel onay verebilir.",
+    "noteLabel": "Açıklama",
+    "noteTooShort": "En az 10 karakter yazın.",
+    "submit": "İtiraz gönder",
+    "openFromCheckIn": "İtiraz oluştur"
+  },
+  "documents": {
+    "title": "Belgelerim",
+    "lead": "Eşleşme ve başvuru için gerekli sertifikaları buradan yükleyin.",
+    "empty": "Henüz belge yok.",
+    "uploadCta": "Belge yükle",
+    "uploadTitle": "Belge yükle",
+    "uploadLead": "PDF veya görsel seçin; boyut ve format sunucuda doğrulanır.",
+    "pickFile": "Dosya seç",
+    "pickRequired": "Önce bir dosya seçin.",
+    "pickFailed": "Dosya seçilemedi.",
+    "pickCancelled": "Dosya seçimi iptal edildi.",
+    "uploadSubmit": "Yükle ve tamamla",
+    "types": {
+      "id_card": "Kimlik",
+      "criminal_record": "Adli sicil",
+      "health_report": "Sağlık raporu",
+      "food_hygiene": "Hijyen belgesi",
+      "drivers_license": "Ehliyet",
+      "other": "Diğer"
+    },
+    "status": {
+      "pending_upload": "Yükleme bekleniyor",
+      "uploaded": "Yüklendi"
+    }
+  },
+  "apply": {
+    "title": "Başvuruyu onayla",
+    "confirm": "Başvuruyu gönder",
+    "overlapTitle": "Saat çakışması",
+    "overlapWarn": "Başka bir başvurunuz veya onaylı vardiyanız bu ilanla çakışıyor.",
+    "overlapAck": "Çakışmayı anladım; yine de başvurmak istiyorum.",
+    "confirmDespiteOverlap": "Çakışmayı kabul ederek başvur"
+  }
+}

@@ -30,6 +30,7 @@ Read backend notes in order. Locked/open: [`../01-architecture-decisions.md`](..
 | 20 | [FCM messaging](20-fcm-messaging.md) | Firebase Cloud Messaging — tokens, inbox, outbox; UX in [shared/05](../shared/05-push-notifications-ux.md) |
 | 21 | [Client security](21-client-security.md) | Best Web + Mobile security baseline (storage, TLS, CSRF, headers) |
 | 22 | [Legal audit logger](22-legal-audit-logger.md) | KVKK accountability logger; admin CSV/PDF — ADR-0037 |
+| 23 | [Security audit program](23-security-audit-program.md) | Coverage-led audit method ([security-audit skill](https://github.com/cloudflare/security-audit-skill)); seed units, not findings |
 | — | [API contracts](../shared/12-api-contracts.md) | Envelope, errors, Zod — ADR-0027 |
 | — | [NFRs / SLOs](../05-quality-nfr.md) | Quality targets |
 | — | [Testing strategy](../06-testing-strategy.md) | Case-driven pyramid |
@@ -79,4 +80,4 @@ packages/
   design-tokens/           # color tokens — ADR-0038
 ```
 
-Module folder names are **final for v1** (AO-5). Tooling: **pnpm + Turborepo** (ADR-0038). Production coding: [`../agents/10-production-ready.md`](../agents/10-production-ready.md).
+Module folder names are **final for v1** (AO-5). Tooling: **Bun + Turborepo** at root (ADR-0040). Production coding: [`../agents/10-production-ready.md`](../agents/10-production-ready.md).

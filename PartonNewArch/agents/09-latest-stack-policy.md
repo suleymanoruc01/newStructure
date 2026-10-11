@@ -14,7 +14,7 @@
 1. **Latest stable inside the fence** — For each Adopt stack choice, install `@latest` (or current stable documented by the vendor) at scaffold time.  
 2. **Verify before pin** — Use `npm view <pkg> version`, official docs, or **ctx7** — never invent version numbers.  
 3. **Locked boundaries win** — Latest Expo is still banned; latest Nest is required.  
-4. **Prefer current LTS runtimes** — Node **current Active/Maintenance LTS** that satisfies Nest’s floor (Nest 12: Node **≥ 20.19** or **≥ 22.12**; CLI generate may need **≥ 22.22.3** / **24+**).  
+4. **Prefer current LTS runtimes** — Node **current Active/Maintenance LTS** that satisfies Nest’s floor (Nest 12: Node **≥ 20.19** or **≥ 22.12**; CLI generate may need **≥ 22.22.3** / **24+**). **Bun** for monorepo install/scripts (ADR-0040); **not** under `apps/mobile`.  
 5. **Majors: adopt when stable** — When Nest/Prisma/RN ship a new **stable** major compatible with our fence, **upgrade** (do not stay on old major “for comfort”).  
 6. **No alpha/beta as default** — Unless radar says Trial and a spike passed.  
 7. **Renovate/Dependabot** — Enable on the monorepo; group safe minors; major bumps follow this policy.  
@@ -42,7 +42,8 @@
 | **React (admin)** | Latest stable compatible with Vite + shadcn | |
 | **Vite** | Latest stable | |
 | **shadcn/ui** | Latest CLI / registry components | Dark default ADR-0014 |
-| **pnpm / Turborepo** | Latest stable | |
+| **Bun** (root workspace) | Latest stable | ADR-0040; `apps/mobile` uses **npm** |
+| **Turborepo** | Latest stable | |
 | **BullMQ / ioredis** | Latest stable when Stage B | Managed Redis |
 | **OpenTelemetry** | Latest stable Node SDK | |
 

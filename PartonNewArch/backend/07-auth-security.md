@@ -1,14 +1,14 @@
 # 07 — Auth & security (checklist)
 
 **Status:** `accepted` (checklist); full model in 18  
-**Last updated:** 2026-10-09  
+**Last updated:** 2026-10-11  
 **Deep dive:** [`18-auth-rbac.md`](18-auth-rbac.md) · [ADR-0011](adr/0011-auth-rbac.md)  
 **Client security (Web + Mobile):** [`21-client-security.md`](21-client-security.md) · [ADR-0018](adr/0018-client-security.md)  
 **Architecture:** [`../04-application-architecture.md`](../04-application-architecture.md) §10 · §15.2  
 **Privacy:** [`17-privacy-kvkk-gdpr.md`](17-privacy-kvkk-gdpr.md) · [ADR-0010](adr/0010-privacy-kvkk-gdpr.md)  
 **Legacy ref:** Firebase Auth + OTP repos; `CASE-AUTH`, `CASE-SECURITY`, `CASE-ABUSE`
 
-This file is the **implementation checklist**. For identity model, RBAC matrices, context switch, and guard pipeline, use **[18 — Auth & RBAC](18-auth-rbac.md)**.
+This file is the **implementation checklist**. For identity model, RBAC matrices, context switch, and guard pipeline, use **[18 — Auth & RBAC](18-auth-rbac.md)**. For how those controls are audited — verdicts, companions, and seed coverage units — use **[23 — Security audit program](23-security-audit-program.md)**. An unchecked box below is an implementation gap, not a confirmed finding.
 
 ## Goals
 

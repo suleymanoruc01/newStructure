@@ -236,7 +236,7 @@ Align with [18-auth-rbac](../backend/18-auth-rbac.md) and SSE cookie/ticket note
 
 | Piece | Responsibility |
 | --- | --- |
-| Build pipeline | `pnpm --filter admin build` → output to Nest `public/admin` or `client/admin/dist` |
+| Build pipeline | `bun --filter @parton/admin run build` → output to Nest `public/admin` or `client/admin/dist` |
 | Static middleware | Serve assets; SPA fallback for `/admin/*` |
 | API | Unchanged `/api/v1` with CORS only if admin ever split host |
 | Dev DX | Vite `@` alias; proxy `/api` → Nest; hot reload |

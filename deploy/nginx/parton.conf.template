@@ -1,0 +1,54 @@
+# PartOn NGINX template — copy to /etc/nginx/sites-available and adjust TLS paths.
+# Upstream: Nest via PM2 on 127.0.0.1:3000
+
+upstream parton_api {
+  server 127.0.0.1:3000;
+  keepalive 32;
+}
+
+server {
+  listen 80;
+  server_name www.parton.com.tr parton.com.tr;
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl http2;
+  server_name www.parton.com.tr;
+
+  # ssl_certificate     /etc/ssl/certs/parton.crt;
+  # ssl_certificate_key /etc/ssl/private/parton.key;
+  include snippets/ssl-params.conf;
+
+  root /var/www/parton/marketing;
+  index index.html;
+
+  location /api/v1/realtime/ {
+    include snippets/proxy-params.conf;
+    proxy_buffering off;
+    proxy_cache off;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+    chunked_transfer_encoding off;
+    proxy_pass http://parton_api;
+  }
+
+  location /api/ {
+    include snippets/proxy-params.conf;
+    proxy_pass http://parton_api;
+  }
+
+  location /admin/ {
+    include snippets/proxy-params.conf;
+    proxy_pass http://parton_api;
+  }
+
+  location /health/ {
+    include snippets/proxy-params.conf;
+    proxy_pass http://parton_api;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}

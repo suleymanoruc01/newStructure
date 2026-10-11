@@ -1,0 +1,83 @@
+default_platform(:ios)
+
+def upload_ios_enabled?
+  !ENV.fetch("ASC_API_KEY_PATH", "").empty? ||
+    !ENV.fetch("FASTLANE_APPLE_ID", "").empty?
+end
+
+def upload_android_enabled?
+  !ENV.fetch("PLAY_JSON_KEY_PATH", "").empty?
+end
+
+platform :ios do
+  desc "Build and upload to TestFlight (or internal)"
+  lane :beta do
+    setup_ci if ENV["CI"]
+    increment_build_number(xcodeproj: "ios/PartonMobile.xcodeproj")
+    build_app(
+      workspace: "ios/PartonMobile.xcworkspace",
+      scheme: "PartonMobile",
+      export_method: "app-store"
+    )
+    if upload_ios_enabled?
+      upload_to_testflight(skip_waiting_for_build_processing: true)
+    else
+      UI.important("Skipping TestFlight upload — set ASC_API_KEY_PATH or FASTLANE_APPLE_ID")
+    end
+  end
+
+  desc "App Store production train"
+  lane :release do
+    setup_ci if ENV["CI"]
+    build_app(
+      workspace: "ios/PartonMobile.xcworkspace",
+      scheme: "PartonMobile",
+      export_method: "app-store"
+    )
+    if upload_ios_enabled?
+      upload_to_app_store
+    else
+      UI.important("Skipping App Store upload — set ASC_API_KEY_PATH or FASTLANE_APPLE_ID")
+    end
+  end
+end
+
+platform :android do
+  desc "Build AAB and upload to Play internal/closed testing"
+  lane :beta do
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "android"
+    )
+    aab_path = lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+    if upload_android_enabled?
+      upload_to_play_store(
+        track: "internal",
+        aab: aab_path,
+        json_key: ENV["PLAY_JSON_KEY_PATH"]
+      )
+    else
+      UI.important("Skipping Play upload — set PLAY_JSON_KEY_PATH")
+    end
+  end
+
+  desc "Play production train"
+  lane :release do
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "android"
+    )
+    aab_path = lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+    if upload_android_enabled?
+      upload_to_play_store(
+        track: "production",
+        aab: aab_path,
+        json_key: ENV["PLAY_JSON_KEY_PATH"]
+      )
+    else
+      UI.important("Skipping Play upload — set PLAY_JSON_KEY_PATH")
+    end
+  end
+end

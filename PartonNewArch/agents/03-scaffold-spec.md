@@ -78,10 +78,10 @@
 │   ├── api-contracts/
 │   ├── shared-utils/
 │   └── design-tokens/
-├── docker-compose.yml
-├── pnpm-workspace.yaml
+├── docs/DEV.md                 # local dev: PM2, host Postgres (no Docker)
+├── bun.lock                      # Bun workspace lock (mobile uses npm lock under apps/mobile)
 ├── turbo.json
-├── package.json
+├── package.json                  # workspaces: backend, admin, marketing, devops-mcp, packages/*
 ├── .env.example
 ├── AGENTS.md                    # copy or symlink from PartonNewArch/AGENTS.md
 └── CLAUDE.md
@@ -96,7 +96,8 @@
 | Tool | Version target |
 | --- | --- |
 | Node | Current LTS meeting Nest 12 floor (**≥ 20.19** / **≥ 22.12**; prefer **22/24 LTS**) |
-| pnpm | **Latest** stable |
+| Bun | **Latest** stable (root workspace only — ADR-0040) |
+| npm | **Latest** stable in `apps/mobile` only |
 | NestJS | **12.x** latest (`@nestjs/core@latest`) |
 | TypeScript | **6.x** latest (Nest 12) |
 | Prisma | **Latest** stable + `@prisma/adapter-pg` |
@@ -115,29 +116,32 @@ If a version conflicts at install time: pick **newest** compatible set **without
 
 ## 3. Workspace files (minimal)
 
-### `pnpm-workspace.yaml`
+### Root `package.json` (workspaces + scripts)
 
-```yaml
-packages:
-  - "apps/*"
-  - "packages/*"
-```
-
-### Root `package.json` scripts
+`workspaces` must **not** include `apps/mobile` (npm + Fastlane there). Example:
 
 ```json
 {
+  "packageManager": "bun@<latest>",
+  "workspaces": [
+    "apps/backend",
+    "apps/admin",
+    "apps/marketing",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "db:migrate": "pnpm --filter @parton/backend exec prisma migrate dev",
-    "db:seed": "pnpm --filter @parton/backend exec prisma db seed"
+    "db:migrate": "bun run --filter '@parton/backend' db:migrate",
+    "db:seed": "bun run --filter '@parton/backend' db:seed"
   }
 }
 ```
+
+Mobile: `cd apps/mobile && npm install` — shared packages via `file:../../packages/...`.
 
 ### `turbo.json`
 
@@ -202,12 +206,17 @@ Pipeline: `build` depends on `^build`; `test` depends on `build` for contracts; 
 
 ---
 
-## 7. Docker Compose
+## 7. Local data services (no Docker)
 
-Services: `postgres:18`, **`minio`** (documents), optional `redis` (Stage B).  
-Backend `DATABASE_URL` points at compose.  
+| Service | Stance |
+| --- | --- |
+| PostgreSQL 18+ | **Host install or managed** — `DATABASE_URL` in `.env` |
+| Redis | Host or managed when Stage B BullMQ is enabled |
+| Object storage | S3-compatible (managed bucket or host-run MinIO) — not shipped as Compose in this repo |
+| Nest process | **PM2** staging/prod — `apps/backend/ecosystem.config.cjs` · [web/05](../web/05-pm2.md) |
+
 **SMS + FCM:** real sandbox credentials in `.env` — Nest **fails boot** if missing ([08-no-mocks](08-no-mocks-fully-functional.md)).  
-No production cloud required for S0–S8; sandbox projects **are** required for auth/notify slices.
+Ops runbook: [`../../docs/DEV.md`](../../docs/DEV.md).
 
 ---
 

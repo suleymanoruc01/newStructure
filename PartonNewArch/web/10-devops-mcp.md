@@ -76,7 +76,7 @@ Fail boot if credential missing ([agents/08](../agents/08-no-mocks-fully-functio
 
 Document in `apps/devops-mcp/README.md`:
 
-- Cursor MCP config pointing at `pnpm --filter @parton/devops-mcp exec …` (or `node dist/index.js`)  
+- Cursor MCP config pointing at `bun --filter @parton/devops-mcp run start` (or `node dist/index.js`)  
 - Claude Code MCP registration  
 
 Agents using PartOn DevOps **must** prefer these tools over inventing curl scrapes of `/admin`.
@@ -114,3 +114,4 @@ Same rules as ADR-0035: no OTP, JWT, full phone, document bodies in tool respons
 - [ADR-0036](../backend/adr/0036-admin-devops-mcp.md)  
 - DevOps UI: [`09-admin-devops.md`](09-admin-devops.md)  
 - Observability: [`../backend/09-observability.md`](../backend/09-observability.md)  
+- Security audit (MCP trust class): [`../backend/23-security-audit-program.md`](../backend/23-security-audit-program.md)  

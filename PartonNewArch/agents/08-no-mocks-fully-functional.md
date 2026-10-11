@@ -58,9 +58,9 @@
 
 | Dep | How |
 | --- | --- |
-| Postgres 18 | Docker Compose — required |
-| Redis | Compose when Stage B enabled — real BullMQ |
-| Object storage | **MinIO** in Compose (S3 API) — not a fake Map |
+| Postgres 18 | Host or managed instance — required |
+| Redis | Host or managed when Stage B enabled — real BullMQ |
+| Object storage | **S3-compatible** endpoint (managed or host MinIO) — not a fake Map |
 | SMS | Real provider **test/sandbox** credentials in `.env` (Netgsm/Twilio/etc. per product pick) |
 | FCM | Real Firebase **project** service account JSON path in `.env` |
 | Mobile push verify | Send to a dev device token or FCM topic dry-run **API** that hits Google |

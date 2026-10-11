@@ -1,0 +1,41 @@
+{
+  "worker": {
+    "title": "Profil kurulumu",
+    "timeBudget": "3 kısa adım; çoğu kullanıcı 5 dakikadan kısa sürede bitirir.",
+    "step": "Adım {{current}} / {{total}}",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "birthDate": "Doğum tarihi",
+    "gender": "Cinsiyet",
+    "sectors": "Sektörler (virgülle)",
+    "nightShiftOn": "Gece vardiyası: uygun",
+    "nightShiftOff": "Gece vardiyası: uygun değil",
+    "latitude": "Ev konumu — enlem",
+    "longitude": "Ev konumu — boylam",
+    "availabilityHint": "Hafta içi 09:00–17:00 müsaitliği kaydedilecek.",
+    "finish": "Profili tamamla",
+    "invalidCoords": "Geçerli enlem ve boylam girin."
+  },
+  "employer": {
+    "businessTitle": "İşletme bilgileri",
+    "businessSubtitle": "Firma kaydını oluşturun.",
+    "legalName": "Ticari unvan",
+    "tradingName": "Marka adı (isteğe bağlı)",
+    "taxId": "Vergi numarası",
+    "industries": "Sektörler (virgülle)",
+    "branchTitle": "İlk şube",
+    "branchSubtitle": "Çalışanların konumunu doğrulamak için şube adresi gerekli.",
+    "branchName": "Şube adı",
+    "address": "Adres",
+    "city": "İl",
+    "latitude": "Enlem",
+    "longitude": "Boylam",
+    "finish": "Kurulumu bitir"
+  },
+  "manager": {
+    "title": "Şube yöneticisi kodu",
+    "subtitle": "İşvereninizden aldığınız kodu girin.",
+    "codeLabel": "Yönetici kodu",
+    "submit": "Şubeye bağlan"
+  }
+}

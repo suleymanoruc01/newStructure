@@ -1,0 +1,15 @@
+{
+  "appName": "PartOn",
+  "continue": "Devam",
+  "back": "Geri",
+  "skip": "Atla",
+  "retry": "Tekrar dene",
+  "loading": "Yükleniyor…",
+  "cancel": "İptal",
+  "refresh": "Yenile",
+  "networkError": "Bağlantı hatası. Lütfen tekrar deneyin.",
+  "maintenance": "PartOn bakım modunda. Lütfen biraz sonra tekrar deneyin.",
+  "forceUpdate": "Uygulamanızı güncellemeniz gerekiyor. Mağazadan en son sürümü yükleyin.",
+  "yes": "Evet",
+  "no": "Hayır"
+}

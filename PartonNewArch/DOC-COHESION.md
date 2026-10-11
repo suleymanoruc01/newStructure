@@ -1,7 +1,7 @@
 # Documentation cohesion model
 
 **Status:** `accepted`  
-**Last updated:** 2026-10-10  
+**Last updated:** 2026-10-11  
 **Purpose:** Keep PartonNewArch **wired, coherent, and non-contradictory**.
 
 ---
@@ -39,16 +39,18 @@ flowchart TB
   HIDX --> H04
   HIDX --> HAG
   CA --> JSON[parton_case_tests_tr.json]
+  CA --> NAEN[cases/parton_case_tests_newarch_en.json]
+  CA --> NATR[cases/parton_case_tests_newarch_tr.json]
 ```
 
 | Family | Prefix | Cohesion rule |
 | --- | --- | --- |
-| Backend deep-dives | `backend/01`–`22` | Module names match `04-domain-modules` |
+| Backend deep-dives | `backend/01`–`23` | Module names match `04-domain-modules`; [23](backend/23-security-audit-program.md) is the audit method |
 | ADRs | `backend/adr/00xx` | Listed in adr/README + 01 + 04 §18 (through **0039**) |
 | Design system | `DESIGN.md` | Stitch format; tokens = shared/01; ADR-0039 |
 | Shared cross-cuts | `shared/01`–`12` | Linked from 04 §15.x and shared/README |
 | Mobile / web | `mobile/*` `web/*` | Screen IDs unique; recipes R1–R8 |
-| Cases | `cases/*` | 248 ids match JSON; UI mandate |
+| Cases | `cases/*` | 248 ids match `parton_case_tests_tr.json` + NewArch TR/EN catalogs; UI mandate |
 | Agents | `agents/00`–`10` | Defaults ⊆ gaps; bans ⊆ ADRs; no-mocks; latest-stack; **production-ready** |
 | Quality/ops | `05` `06` `07` | Point at 04 + DOC-INDEX |
 
@@ -103,16 +105,17 @@ Do not say “open” for AO-6/AO-8 — they are **accepted** via ADR-0027.
 16. **Admin DevOps:** unified error tracking + releases — [ADR-0035](backend/adr/0035-admin-devops-error-tracking.md) · [web/09](web/09-admin-devops.md).  
 17. **Admin DevOps MCP:** authenticated agent tools — [ADR-0036](backend/adr/0036-admin-devops-mcp.md) · [web/10](web/10-devops-mcp.md).  
 18. **Legal audit logger:** append-only + admin CSV/PDF — [ADR-0037](backend/adr/0037-legal-audit-logger.md) · [backend/22](backend/22-legal-audit-logger.md) · [web/11](web/11-legal-audit-reports.md).  
-19. **Monorepo tooling:** pnpm + Turborepo + locked packages — [ADR-0038](backend/adr/0038-monorepo-tooling.md).  
+19. **Monorepo tooling:** Bun + Turborepo (root); mobile npm-only — [ADR-0040](backend/adr/0040-bun-monorepo-exclude-mobile.md).  
 20. **Production coding gate:** docs ready for full-stack ship — [agents/10](agents/10-production-ready.md).  
-21. **DESIGN.md:** visual SoR for agents — [DESIGN.md](DESIGN.md) · [ADR-0039](backend/adr/0039-design-md.md); structure from [awesome-design-md](https://github.com/voltagent/awesome-design-md).
+21. **DESIGN.md:** visual SoR for agents — [DESIGN.md](DESIGN.md) · [ADR-0039](backend/adr/0039-design-md.md); structure from [awesome-design-md](https://github.com/voltagent/awesome-design-md).  
+22. **Security audit:** coverage method only — [backend/23](backend/23-security-audit-program.md) via [security-audit-skill](https://github.com/cloudflare/security-audit-skill). Seed units are not findings.
 
 ---
 
 ## 6. Quick cohesion audit (run when docs drift)
 
 ```text
-[x] ADR files on disk == adr/README table == 04 §18 (0001–0039)
+[x] ADR files on disk == adr/README table == 04 §18 (0001–0040)
 [x] DESIGN.md present + ADR-0039; 09/10/01-colors point at it
 [x] README architecture snapshot matches 01 locked table
 [x] No “AO-6 open” / “AO-8 proposed” leftover (except history strikethrough)
@@ -124,7 +127,7 @@ Do not say “open” for AO-6/AO-8 — they are **accepted** via ADR-0027.
 [x] Domain modules AO-5 final; Prisma ADR-0003 accepted; AO-7 ADR-0038 accepted
 ```
 
-**Last cohesion pass:** 2026-10-10
+**Last cohesion pass:** 2026-10-11
 
 ---
 

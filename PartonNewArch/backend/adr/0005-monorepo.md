@@ -15,7 +15,7 @@ Develop PartOn in a **single monorepo**:
 - `apps/backend` — NestJS modular monolith (REST `/api/v1` + admin panel)
 - `packages/*` — shared contracts and platform-agnostic helpers only
 
-Tooling: **pnpm + Turborepo** + locked packages — [ADR-0038](0038-monorepo-tooling.md) (closes AO-7). CI path filters for mobile vs backend — AO-1 **accepted** ([agents/02](../../agents/02-defaults-and-non-asks.md)).
+Tooling: **Bun + Turborepo** + locked packages — [ADR-0040](0040-bun-monorepo-exclude-mobile.md) (closes AO-7); **npm** in `apps/mobile`. CI path filters for mobile vs backend — AO-1 **accepted** ([agents/02](../../agents/02-defaults-and-non-asks.md)).
 
 ## Alternatives
 

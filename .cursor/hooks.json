@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "node \"scripts/run-ponytail-hook.mjs\" activate",
+        "timeout": 5
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "node \"scripts/run-ponytail-hook.mjs\" mode-tracker",
+        "timeout": 5
+      }
+    ]
+  }
+}

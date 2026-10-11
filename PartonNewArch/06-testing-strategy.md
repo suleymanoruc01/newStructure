@@ -1,8 +1,8 @@
 # 06 — Testing strategy (case-driven)
 
 **Status:** `accepted` (strategy)  
-**Last updated:** 2026-10-09  
-**Acceptance SoR:** [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json) · [`cases/`](cases/)  
+**Last updated:** 2026-10-11  
+**Acceptance SoR:** [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json) (IDs) · NewArch scenarios [`cases/parton_case_tests_newarch_en.json`](cases/parton_case_tests_newarch_en.json) / [`cases/parton_case_tests_newarch_tr.json`](cases/parton_case_tests_newarch_tr.json) · [`cases/`](cases/)  
 **Architecture:** [`04-application-architecture.md`](04-application-architecture.md)  
 **Index:** [`DOC-INDEX.md`](DOC-INDEX.md)
 
@@ -43,10 +43,13 @@ flowchart TB
 | Nest PR | Domain/API tests for touched rules |
 | UI PR | State tests (loading/empty/error/blocked) + recipe |
 | Notify | Outbox + inbox + FCM sandbox send (or recorded provider message id) |
-| Gap cases | Mark `skip` + link gap id until product fork closes |
+| Gap / Hold cases | Mark `skip` + gap id. v1 OTP-only skips: **T-002**, **T-008**, **T-248** ([agents/02](agents/02-defaults-and-non-asks.md)) |
+| NewArch catalog | Use `architecture.rest`, `screens`, `error_codes`, `notify_template` from the EN/TR JSON when writing tests |
 | Matrix | Update [`cases/00-coverage-matrix`](cases/00-coverage-matrix.md) when coverage level changes |
 
 Incomplete: Nest green without mapped screen/components ([UI mandate](cases/03-ui-coverage-mandate.md)).
+
+Case tests and the security audit answer different questions. A green `@T-244` shows one path enforces scope. [23 — Security audit program](backend/23-security-audit-program.md) still requires a unit per surface × boundary × attack class, and only a source-backed `confirmed` result is a vulnerability.
 
 ---
 
@@ -95,4 +98,5 @@ See [`07-environments-and-ops.md`](07-environments-and-ops.md).
 
 - E2E journeys: [`cases/02-e2e-journeys.md`](cases/02-e2e-journeys.md)  
 - NFRs: [`05-quality-nfr.md`](05-quality-nfr.md)  
+- Security audit: [`backend/23-security-audit-program.md`](backend/23-security-audit-program.md)  
 - Gap backlog: [`cases/01-gap-backlog.md`](cases/01-gap-backlog.md)  

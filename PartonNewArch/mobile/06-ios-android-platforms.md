@@ -22,6 +22,7 @@
 | Feature parity | Same cases, screens, REST, AuthZ; platform-idiomatic chrome only |
 | CI | **Both** `ios` and `android` build jobs green |
 | Store | **Fastlane** → App Store + Play — [07](07-fastlane.md) · ADR-0030 |
+| JS package manager | **`npm` in `apps/mobile` only** — no Bun ([ADR-0040](../backend/adr/0040-bun-monorepo-exclude-mobile.md)) |
 
 ---
 

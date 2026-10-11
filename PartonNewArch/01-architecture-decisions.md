@@ -73,7 +73,7 @@ This file records **locked** starting decisions and **open** topics. Feature sco
 | Admin DevOps | Error tracking (all apps) + releases/health — [ADR-0035](backend/adr/0035-admin-devops-error-tracking.md) · [web/09](web/09-admin-devops.md) |
 | Admin DevOps MCP | MCP server for agent triage (same Nest SoR) — [ADR-0036](backend/adr/0036-admin-devops-mcp.md) · [web/10](web/10-devops-mcp.md) |
 | Legal audit logger | Append-only `legal_audit_events` + admin **CSV/PDF** reports — [ADR-0037](backend/adr/0037-legal-audit-logger.md) · [backend/22](backend/22-legal-audit-logger.md) · [web/11](web/11-legal-audit-reports.md) |
-| Monorepo tooling | **pnpm** + **Turborepo** + locked packages — [ADR-0038](backend/adr/0038-monorepo-tooling.md) |
+| Monorepo tooling | **Bun** + **Turborepo** (root); **`apps/mobile` = npm only** — [ADR-0040](backend/adr/0040-bun-monorepo-exclude-mobile.md) |
 | Docs readiness | **Production-ready for full-stack coding** — [agents/10](agents/10-production-ready.md) |
 | Visual design system | **[`DESIGN.md`](DESIGN.md)** (Stitch / [awesome-design-md](https://github.com/voltagent/awesome-design-md) format) — [ADR-0039](backend/adr/0039-design-md.md) |
 
@@ -99,7 +99,7 @@ This file records **locked** starting decisions and **open** topics. Feature sco
 | AO-4 | Formal multi-AZ / contractual SLOs — eng targets in [05-quality-nfr](05-quality-nfr.md) are **implementable defaults**; region → AO-10 |
 | AO-5 | ~~Domain modules~~ → **Accepted for v1:** names in [04-domain-modules](backend/04-domain-modules.md) |
 | AO-6 | ~~Error envelope, pagination, OpenAPI~~ → **Accepted** — [ADR-0027](backend/adr/0027-api-contracts-baseline.md) |
-| AO-7 | ~~Tooling / packages~~ → **Accepted:** pnpm + Turborepo + `api-contracts` / `shared-utils` / `design-tokens` — [ADR-0038](backend/adr/0038-monorepo-tooling.md) |
+| AO-7 | ~~Tooling / packages~~ → **Accepted:** Bun + Turborepo + `api-contracts` / `shared-utils` / `design-tokens`; mobile **npm** — [ADR-0040](backend/adr/0040-bun-monorepo-exclude-mobile.md) |
 | AO-8 | ~~Validation library~~ → **Accepted Zod 4** — [ADR-0027](backend/adr/0027-api-contracts-baseline.md); response runtime validation optional |
 | AO-9 | ~~Mobile release tooling~~ → **Accepted: Fastlane** — [ADR-0030](backend/adr/0030-fastlane-mobile-release.md) |
 | AO-10 | Cloud vendor brand (AWS/GCP/…) — **only remaining open**; **does not block** coding — Compose + PM2 + NGINX ([07-environments](07-environments-and-ops.md) · [agents/10](agents/10-production-ready.md)) |
@@ -135,7 +135,7 @@ Technology radar: [`03-tech-radar-2026.md`](03-tech-radar-2026.md)
 | ADR-0027…0029 | API contracts · latest stable · dual-platform |
 | ADR-0030…0033 | Fastlane · PM2 · NGINX · marketing |
 | ADR-0034…0037 | Admin CASE-* · DevOps · MCP · legal audit CSV/PDF |
-| ADR-0038 | pnpm + Turborepo + locked packages |
+| ADR-0040 | Bun + Turborepo; mobile npm + Fastlane |
 | ADR-0039 | DESIGN.md visual SoR (Stitch / awesome-design-md) |
 | Docs readiness | [agents/10-production-ready.md](agents/10-production-ready.md) |
 

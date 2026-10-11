@@ -37,7 +37,7 @@
 | Jobs | Outbox Stage A → BullMQ Stage B; RabbitMQ Hold |
 | Realtime | FCM background; SSE foreground |
 | Auth | Phone OTP + JWT; manager first-class AuthZ |
-| Tooling | **pnpm** + **Turborepo**; packages `api-contracts`, `shared-utils`, `design-tokens` |
+| Tooling | **Bun** + **Turborepo** (root); **npm** in `apps/mobile`; packages `api-contracts`, `shared-utils`, `design-tokens` — ADR-0040 |
 | Ops | PM2 + NGINX; Compose local/staging DB; Admin DevOps + MCP; legal audit |
 | Clients support | Last **2** native releases (`X-API-Deprecated` when sunsetting) |
 | Retention | Locked matrix in [17](../backend/17-privacy-kvkk-gdpr.md) / [22](../backend/22-legal-audit-logger.md) |

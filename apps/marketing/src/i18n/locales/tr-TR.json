@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "pricing": "Fiyatlandırma",
+    "privacy": "Gizlilik",
+    "terms": "Kullanım koşulları",
+    "employerLogin": "İşveren girişi"
+  },
+  "footer": {
+    "tagline": "Türkiye'nin vardiya pazaryeri.",
+    "legal": "Yasal",
+    "contact": "İletişim",
+    "contactEmail": "destek@parton.com.tr",
+    "rights": "© {{year}} PartOn. Tüm hakları saklıdır."
+  },
+  "landing": {
+    "metaTitle": "PartOn — Vardiya işlerini bul, ekiplerini doldur",
+    "metaDescription": "PartOn ile iş arayanlar kısa vardiyaları keşfeder; işverenler doğrulanmış ekiplerle koltuklarını doldurur.",
+    "heroTitle": "Güne hazır vardiya işleri",
+    "heroSubtitle": "İş arayanlar için mobil uygulama; işverenler için net jeton modeli ve operasyonel güven.",
+    "ctaDownload": "Uygulamayı indir",
+    "ctaEmployer": "İşveren girişi",
+    "sectionWorkersTitle": "İş arayanlar için",
+    "sectionWorkersBody": "Tek dokunuşla başvuru, 3 saatlik onay penceresi ve şube bazlı check-in ile sahada güven.",
+    "sectionEmployersTitle": "İşverenler için",
+    "sectionEmployersBody": "İlan yayınla, jeton rezervasyonu ile kontrollü harcama yap, başvuruları tek panelden yönet.",
+    "bandTitle": "Gerçek iş, gerçek ekip",
+    "bandBody": "PartOn krem ve orman paletiyle gün ışığında okunabilir; zaman baskısında sakin kalır."
+  },
+  "pricing": {
+    "metaTitle": "PartOn Fiyatlandırma — Jeton modeli",
+    "metaDescription": "İşverenler için jeton ve provizyon modelinin özeti.",
+    "title": "Jeton ile öngörülebilir maliyet",
+    "intro": "Her yayınlanan vardiya için jeton rezervasyonu yapılır; kabul edilen başvurularla maliyet netleşir.",
+    "tierStarter": "Başlangıç",
+    "tierStarterDesc": "Tek şube, düşük hacimli işletmeler için.",
+    "tierGrowth": "Büyüme",
+    "tierGrowthDesc": "Çok şubeli işletmeler ve düzenli vardiya ihtiyacı.",
+    "featureHold": "Yayın öncesi jeton hold",
+    "featureRelease": "Kabul sonrası otomatik mahsuplaşma",
+    "featureTopUp": "Anlık jeton yükleme (ödeme entegrasyonu S7)",
+    "ctaEmployer": "İşveren hesabı aç"
+  },
+  "legal": {
+    "privacyTitle": "Gizlilik politikası",
+    "termsTitle": "Kullanım koşulları",
+    "version": "Sürüm: {{version}}",
+    "privacyMeta": "PartOn gizlilik politikası — KVKK uyumlu veri işleme özeti.",
+    "termsMeta": "PartOn kullanım koşulları — platform kuralları ve sorumluluklar."
+  },
+  "legalPrivacy": {
+    "p1": "PartOn, 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında veri sorumlusu olarak hareket eder.",
+    "p2": "Telefon numarası, konum (check-in anında), belge yüklemeleri ve işlem kayıtları hizmetin ifası için işlenir.",
+    "p3": "Verilerinize erişim, düzeltme ve silme taleplerinizi destek kanalından iletebilirsiniz."
+  },
+  "legalTerms": {
+    "p1": "Platformu kullanarak iş arayan ve işveren rollerindeki yükümlülükleri kabul edersiniz.",
+    "p2": "Yanıltıcı ilan, sahte check-in ve kötüye kullanım hesap kısıtlaması ile sonuçlanabilir.",
+    "p3": "Güncel politika sürümleri uygulama içi onay akışı ile bildirilir."
+  }
+}

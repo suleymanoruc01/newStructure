@@ -12,9 +12,9 @@
 
 | Rank | Source | Use for |
 | --- | --- | --- |
-| 1 | `parton_case_tests_tr.json` + `cases/groups/CASE-*.md` | What must pass |
+| 1 | `parton_case_tests_tr.json` + NewArch catalogs `cases/parton_case_tests_newarch_en.json` / `_tr.json` + `cases/groups/CASE-*.md` | What must pass |
 | 2 | `backend/adr/ADR-*.md` + `01-architecture-decisions.md` | Locked stack / bans |
-| 3 | Domain deep-dives (`backend/11`…`21`, `shared/*`) | Rules & contracts |
+| 3 | Domain deep-dives (`backend/11`…`23`, `shared/*`) | Rules & contracts; [23](../backend/23-security-audit-program.md) is audit method, not a finding |
 | 4 | Screen catalogs (`mobile/screens/*`, `web/screens/*`) | Screen IDs & UI |
 | 5 | `agents/02-defaults-and-non-asks.md` | Open forks only |
 | 6 | Existing code under `apps/` / `packages/` | Current implementation |
@@ -108,7 +108,7 @@ When summarizing work:
 - [ ] New `error.code` in `shared/12` or contracts enum  
 - [ ] No banned dependency in `package.json` (expo, amqplib as primary bus, etc.)  
 - [ ] No import path `apps/backend` from mobile  
-- [ ] Case IDs in tests exist in `parton_case_tests_tr.json`  
+- [ ] Case IDs in tests exist in `parton_case_tests_tr.json` / NewArch catalogs  
 
 ---
 

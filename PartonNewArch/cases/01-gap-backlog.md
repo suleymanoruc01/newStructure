@@ -1,7 +1,7 @@
 # 01 — Gap backlog (from case catalog)
 
 **Status:** `accepted` (gaps → agent defaults; production coding ready) · [agents/10](../agents/10-production-ready.md)
-**Last updated:** 2026-10-10  
+**Last updated:** 2026-10-11  
 **Derived from:** all 248 cases in `parton_case_tests_tr.json`  
 **UI mandate:** [`03-ui-coverage-mandate.md`](03-ui-coverage-mandate.md)
 
@@ -11,13 +11,13 @@ Items below were under-specified or missing in the first PartonNewArch pass. Clo
 
 | Gap ID | Cases | Capability | Arch action |
 | --- | --- | --- | --- |
-| `gap-tokens-module` | T-149–T-163, T-203, T-209, T-214, T-220, T-225 | First-class token ledger (hold/capture/release) | Add [`../backend/11-tokens-and-provision.md`](../backend/11-tokens-and-provision.md); Nest module `tokens` |
+| `gap-tokens-module` | T-149–T-163, T-203, T-209, T-214, T-220, T-225 | First-class token ledger (hold/capture/release) | **Partial (2026-10-11):** Nest `tokens` module + hold/capture/release e2e (T-154–T-157, T-163); top-up provider T-161 / perf T-225 still open |
 | `gap-matching-rules-engine` | T-058–T-079 | Server hard filters + ranking | Add [`../backend/12-matching-rules.md`](../backend/12-matching-rules.md) |
 | `gap-checkin-dispute` | T-134, T-135, T-210–T-214 | Manual confirm + worker dispute after GPS fail | Screens + `shifts`/`moderation` APIs |
-| `gap-favorites-only-job` | T-056–T-057, T-075, T-168–T-171, T-215–T-218 | Job visibility = favorites audience | Job flag + matching filter + UI toggle |
+| `gap-favorites-only-job` | T-056–T-057, T-075, T-168–T-171, T-215–T-218 | Job visibility = favorites audience | **Partial (2026-10-11):** REST publish + feed filter + `job.favorites_only` inbox on publish; mobile employer toggle + T-168–T-171 UI still open |
 | `gap-geofence-policy` | T-125–T-127, T-136–T-148 | Radii 50/100m, indoor softness, mock GPS | [`../backend/13-location-policy.md`](../backend/13-location-policy.md) |
 | `gap-firm-verification` | T-013, T-015 | Tax ID uniqueness; block publish until verified | `employers.verification_status` gate on `jobs.publish` |
-| `gap-documents` | T-022–T-024, T-045, T-066–T-067, T-249 | Worker docs + job-required docs + secure download | `workers/documents` + signed URLs |
+| `gap-documents` | T-022–T-024, T-045, T-066–T-067, T-249 | Worker docs + job-required docs + secure download | **Partial (2026-10-11):** required types persist on the job; feed hides workers missing them and apply returns `JOB_NOT_APPLICABLE`; uploaded type makes the job eligible. Signed download ACL is in place. T-022–T-024 upload screens remain |
 | `gap-profile-demographics` | T-027, T-028, T-044, T-191 | Age/gender on profile; optional job filters; abuse | Fields + matching + validation |
 
 ## P1 — product forks
@@ -37,10 +37,10 @@ Items below were under-specified or missing in the first PartonNewArch pass. Clo
 
 | Gap ID | Cases | Action |
 | --- | --- | --- |
-| `gap-mock-gps` | T-131, T-148, T-188 | Detect mock location flags (Android) / risk score |
-| `gap-device-fingerprint` | T-184 | Device id hash on auth; multi-account alerts |
-| `gap-bot-protection` | T-186 | Rate limits + CAPTCHA/challenge on apply |
-| `gap-ban-reentry` | T-192 | Ban list on phone/tax/device |
+| `gap-mock-gps` | T-131, T-148, T-188 | **Partial (2026-10-11):** server `MOCK_LOCATION_DETECTED` on check-in + e2e; client risk score / T-148 still open |
+| `gap-device-fingerprint` | T-184 | **Done (2026-10-11):** OTP verify hashes `deviceId`, stores `device_fingerprints`, writes `multi_account_device` risk event |
+| `gap-bot-protection` | T-186 | **Partial (2026-10-11):** apply window is 10 per 60s in Postgres (`429 RATE_LIMITED` + `bot_apply` risk). CAPTCHA stays Hold per agents/02 |
+| `gap-ban-reentry` | T-192 | **Done (2026-10-11):** `auth_bans` phone, tax id, and device hash block OTP verify and later requests; admin ban revokes sessions |
 | `gap-profanity-filter` | T-176 | Rating comment moderation |
 | `gap-attendance-fraud` | T-182, T-183, T-189, T-190 | Risk counters; admin queue |
 

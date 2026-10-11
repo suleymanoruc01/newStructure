@@ -19,11 +19,12 @@ Living architecture and delivery notes for the **PartOn** rebuild: monorepo with
 | [`00-product-and-stack.md`](00-product-and-stack.md) | Product context + stack sketch |
 | [`05-quality-nfr.md`](05-quality-nfr.md) | NFRs / proposed SLOs |
 | [`06-testing-strategy.md`](06-testing-strategy.md) | Case-driven test pyramid |
+| [`backend/23-security-audit-program.md`](backend/23-security-audit-program.md) | Security audit method ([security-audit skill](https://github.com/cloudflare/security-audit-skill)); seed coverage, no findings yet |
 | [`07-environments-and-ops.md`](07-environments-and-ops.md) | Envs, deploy, health |
 | [`shared/11-glossary.md`](shared/11-glossary.md) | Domain & architecture glossary |
 | [`shared/12-api-contracts.md`](shared/12-api-contracts.md) | REST envelope, errors, Zod (ADR-0027) |
 
-**Acceptance spine:** all **248** cases in [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json) → [`cases/`](cases/) — each feature needs **UI screens + components** ([mandate](cases/03-ui-coverage-mandate.md) · [components](shared/02-ui-components.md)).
+**Acceptance spine:** all **248** cases in [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json) → NewArch scenarios [`cases/parton_case_tests_newarch_en.json`](cases/parton_case_tests_newarch_en.json) (English) / [`cases/parton_case_tests_newarch_tr.json`](cases/parton_case_tests_newarch_tr.json) → [`cases/`](cases/) — each feature needs **UI screens + components** ([mandate](cases/03-ui-coverage-mandate.md) · [components](shared/02-ui-components.md)).
 
 Legacy Kotlin / Firebase is reference-only: [`../parton-codebase-wiki/`](../parton-codebase-wiki/).
 
@@ -45,12 +46,13 @@ Legacy Kotlin / Firebase is reference-only: [`../parton-codebase-wiki/`](../part
 | Push UX | User-centered templates, prefs, deep links | ADR-0021 · [shared/05](shared/05-push-notifications-ux.md) |
 | Foreground live | SSE (not WebSocket) | ADR-0012 · [19](backend/19-sse.md) |
 | Admin Web UI | Vite + shadcn/ui dark; **all CASE-*** ops + **DevOps** + **MCP** + **legal audit CSV/PDF** | ADR-0014/0031–0038 · [web/04](web/04-shadcn-dark-ui.md) · [web/08](web/08-admin-case-coverage.md) · [web/09](web/09-admin-devops.md) · [web/10](web/10-devops-mcp.md) · [web/11](web/11-legal-audit-reports.md) |
-| Tooling | **pnpm** + **Turborepo** | ADR-0038 |
+| Tooling | **Bun** + **Turborepo** (mobile: **npm** + **Fastlane**) | ADR-0040 · ADR-0030 |
 | Marketing | Vite `apps/marketing` **production** (landing, pricing, legal + prerender) | ADR-0033 · [web/07](web/07-marketing.md) |
 | Mobile UI | NativeWind + Liquid Glass principles | ADR-0015/0016 · [mobile/04](mobile/04-nativewind-ui.md) · [mobile/05](mobile/05-wwdc-liquid-glass.md) |
 | Color system | Cream / forest / orange tokens | ADR-0017 · [shared/01](shared/01-color-system.md) |
 | Privacy | KVKK primary, GDPR-ready | ADR-0010 · [17](backend/17-privacy-kvkk-gdpr.md) |
 | Client security | Memory access JWT; Keychain / HttpOnly refresh | ADR-0018 · [21](backend/21-client-security.md) |
+| Security audit | Boundary × attack-class coverage; confirm only with source evidence | [23](backend/23-security-audit-program.md) |
 | Screen UX | Layout recipes R1–R8; one primary CTA | ADR-0019 · [shared/03](shared/03-screen-ux-layout.md) |
 | Wizard state | WizardShell + scoped store; Nest draft | ADR-0020 · [shared/04](shared/04-wizard-state.md) |
 | Accessibility | WCAG 2.2 AA (web) + mobile equivalent | ADR-0022 · [shared/06](shared/06-accessibility-wcag.md) |
@@ -129,6 +131,6 @@ See [`backend/README.md`](backend/README.md) for backend docs/ADRs; Web UI: [`we
 | Mobile screens (catalog) | **75** — [mobile/02](mobile/02-screen-catalog.md) |
 | Web screens (public+employer+admin) | **72** — [web/02](web/02-screen-catalog.md) |
 | ADRs | **39** (0001–0039) — [backend/adr](backend/adr/README.md) |
-| Backend deep-dives | `01`–`22` |
+| Backend deep-dives | `01`–`23` |
 
 Cohesion: [`DOC-COHESION.md`](DOC-COHESION.md). Product forks (non-blocking): [`cases/01-gap-backlog.md`](cases/01-gap-backlog.md).

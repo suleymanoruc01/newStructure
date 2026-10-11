@@ -1,0 +1,12 @@
+{
+  "forbidden": {
+    "title": "Erişim yok",
+    "body": "Bu kaynağa erişim yetkiniz yok veya yanlış hesap bağlamındasınız.",
+    "tenantHint": "İşveren ve iş arayan verileri ayrıdır. Gerekirse üst menüden rol değiştirin."
+  },
+  "sessionExpired": {
+    "title": "Oturum sona erdi",
+    "body": "Güvenliğiniz için oturumunuz kapatıldı. Devam etmek için tekrar giriş yapın.",
+    "reauth": "Yeniden giriş yap"
+  }
+}

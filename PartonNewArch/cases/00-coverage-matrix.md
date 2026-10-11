@@ -1,6 +1,7 @@
 # Case coverage matrix
 
 **Source:** [`../../parton_case_tests_tr.json`](../../parton_case_tests_tr.json)  
+**NewArch scenarios:** [`parton_case_tests_newarch_en.json`](parton_case_tests_newarch_en.json) · [`parton_case_tests_newarch_tr.json`](parton_case_tests_newarch_tr.json)  
 **Status:** `accepted` · [agents/10](../agents/10-production-ready.md)  
 **Last updated:** 2026-10-10  
 **UI mandate:** [`03-ui-coverage-mandate.md`](03-ui-coverage-mandate.md) · components [`../shared/02-ui-components.md`](../shared/02-ui-components.md)
@@ -114,7 +115,7 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-042` | Geçmiş tarihli ilan oluşturma denemesi | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-043` | Başlangıç saati bitiş saatinden sonra girilmesi | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-044` | Cinsiyet filtresi ile ilan oluşturma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `gap` | gap-gender-filter |
-| `T-045` | Belge zorunluluğu ekleme | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `gap` | gap-documents |
+| `T-045` | Belge zorunluluğu ekleme | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` | gap-documents |
 | `T-046` | Personel sayısı 1 olan ilan | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-047` | Çoklu personel sayılı ilan | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-048` | Aynı saatlerde çakışan çoklu ilan | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
@@ -125,8 +126,8 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-053` | Personel sayısını artırma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-054` | Personel sayısını azaltma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-055` | İlanı yayından kaldırma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
-| `T-056` | İlanı sadece favorilere açma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `gap` | gap-favorites-only-job |
-| `T-057` | Favorilere özel ilanda uygun aday yoksa davranış | Yüksek | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `gap` | gap-favorites-only-job |
+| `T-056` | İlanı sadece favorilere açma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` | gap-favorites-only-job |
+| `T-057` | Favorilere özel ilanda uygun aday yoksa davranış | Yüksek | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` | gap-favorites-only-job |
 
 ### CASE-MATCHING — Eşleşme Motoru
 
@@ -142,8 +143,8 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-063` | Sektör uyumsuz ilanın görünmemesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-064` | Meslek uyumlu ilanın görünmesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-065` | Meslek uyumsuz ilanın görünmemesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
-| `T-066` | Belgesi olan kullanıcının ilgili ilanı görmesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `gap` | gap-documents |
-| `T-067` | Belgesi olmayan kullanıcının ilgili ilanı görmemesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `gap` | gap-documents |
+| `T-066` | Belgesi olan kullanıcının ilgili ilanı görmesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `covered` | gap-documents |
+| `T-067` | Belgesi olmayan kullanıcının ilgili ilanı görmemesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `covered` | gap-documents |
 | `T-068` | Konum yakınlığına göre sıralama | Kritik | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-069` | Çoklu sektör seçen işçiye tüm uygun ilanların görünmesi | Yüksek | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-070` | Çoklu meslek seçen işçiye tüm uygun ilanların görünmesi | Yüksek | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
@@ -151,7 +152,7 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-072` | Tam kapsama kuralı testi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-073` | Gece vardiyası eşleşmesi | Yüksek | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `gap` | gap-night-shift |
 | `T-074` | Favori işveren ilanlarının ayrı gösterimi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
-| `T-075` | Sadece favorilere açık ilanın diğer işçilere görünmemesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `gap` | gap-favorites-only-job |
+| `T-075` | Sadece favorilere açık ilanın diğer işçilere görünmemesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `covered` | gap-favorites-only-job |
 | `T-076` | En yakın işin üstte görünmesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-077` | En yüksek eşleşme skorunun üstte görünmesi | Yüksek | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-078` | Favori işveren ilanının öncelikli görünmesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
@@ -240,7 +241,7 @@ Push/in-app bildirimler, tokenlar, bildirim tetikleri ve bildirim durumları.
 | `T-128` | Düşük internetle tekrar deneme | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` |  |
 | `T-129` | Erken check-in denemesi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` |  |
 | `T-130` | Geç check-in denemesi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` |  |
-| `T-131` | Sahte konumla check-in denemesi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `gap` | gap-mock-gps |
+| `T-131` | Sahte konumla check-in denemesi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` | gap-mock-gps |
 | `T-132` | Konum izni kapalıyken check-in denemesi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` |  |
 | `T-133` | İşverenin işçi geldi bildirimi alması | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` |  |
 | `T-134` | Manuel doğrulama akışı varsa testi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `gap` | gap-checkin-dispute |
@@ -277,16 +278,16 @@ Jeton, provizyon, bakiye, kullanım, iade ve işlem güvenliği akışları.
 | `T-151` | Personel sayısı kadar jeton bloklama | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
 | `T-152` | İlan iptalinde jeton iadesi | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
 | `T-153` | Hiç başvuru gelmeyen ilanda jeton durumu | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
-| `T-154` | Başvuru var ama onay yoksa jeton durumu | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
-| `T-155` | Onay var ama işçi gelmediyse jeton durumu | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
+| `T-154` | Başvuru var ama onay yoksa jeton durumu | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `covered` | tokens-module |
+| `T-155` | Onay var ama işçi gelmediyse jeton durumu | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `covered` | tokens-module |
 | `T-156` | İşçi geldiğinde jetonun kesinleşmesi | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
-| `T-157` | Çok kişili ilanda kısmi gelişte kısmi jeton düşüşü | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
+| `T-157` | Çok kişili ilanda kısmi gelişte kısmi jeton düşüşü | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `covered` | tokens-module |
 | `T-158` | Personel sayısı artırıldığında ek provizyon | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
 | `T-159` | Personel sayısı azaltıldığında iade | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
 | `T-160` | Ağ hatasında çift jeton düşüşü engeli | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
-| `T-161` | Başarısız ödeme sonrası ilanın durumu | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `gap` | gap-payments |
+| `T-161` | Başarısız ödeme sonrası ilanın durumu | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `covered` | gap-payments |
 | `T-162` | Jeton hareket geçmişi raporlama | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
-| `T-163` | Anlık bakiye güncelleme | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `partial` | tokens-module |
+| `T-163` | Anlık bakiye güncelleme | Kritik | İş Kuralı | tokens, jobs, shifts, applications | m.employer.tokens.root, w.employer.tokens.* | `covered` | tokens-module |
 
 ### CASE-FAVORITES — Favori Sistemi
 
@@ -328,15 +329,15 @@ Kötüye kullanım, negatif senaryolar, hile, tekrarlı işlem ve sınır ihlali
 | `T-181` | Aynı saat diliminde iki işe onay alma | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
 | `T-182` | Sürekli “geleceğim” deyip gelmeyen işçi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
 | `T-183` | Sürekli son dakika iptal eden işveren | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
-| `T-184` | Aynı cihazdan çoklu sahte hesap | Kritik | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `gap` | gap-device-fingerprint |
+| `T-184` | Aynı cihazdan çoklu sahte hesap | Kritik | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` | gap-device-fingerprint |
 | `T-185` | Sahte ilan açma girişimi | Kritik | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
-| `T-186` | Bot başvuru denemeleri | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `gap` | gap-bot-protection |
+| `T-186` | Bot başvuru denemeleri | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` | gap-bot-protection |
 | `T-187` | Puan manipülasyonu | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
 | `T-188` | Sahte konumla jeton düşürme denemesi | Kritik | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `gap` | gap-mock-gps |
 | `T-189` | İşverenin gelen işçiyi gelmedi göstermesi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
 | `T-190` | İşçinin gelmediği halde geldi göstermesi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
 | `T-191` | Yaş sınırını yanlış beyan etme | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `gap` | gap-age-filter |
-| `T-192` | Yasaklı kullanıcının tekrar kayıt denemesi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `gap` | gap-ban-reentry |
+| `T-192` | Yasaklı kullanıcının tekrar kayıt denemesi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` | gap-ban-reentry |
 
 ### CASE-E2E — Uçtan Uca Senaryolar
 
@@ -419,7 +420,7 @@ Yetkilendirme, veri koruma, hassas veri, erişim kontrolü ve güvenlik akışla
 | `T-246` | Yetkisiz API erişim testi | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
 | `T-247` | Oturum yönetimi güvenliği | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
 | `T-248` | Şifre sıfırlama güvenliği | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `gap` | gap-password |
-| `T-249` | Belge dosyalarının yetkisiz erişime kapalı olması | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `gap` | gap-documents |
+| `T-249` | Belge dosyalarının yetkisiz erişime kapalı olması | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` | gap-documents |
 | `T-250` | Konum verisinin güvenli saklanması | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
 | `T-251` | Hassas alanların gereksiz gösterilmemesi | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
 | `T-252` | Loglarda hassas veri sızıntısı olmaması | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |

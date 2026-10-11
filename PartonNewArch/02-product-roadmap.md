@@ -55,7 +55,7 @@ Suggested calendar (team-size agnostic): **P0 ~4–6 wks · P1 ~6–8 · P2 ~6�
 
 | Workstream | Deliverable | Tech (Sep 2026) |
 | --- | --- | --- |
-| Monorepo | `apps/mobile`, `apps/backend`, `apps/admin`, `apps/marketing`, `apps/devops-mcp`, packages | **pnpm** + **Turborepo** — [ADR-0038](backend/adr/0038-monorepo-tooling.md) |
+| Monorepo | `apps/mobile`, `apps/backend`, `apps/admin`, `apps/marketing`, `apps/devops-mcp`, packages | **Bun** + **Turborepo** (mobile **npm**) — [ADR-0040](backend/adr/0040-bun-monorepo-exclude-mobile.md) |
 | Backend shell | Nest modular monolith, global prefix `/api/v1`, health | **NestJS 12.x latest** (Node per Nest 12 floor), TS **6**, `@nestjs/swagger` — ADR-0028 |
 | Contracts | Shared request/response schemas + TS types | **Zod 4** in `packages/api-contracts`; Nest validates via nestjs-zod — **ADR-0027** (AO-6/8 closed) |
 | Data | Postgres + migrations + Prisma module | **PostgreSQL 18** (`uuidv7()`), **Prisma 7+** driver adapters (ADR-0003) |

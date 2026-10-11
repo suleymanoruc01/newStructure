@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "@parton/design-tokens/css-variables.css";
+
+@theme inline {
+  --color-surface-base: var(--surface-base);
+  --color-surface-1: var(--surface-level-1);
+  --color-surface-2: var(--surface-level-2);
+  --color-surface-inverted: var(--surface-inverted);
+  --color-text-high: var(--text-high);
+  --color-text-medium: var(--text-medium);
+  --color-text-low: var(--text-low);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --font-display: "DM Sans", "Source Sans 3", system-ui, sans-serif;
+  --font-sans: "Source Sans 3", "DM Sans", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-surface-base text-text-high font-sans antialiased;
+  }
+}

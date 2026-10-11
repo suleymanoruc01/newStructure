@@ -1,7 +1,7 @@
 # 21 — Client security (Web + Mobile)
 
 **Status:** `accepted`  
-**Last updated:** 2026-10-09  
+**Last updated:** 2026-10-11  
 **ADR:** [0018 — Client security baseline](adr/0018-client-security.md)  
 **Architecture:** [`../04-application-architecture.md`](../04-application-architecture.md) §15.2  
 **AuthN/AuthZ:** [`18-auth-rbac.md`](18-auth-rbac.md) · [`07-auth-security.md`](07-auth-security.md)  
@@ -160,7 +160,7 @@ If admin is on a **different site** than API, prefer **BFF cookie session** on N
 | `Strict-Transport-Security` | max-age ≥ 6 months; includeSubDomains when ready |
 | Cookies | `Secure`, `HttpOnly` (refresh), short access never in cookie if Bearer pattern used |
 | XSS | React default escaping; no unsanitized HTML; avoid `eval` |
-| Dependencies | Lockfile + `npm/pnpm audit` in CI |
+| Dependencies | Lockfile + `bun audit` / `npm audit` (mobile) in CI |
 
 ### 4.3 Admin-specific
 
@@ -218,7 +218,7 @@ If admin is on a **different site** than API, prefer **BFF cookie session** on N
 
 ### P2+
 
-- [ ] Periodic pen-test / MASVS review  
+- [ ] Periodic audit using [23](23-security-audit-program.md) (security-audit skill) + MASVS review  
 - [ ] WebAuthn / passkeys for admin (Assess)  
 
 ---
@@ -229,4 +229,5 @@ If admin is on a **different site** than API, prefer **BFF cookie session** on N
 - [18-auth-rbac](18-auth-rbac.md) · [07-auth-security](07-auth-security.md)  
 - [17-privacy](17-privacy-kvkk-gdpr.md) · [13-location](13-location-policy.md)  
 - Web IA session note: [`../web/01-information-architecture.md`](../web/01-information-architecture.md)  
+- Security audit program: [23-security-audit-program.md](23-security-audit-program.md)  
 - CASE-SECURITY: [`../cases/groups/CASE-SECURITY.md`](../cases/groups/CASE-SECURITY.md)  

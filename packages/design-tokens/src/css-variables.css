@@ -1,0 +1,66 @@
+/* PartOn semantic tokens — shared/01-color-system.md */
+
+:root {
+  --background: #f3e8cf;
+  --foreground: #252823;
+  --card: #eadcc5;
+  --card-foreground: #252823;
+  --popover: #ddd4c7;
+  --popover-foreground: #252823;
+  --primary: #e97a3d;
+  --primary-foreground: #f3e8cf;
+  --secondary: #344a32;
+  --secondary-foreground: #f3e8cf;
+  --muted: #eadcc5;
+  --muted-foreground: #83947a;
+  --accent: #e2b83f;
+  --accent-foreground: #252823;
+  --destructive: #b94e32;
+  --destructive-foreground: #f3e8cf;
+  --border: #ddd4c7;
+  --input: #ddd4c7;
+  --ring: #e97a3d;
+  --radius: 0.5rem;
+  --chart-1: #e97a3d;
+  --chart-2: #bfd85a;
+  --chart-3: #aab8bd;
+  --chart-4: #68734a;
+  --surface-base: #f3e8cf;
+  --surface-level-1: #eadcc5;
+  --surface-level-2: #ddd4c7;
+  --surface-inverted: #252823;
+  --text-high: #252823;
+  --text-medium: #344a32;
+  --text-low: #83947a;
+  --text-on-color: #f3e8cf;
+}
+
+.dark {
+  --background: #252823;
+  --foreground: #f3e8cf;
+  --card: #234d3c;
+  --card-foreground: #f3e8cf;
+  --popover: #334b43;
+  --popover-foreground: #f3e8cf;
+  --primary: #e97a3d;
+  --primary-foreground: #f3e8cf;
+  --secondary: #344a32;
+  --secondary-foreground: #f3e8cf;
+  --muted: #334b43;
+  --muted-foreground: #aab8bd;
+  --accent: #e2b83f;
+  --accent-foreground: #252823;
+  --destructive: #b94e32;
+  --destructive-foreground: #f3e8cf;
+  --border: #334b43;
+  --input: #334b43;
+  --ring: #e97a3d;
+  --surface-base: #252823;
+  --surface-level-1: #234d3c;
+  --surface-level-2: #334b43;
+  --surface-inverted: #f3e8cf;
+  --text-high: #f3e8cf;
+  --text-medium: #eadcc5;
+  --text-low: #aab8bd;
+  --text-on-color: #f3e8cf;
+}

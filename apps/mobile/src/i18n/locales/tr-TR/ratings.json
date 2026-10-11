@@ -1,0 +1,13 @@
+{
+  "pending": {
+    "title": "Bekleyen değerlendirmeler",
+    "lead": "Tamamlanan vardiyalar için karşı tarafa puan verin.",
+    "empty": "Bekleyen değerlendirme yok.",
+    "untitled": "Vardiya"
+  },
+  "compose": {
+    "title": "Değerlendirme yaz",
+    "comment": "Yorum (isteğe bağlı)",
+    "submit": "Gönder"
+  }
+}

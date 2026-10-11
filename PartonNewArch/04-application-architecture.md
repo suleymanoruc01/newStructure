@@ -879,7 +879,7 @@ Docs: [`mobile/04-nativewind-ui.md`](mobile/04-nativewind-ui.md) · [`mobile/05-
 
 ### 15.1 Case → UI coverage (mandatory)
 
-Every capability in [`parton_case_tests_tr.json`](../parton_case_tests_tr.json) (248 cases) **must** have:
+Every capability in [`parton_case_tests_tr.json`](../parton_case_tests_tr.json) (248 cases) — mapped scenarios in [`cases/parton_case_tests_newarch_en.json`](cases/parton_case_tests_newarch_en.json) / [`_tr.json`](cases/parton_case_tests_newarch_tr.json) — **must** have:
 
 1. At least one **screen** (mobile and/or web/admin) or named system surface owned by a screen.  
 2. **Named components** from [`shared/02-ui-components.md`](shared/02-ui-components.md).  
@@ -1022,6 +1022,7 @@ Web **WCAG 2.2 AA**; mobile equivalent AA outcomes — [ADR-0022](backend/adr/00
 | Config | `DATABASE_URL`, `REDIS_QUEUE_URL` (Stage B), JWT/SMS/**Firebase** secrets; subprocessor env visibility |
 | Auth / RBAC | OTP + JWT + role/branch scope — §10 |
 | Client security | Memory access + Keychain / HttpOnly refresh — §15.2 · ADR-0018 |
+| Security audit | Boundary × attack class; confirm only with source evidence — [23](backend/23-security-audit-program.md) |
 | Screen UX | Layout recipes R1–R8 — §15.3 · ADR-0019 |
 | Wizard state | WizardShell + scoped store + Nest draft — §15.4 · ADR-0020 |
 | Accessibility | WCAG 2.2 AA (web) + mobile equivalent — §15.5 · ADR-0022 |
@@ -1105,7 +1106,7 @@ Product phases: [`02-product-roadmap.md`](02-product-roadmap.md).
 | [0035](backend/adr/0035-admin-devops-error-tracking.md) | **Admin DevOps** errors & releases | accepted |
 | [0036](backend/adr/0036-admin-devops-mcp.md) | **Admin DevOps MCP** for AI agents | accepted |
 | [0037](backend/adr/0037-legal-audit-logger.md) | **Legal audit logger** + admin CSV/PDF | accepted |
-| [0038](backend/adr/0038-monorepo-tooling.md) | **pnpm + Turborepo** + locked packages | accepted |
+| [0040](backend/adr/0040-bun-monorepo-exclude-mobile.md) | **Bun + Turborepo** (mobile **npm** + **Fastlane**) | accepted |
 | [0039](backend/adr/0039-design-md.md) | **DESIGN.md** visual SoR (Stitch / awesome-design-md) | accepted |
 
 ---
@@ -1136,6 +1137,7 @@ Product phases: [`02-product-roadmap.md`](02-product-roadmap.md).
 - [ ] Related `CASE-*` / `T-###` in PR  
 - [ ] Case feature has **screen ID(s)** + **named components** ([UI mandate](cases/03-ui-coverage-mandate.md))  
 - [ ] Client security: no refresh in AsyncStorage/localStorage; web CSRF if cookie refresh; no secrets in bundles ([21](backend/21-client-security.md))  
+- [ ] New trust boundary has a seed unit in [23](backend/23-security-audit-program.md) §6 (or the row was added) — checklist gaps are not findings  
 - [ ] Screen UX: layout **recipe**, one primary CTA, named components, loading/empty/error/blocked ([03](shared/03-screen-ux-layout.md))  
 - [ ] Wizards: values in **WizardShell**/scoped store; Back restores fields; Nest draft when required ([04](shared/04-wizard-state.md))  
 - [ ] A11y: contrast tokens; labeled controls; keyboard (web); no glass on critical CTAs ([06](shared/06-accessibility-wcag.md))  
@@ -1156,7 +1158,7 @@ Product phases: [`02-product-roadmap.md`](02-product-roadmap.md).
 - [ ] Admin DevOps: error triage (all apps) + releases + services ([web/09](web/09-admin-devops.md) · ADR-0035)  
 - [ ] Admin DevOps MCP: authenticated tools → Nest devops APIs ([web/10](web/10-devops-mcp.md) · ADR-0036)  
 - [ ] Legal audit: append-only logger + admin CSV **and** PDF reports ([backend/22](backend/22-legal-audit-logger.md) · [web/11](web/11-legal-audit-reports.md) · ADR-0037)  
-- [ ] Production-ready: no MVP stubs / eng TODOs; pnpm+Turborepo; Prisma SoR ([agents/10](agents/10-production-ready.md) · ADR-0038/0003)  
+- [ ] Production-ready: no MVP stubs / eng TODOs; Bun+Turborepo; Prisma SoR ([agents/10](agents/10-production-ready.md) · ADR-0040/0003)  
 - [ ] UI from [`DESIGN.md`](DESIGN.md) tokens/rules (ADR-0039); no purple-glow / invented palette  
 
 ---
@@ -1171,6 +1173,7 @@ Product phases: [`02-product-roadmap.md`](02-product-roadmap.md).
 | Latest stable stack | [ADR-0028](backend/adr/0028-latest-stable-stack.md) · [radar](03-tech-radar-2026.md) |
 | This overview (clients, Auth, FCM, Web/Mobile UI, privacy) | **You are here** — §0, §4, §10–§15 |
 | Client security (Web + Mobile) | [`backend/21-client-security.md`](backend/21-client-security.md) · §15.2 |
+| Security audit program | [`backend/23-security-audit-program.md`](backend/23-security-audit-program.md) |
 | Screen UX & layout recipes | [`shared/03-screen-ux-layout.md`](shared/03-screen-ux-layout.md) · §15.3 |
 | Wizard / multi-step state | [`shared/04-wizard-state.md`](shared/04-wizard-state.md) · §15.4 |
 | Accessibility (WCAG) | [`shared/06-accessibility-wcag.md`](shared/06-accessibility-wcag.md) · §15.5 |
@@ -1199,7 +1202,7 @@ Product phases: [`02-product-roadmap.md`](02-product-roadmap.md).
 | Legal audit logger | [`backend/22-legal-audit-logger.md`](backend/22-legal-audit-logger.md) · ADR-0037 |
 | Legal audit reports (admin) | [`web/11-legal-audit-reports.md`](web/11-legal-audit-reports.md) · ADR-0037 |
 | Production-ready coding gate | [`agents/10-production-ready.md`](agents/10-production-ready.md) |
-| Monorepo tooling | [ADR-0038](backend/adr/0038-monorepo-tooling.md) |
+| Monorepo tooling | [ADR-0040](backend/adr/0040-bun-monorepo-exclude-mobile.md) |
 | DESIGN.md (visual SoR) | [`DESIGN.md`](DESIGN.md) · [ADR-0039](backend/adr/0039-design-md.md) |
 | Admin Web UI (shadcn dark) | [`web/04-shadcn-dark-ui.md`](web/04-shadcn-dark-ui.md) |
 | Push UX (user-centered) | [`shared/05-push-notifications-ux.md`](shared/05-push-notifications-ux.md) |

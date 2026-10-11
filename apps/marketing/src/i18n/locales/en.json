@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "pricing": "Pricing",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "employerLogin": "Employer sign in"
+  },
+  "footer": {
+    "tagline": "Turkey's shift marketplace.",
+    "legal": "Legal",
+    "contact": "Contact",
+    "contactEmail": "destek@parton.com.tr",
+    "rights": "© {{year}} PartOn. All rights reserved."
+  },
+  "landing": {
+    "metaTitle": "PartOn — Find shifts, fill your team",
+    "metaDescription": "Workers discover short shifts; employers fill seats with a clear token model.",
+    "heroTitle": "Shift work ready for the day",
+    "heroSubtitle": "Mobile app for workers; token model and operational trust for employers.",
+    "ctaDownload": "Get the app",
+    "ctaEmployer": "Employer sign in",
+    "sectionWorkersTitle": "For workers",
+    "sectionWorkersBody": "One-tap apply, 3-hour confirm windows, and branch check-in built for the field.",
+    "sectionEmployersTitle": "For employers",
+    "sectionEmployersBody": "Publish jobs, hold tokens before spend, and review applicants in one flow.",
+    "bandTitle": "Real work, real teams",
+    "bandBody": "Cream and forest palette readable in daylight; calm under time pressure."
+  },
+  "pricing": {
+    "metaTitle": "PartOn Pricing — Token model",
+    "metaDescription": "How employer tokens and provision work on PartOn.",
+    "title": "Predictable cost with tokens",
+    "intro": "Each published shift reserves tokens; accepted applications settle the cost.",
+    "tierStarter": "Starter",
+    "tierStarterDesc": "Single branch, lower volume.",
+    "tierGrowth": "Growth",
+    "tierGrowthDesc": "Multi-branch and recurring shift needs.",
+    "featureHold": "Pre-publish token hold",
+    "featureRelease": "Settlement after acceptance",
+    "featureTopUp": "Instant top-up (payments in S7)",
+    "ctaEmployer": "Open employer account"
+  },
+  "legal": {
+    "privacyTitle": "Privacy policy",
+    "termsTitle": "Terms of use",
+    "version": "Version: {{version}}",
+    "privacyMeta": "PartOn privacy policy summary.",
+    "termsMeta": "PartOn terms of use."
+  },
+  "legalPrivacy": {
+    "p1": "PartOn processes personal data as a data controller under applicable law.",
+    "p2": "Phone, check-in location, documents, and transaction logs are processed to provide the service.",
+    "p3": "Contact support for access, correction, and erasure requests."
+  },
+  "legalTerms": {
+    "p1": "By using the platform you accept obligations for worker and employer roles.",
+    "p2": "Misleading listings or fraudulent check-in may lead to restrictions.",
+    "p3": "Policy updates are communicated through in-app acceptance."
+  }
+}

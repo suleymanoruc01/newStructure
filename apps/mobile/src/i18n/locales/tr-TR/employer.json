@@ -1,0 +1,106 @@
+{
+  "jobs": {
+    "title": "İlanlarınız",
+    "create": "Yeni ilan",
+    "createTitle": "İlan yayınla",
+    "publish": "Yayınla",
+    "branchId": "Şube kimliği",
+    "branchRequired": "Şube seçin veya şube kimliği girin.",
+    "sector": "Sektör kodu",
+    "occupation": "Meslek kodu",
+    "headcount": "Personel sayısı",
+    "startsAt": "Başlangıç (ISO)",
+    "endsAt": "Bitiş (ISO)",
+    "tokenBalance": "Kullanılabilir: {{available}} · Provizyon: {{held}}",
+    "tokenExplain": "Yayınladığınız ilan için jeton provizyonu alınır; vardiya tamamlanınca kesinleşir, iptal veya kapanışta serbest bırakılır.",
+    "applicants": "Başvurular",
+    "favoritesOnly": "Sadece favori işçiler",
+    "favoritesOnlyHint": "Açıkken ilan yalnızca favori listenizdeki iş arayanlara görünür.",
+    "navFavorites": "Favori işçiler",
+    "navDisputes": "Check-in itirazları",
+    "navRatings": "Değerlendir",
+    "navVerification": "Doğrulama",
+    "genderFilter": {
+      "none": "Cinsiyet filtresi yok",
+      "female": "Kadın",
+      "male": "Erkek"
+    },
+    "requiredDocuments": "Zorunlu belge türleri (virgülle)",
+    "requiredDocumentsHint": "Örn: id_card, food_hygiene — iş arayanın yüklü belgeleriyle eşleşmeli.",
+    "detail": {
+      "open": "Detay / düzenle",
+      "status": "Durum: {{status}}",
+      "headcountHint": "Personel sayısı değişince jeton provizyonu otomatik güncellenir.",
+      "saveHeadcount": "Personel sayısını kaydet",
+      "closeJob": "İlanı kapat (jeton iadesi)",
+      "invalidHeadcount": "Geçerli bir personel sayısı girin."
+    }
+  },
+  "verification": {
+    "title": "Firma doğrulama",
+    "lead": "Vergi kimliği ve şirket bilgileriniz doğrulandıktan sonra ilan yayınlayabilirsiniz.",
+    "publishBlocked": "Doğrulama tamamlanmadan ilan yayınlanamaz. Destek ekibi incelemeyi tamamladığında bildirim alacaksınız.",
+    "viewStatus": "Doğrulama durumunu gör",
+    "backToJobs": "İlanlara dön",
+    "status": {
+      "pending": "İnceleme bekleniyor",
+      "verified": "Doğrulandı — ilan yayınlayabilirsiniz",
+      "rejected": "Reddedildi — bilgilerinizi güncelleyin",
+      "bypass": "Doğrulama atlandı (ortam)"
+    }
+  },
+  "favorites": {
+    "title": "Favori işçiler",
+    "lead": "Güvendiğiniz iş arayanları favoriye alın; özel ilanlar ve öncelikli eşleşme için kullanılır.",
+    "workerUserId": "İş arayan kullanıcı kimliği",
+    "workerIdRequired": "Geçerli bir kullanıcı kimliği girin.",
+    "add": "Favoriye ekle",
+    "empty": "Henüz favori işçi yok.",
+    "workerLabel": "İş arayan",
+    "mutual": "Karşılıklı favori"
+  },
+  "disputes": {
+    "title": "Açık itirazlar",
+    "lead": "GPS reddi sonrası iş arayan itirazları; şubede olduğunu doğrulayarak manuel onay verebilirsiniz.",
+    "empty": "Açık itiraz yok.",
+    "untitledShift": "Vardiya",
+    "unknownWorker": "İş arayan"
+  },
+  "manualConfirm": {
+    "title": "Manuel check-in onayı",
+    "lead": "İş arayanın şubede olduğunu teyit ediyorsanız onaylayın; jeton kesinleşir ve vardiya kaydı güncellenir.",
+    "cta": "Şubede — onayla"
+  },
+  "applicants": {
+    "title": "Başvurular",
+    "empty": "Bekleyen başvuru yok.",
+    "accept": "Onayla"
+  },
+  "tokens": {
+    "title": "Jetonlar ve provizyon",
+    "lead": "Bakiye, provizyon ve hareket geçmişiniz.",
+    "available": "Kullanılabilir jeton",
+    "balanceHeld": "Toplam bakiye: {{balance}} · Provizyon: {{held}}",
+    "topUpCta": "Jeton yükle",
+    "historyTitle": "Son hareketler",
+    "historyEmpty": "Henüz hareket yok.",
+    "topUpTitle": "Jeton yükle",
+    "topUpLead": "Paket seçin; ödeme sandbox kart ile onaylanır ve bakiye anında güncellenir.",
+    "packageLabel": "{{count}} jeton",
+    "paymentMethodTitle": "Ödeme yöntemi",
+    "sandboxCard": "Sandbox test kartı",
+    "continueToPay": "Ödemeye geç",
+    "pickAmount": "Bir jeton paketi seçin.",
+    "confirmTitle": "Ödemeyi onayla",
+    "confirmBody": "Tutar hesabınıza jeton olarak yansıyacak; başarısız ödemede bakiye değişmez.",
+    "confirmPay": "Ödemeyi tamamla",
+    "topUpSuccess": "Yükleme tamam. Yeni bakiye: {{balance}}",
+    "paymentCancelled": "Ödeme iptal edildi.",
+    "ledgerType": {
+      "top_up": "Jeton yükleme",
+      "hold": "Provizyon",
+      "release": "Provizyon iadesi",
+      "capture": "Kesinleşen jeton"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+---
+description: PartOn production gates override Ponytail minimalism when they conflict
+alwaysApply: true
+---
+
+# PartOn × Ponytail
+
+This repo uses [Ponytail](https://github.com/DietrichGebert/ponytail) (`vendor/ponytail`, `.cursor/skills/ponytail*`) for **how** to implement: smallest correct diff, reuse existing helpers, one test for risky logic, `/ponytail-review` before merge.
+
+**PartOn NewArch wins on scope and quality** (`.cursor/rules/parton-newarch.mdc`, `PartonNewArch/AGENTS.md`, `agents/07`–`10`):
+
+- Do **not** skip features, screens, REST routes, Zod contracts, admin ops UI, or case `T-###` coverage to save lines.
+- Do **not** stub, mock integrations, or leave eng TODOs — Ponytail “lazy” means fewer *unnecessary* lines, not fewer *required* production paths.
+- **Never** cut: trust-boundary validation, ledger/token invariants, AuthZ, KVKK/legal audit, accessibility, or real Postgres e2e for money/security paths.
+- Ground every ID from opened files (`agents/07`); acceptance from `PartonNewArch/cases/parton_case_tests_newarch_*.json`.
+
+When both apply: satisfy the case catalog and ADRs first; apply Ponytail to avoid duplicate abstractions, dead code, and hand-rolled widgets the repo already has.
+
+Commands (Cursor chat): `/ponytail`, `/ponytail-review`, `/ponytail-audit`, `/ponytail-debt`, `/ponytail-help`. Details: `PartonNewArch/agents/11-ponytail-integration.md`.

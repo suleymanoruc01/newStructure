@@ -1,0 +1,12 @@
+node_modules
+dist
+.turbo
+coverage
+*.tsbuildinfo
+.codebase-memory
+
+.env
+.env.*
+!.env.example
+
+apps/backend/src/generated

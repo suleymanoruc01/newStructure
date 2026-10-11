@@ -17,7 +17,7 @@
 | --- | --- | --- |
 | Correctness | Nest owns marketplace rules | CASE-* checklists |
 | Reliability | Outbox; Stage B BullMQ retries | Chaos + job metrics |
-| Security | OTP/JWT, RBAC+scope, client baseline | CASE-SECURITY · ADR-0018 |
+| Security | OTP/JWT, RBAC+scope, client baseline | CASE-SECURITY · ADR-0018 · audit method [23](backend/23-security-audit-program.md) |
 | Privacy | KVKK-first minimization, DSR P3 | ADR-0010 |
 | Performance | Indexes, cursor feeds, async fan-out | CASE-PERF · load plan |
 | Operability | OTel, health, one deployable | [09-observability](backend/09-observability.md) |

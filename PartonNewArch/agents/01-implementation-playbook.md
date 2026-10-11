@@ -21,12 +21,12 @@ Ship **thin vertical slices** that advance this loop; polish after green path.
 
 ### S0 — Monorepo foundation (P0)
 
-1. Create pnpm + Turborepo workspace per scaffold spec (**latest** tool versions)  
+1. Create Bun + Turborepo workspace per scaffold spec (**latest** tool versions); `apps/mobile` via **npm** only (ADR-0040)  
 2. Verify toolchain with `npm view` / [09-latest-stack-policy](09-latest-stack-policy.md) (Nest 12, TS 6, Node LTS)  
 3. `packages/api-contracts` — envelope helpers, error codes, health schemas (Zod **4** latest)  
 4. `packages/design-tokens` — from [shared/01-color-system](../shared/01-color-system.md)  
 5. `apps/backend` — Nest **12** latest, TS **6**, `/api/v1`, Config, Prisma latest, Health, Exception filter  
-6. Docker Compose: Postgres 18 (+ Redis optional + MinIO)  
+6. Host/managed Postgres 18+ (+ Redis optional + S3-compatible storage) — no Docker in repo; see [`../../docs/DEV.md`](../../docs/DEV.md)  
 7. CI: lint, typecheck, test  
 8. `.env.example` complete (SMS/FCM required)  
 9. Scaffold Nest **PM2** `ecosystem.config.cjs` (`instances: 1`) — [web/05](../web/05-pm2.md)  

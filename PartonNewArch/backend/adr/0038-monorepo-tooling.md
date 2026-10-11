@@ -1,6 +1,6 @@
 # ADR-0038: Monorepo tooling — pnpm + Turborepo + locked packages
 
-**Status:** Accepted  
+**Status:** Superseded (package manager) — use [ADR-0040](0040-bun-monorepo-exclude-mobile.md)  
 **Date:** 2026-10-10  
 **Deciders:** Eng  
 **Related:** [ADR-0005](0005-monorepo.md) · [ADR-0027](0027-api-contracts-baseline.md) · [ADR-0028](0028-latest-stable-stack.md) · [agents/03-scaffold-spec.md](../../agents/03-scaffold-spec.md) · [agents/10-production-ready.md](../../agents/10-production-ready.md)

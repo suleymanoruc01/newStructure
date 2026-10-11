@@ -24,7 +24,7 @@ Radar rings (ThoughtWorks-style):
          │ TypeScript 6 · Postgres 18+  │
          │ Bare RN latest · Zod 4 latest│
          │ Prisma latest stable · OTel  │
-         │ pnpm + Turborepo latest      │
+         │ Bun + Turborepo latest       │
          │ PG outbox · OpenAPI          │
          └──────────────┬───────────────┘
                         │
@@ -64,12 +64,12 @@ Radar rings (ThoughtWorks-style):
 
 | Tech | Ring | Rationale |
 | --- | --- | --- |
-| **pnpm workspaces** | Adopt | Fast installs; `workspace:*` for contracts; use `node-linker=hoisted` (or hoist `reflect-metadata`) so Nest DI + bare RN Metro coexist |
+| **Bun workspaces** (root) | Adopt | Fast installs; `workspace:*` for contracts; **`apps/mobile` excluded** — npm + `file:` links — [ADR-0040](backend/adr/0040-bun-monorepo-exclude-mobile.md) |
 | **Turborepo** | Adopt | Task graph, remote cache, `dependsOn: ["^build"]` for compiled shared packages Nest needs |
 | Nx | Assess | Powerful; heavier than needed for 2 apps + few packages |
 | Compiled `packages/*` → CJS/ESM dual | Adopt | Nest `tsc` cannot consume raw TS from `node_modules`; build contracts before API |
 
-Closes **AO-7** — **accepted** ([ADR-0038](backend/adr/0038-monorepo-tooling.md)).
+Closes **AO-7** — **accepted** ([ADR-0040](backend/adr/0040-bun-monorepo-exclude-mobile.md)).
 
 ## API & contracts
 
@@ -257,7 +257,7 @@ ThoughtWorks **Adopt** means “use by default *today*.” BullMQ is deliberatel
 | Open ID | Proposed resolution | Promote when |
 | --- | --- | --- |
 | AO-2 | Bare React Native; Expo forbidden | **Accepted** — ADR-0006 |
-| AO-7 / ADR-0038 | pnpm + Turborepo; packages locked | **Accepted** — scaffold |
+| AO-7 / ADR-0040 | Bun + Turborepo; mobile npm; packages locked | **Accepted** — scaffold |
 | AO-6 / AO-8 | **Accepted** — ADR-0027 (envelope, cursor, Zod 4, OpenAPI) | — |
 | ADR-0003 / 0028 | Prisma **latest stable** + `@prisma/adapter-pg` | **Accepted** — backend scaffold |
 | ADR-0028 | Nest **12** + TS **6** + Node LTS floors; RN/Zod latest | Continuous |

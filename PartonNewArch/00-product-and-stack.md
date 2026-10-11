@@ -65,7 +65,7 @@ See [`03-tech-radar-2026.md`](03-tech-radar-2026.md) and phased delivery in [`02
 
 | Concern | Proposed default | Status |
 | --- | --- | --- |
-| Monorepo tooling | pnpm + Turborepo **latest** | `accepted` — ADR-0038 |
+| Monorepo tooling | Bun + Turborepo **latest** (mobile npm) | `accepted` — ADR-0040 |
 | Backend framework | NestJS **12** latest + TypeScript **6** | `accepted` — ADR-0028 |
 | Validation / contracts | Zod **4** latest in `packages/api-contracts` | `accepted` — ADR-0027 |
 | ORM | Prisma **latest stable** (`@prisma/adapter-pg`) | `accepted` — ADR-0003 / 0028 |

@@ -112,7 +112,7 @@ Cloud vendor is still open. Prefer the **managed Redis of the same cloud** as Ne
 
 | Env | Redis | Notes |
 | --- | --- | --- |
-| `local` | Docker Compose Redis 7 | Queue profile: AOF + `noeviction` |
+| `local` | Host or managed Redis 7 | Queue profile: AOF + `noeviction` — see [`docs/DEV.md`](../../docs/DEV.md) |
 | `ci` | Service container or Testcontainers | Ephemeral OK; same policy flags |
 | `staging` | Managed, single-AZ OK | Same policies as prod; smaller size |
 | `production` | Managed HA / Multi-AZ | Persistence + noeviction + TLS + ACL |

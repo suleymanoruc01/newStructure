@@ -20,7 +20,7 @@
 | --- | --- |
 | Deliverables | OTP, JWT, refresh, `/me`, context switch, **real SMS sandbox** |
 | Cases | CASE-AUTH critical; skip email/password per defaults |
-| Docs | [18-auth](../backend/18-auth-rbac.md) · [21-security](../backend/21-client-security.md) · [CASE-AUTH](../cases/groups/CASE-AUTH.md) |
+| Docs | [18-auth](../backend/18-auth-rbac.md) · [21-security](../backend/21-client-security.md) · [23-audit](../backend/23-security-audit-program.md) · [CASE-AUTH](../cases/groups/CASE-AUTH.md) |
 | Screens | `m.auth.phone`, `otp`, `role-select`, `policies` |
 | Tests | `@T-001` family OTP; 401/403 filters |
 
@@ -90,7 +90,7 @@
 | --- | --- |
 | Deliverables | Full `w.admin.*` matrix (38 screens) incl. **DevOps**; **`apps/devops-mcp`**; people; jobs; matching; applications; shifts; tokens; ratings; docs; notify; abuse; policies; config; audit; perf |
 | Cases | **All 19 CASE-*** groups via admin ops surfaces + DevOps |
-| Docs | [web/08](../web/08-admin-case-coverage.md) · [web/09](../web/09-admin-devops.md) · [web/10](../web/10-devops-mcp.md) · [web/11](../web/11-legal-audit-reports.md) · [backend/22](../backend/22-legal-audit-logger.md) · [admin-console](../web/screens/admin-console.md) · ADR-0034/0035/0036/0037 |
+| Docs | [web/08](../web/08-admin-case-coverage.md) · [web/09](../web/09-admin-devops.md) · [web/10](../web/10-devops-mcp.md) · [web/11](../web/11-legal-audit-reports.md) · [backend/22](../backend/22-legal-audit-logger.md) · [backend/23](../backend/23-security-audit-program.md) · [admin-console](../web/screens/admin-console.md) · ADR-0034/0035/0036/0037 |
 | Defaults | `gap-ban-reentry`, `gap-mock-gps`, `gap-attendance-fraud`, `gap-device-fingerprint` |
 
 ## S9 — Polish

@@ -1,7 +1,7 @@
 # PartonNewArch — Documentation index
 
 **Status:** `accepted` (navigation)  
-**Last updated:** 2026-10-10  
+**Last updated:** 2026-10-11  
 **Canonical architecture:** [`04-application-architecture.md`](04-application-architecture.md)  
 **Cohesion rules:** [`DOC-COHESION.md`](DOC-COHESION.md) — hubs/spokes, sync checklist, status vocabulary  
 **Coding readiness:** [`agents/10-production-ready.md`](agents/10-production-ready.md)
@@ -21,7 +21,7 @@ Master map of living architecture docs. Prefer this file when onboarding or loca
 | **Mobile** | [mobile/README](mobile/README.md) → [06 iOS+Android](mobile/06-ios-android-platforms.md) → [07 Fastlane](mobile/07-fastlane.md) → [IA](mobile/01-information-architecture.md) → [routing](shared/08-routing.md) → screen catalogs |
 | **Web / admin** | [web/README](web/README.md) → [08 admin×cases](web/08-admin-case-coverage.md) → [09 DevOps](web/09-admin-devops.md) → [10 DevOps MCP](web/10-devops-mcp.md) → [11 legal audit](web/11-legal-audit-reports.md) → [04 shadcn](web/04-shadcn-dark-ui.md) → screens |
 | **Product / QA** | [02 roadmap](02-product-roadmap.md) → [cases/README](cases/README.md) → [coverage matrix](cases/00-coverage-matrix.md) → [gap backlog](cases/01-gap-backlog.md) |
-| **Security / privacy** | [21 client security](backend/21-client-security.md) · [18 auth](backend/18-auth-rbac.md) · [17 privacy](backend/17-privacy-kvkk-gdpr.md) · [CASE-SECURITY](cases/groups/CASE-SECURITY.md) |
+| **Security / privacy** | [23 audit program](backend/23-security-audit-program.md) · [21 client security](backend/21-client-security.md) · [18 auth](backend/18-auth-rbac.md) · [17 privacy](backend/17-privacy-kvkk-gdpr.md) · [CASE-SECURITY](cases/groups/CASE-SECURITY.md) |
 | **Design** | **[DESIGN.md](DESIGN.md)** · [01 colors](shared/01-color-system.md) · [09 UI](shared/09-modern-ui-principles.md) · [10 UX](shared/10-modern-ux-principles.md) · [03 layouts](shared/03-screen-ux-layout.md) · [02 components](shared/02-ui-components.md) |
 
 ---
@@ -41,6 +41,8 @@ Master map of living architecture docs. Prefer this file when onboarding or loca
 | [07-environments-and-ops.md](07-environments-and-ops.md) | Envs, deploy, health, ops | accepted (AO-10 vendor brand open) |
 | [AGENTS.md](AGENTS.md) | **AI agent entrypoint** | accepted |
 | [agents/10-production-ready.md](agents/10-production-ready.md) | **Full-stack production coding gate** | accepted |
+| [agents/11-ponytail-integration.md](agents/11-ponytail-integration.md) | Ponytail agent workflow (review, audit, hooks) | accepted |
+| [agents/12-ponytail-audit-baseline.md](agents/12-ponytail-audit-baseline.md) | Ponytail repo audit baseline + lean fixes log | accepted |
 | [DESIGN.md](DESIGN.md) | **Visual SoR** (Stitch / awesome-design-md) | accepted · ADR-0039 |
 | [CLAUDE.md](CLAUDE.md) | Claude Code pointer | accepted |
 | [agents/](agents/) | Playbook, defaults, scaffold, conventions, slices, grounding, no-mocks, latest-stack, **production-ready** (00–10) | accepted |
@@ -62,6 +64,7 @@ Master map of living architecture docs. Prefer this file when onboarding or loca
 | Tokens / matching / geo | [backend/11](backend/11-tokens-and-provision.md) · [12](backend/12-matching-rules.md) · [13](backend/13-location-policy.md) |
 | Privacy | [backend/17](backend/17-privacy-kvkk-gdpr.md) · ADR-0010 |
 | Client security | [backend/21](backend/21-client-security.md) · ADR-0018 |
+| Security audit | [backend/23](backend/23-security-audit-program.md) — skill method + seed units; not a findings report |
 | Mobile UI | [mobile/04](mobile/04-nativewind-ui.md) · [mobile/05](mobile/05-wwdc-liquid-glass.md) · [mobile/08 Stitch](mobile/08-stitch-mobile-ui.md) |
 | Stitch (all channels) | [shared/13](shared/13-stitch-projects.md) · [web/12](web/12-stitch-web-admin-ui.md) · Mobile/Web/Admin projects |
 | iOS + Android (latest) | [mobile/06](mobile/06-ios-android-platforms.md) · ADR-0029 |
@@ -78,7 +81,7 @@ Master map of living architecture docs. Prefer this file when onboarding or loca
 | UX / UI principles | [shared/09](shared/09-modern-ui-principles.md) · [shared/10](shared/10-modern-ux-principles.md) |
 | Routing / deep links | [shared/08](shared/08-routing.md) · [mobile/03](mobile/03-flows-and-deep-links.md) |
 | i18n / a11y | [shared/07](shared/07-i18n.md) · [shared/06](shared/06-accessibility-wcag.md) |
-| Acceptance (248 cases) | [cases/](cases/) · [UI mandate](cases/03-ui-coverage-mandate.md) |
+| Acceptance (248 cases) | [cases/](cases/) · NewArch EN/TR JSON · [UI mandate](cases/03-ui-coverage-mandate.md) |
 | Glossary | [shared/11-glossary.md](shared/11-glossary.md) |
 | API contracts | [shared/12](shared/12-api-contracts.md) · ADR-0027 |
 | AI agents / grounding | [AGENTS.md](AGENTS.md) · [10 production-ready](agents/10-production-ready.md) · [07](agents/07-anti-hallucination.md) · [08](agents/08-no-mocks-fully-functional.md) · [09](agents/09-latest-stack-policy.md) · [02](agents/02-defaults-and-non-asks.md) |
@@ -105,7 +108,8 @@ PartonNewArch/
 ```
 
 Legacy reference (not architecture SoR): [`../parton-codebase-wiki/`](../parton-codebase-wiki/).  
-Case JSON SoR: [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json).
+Case JSON SoR (IDs): [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json).  
+NewArch mapped scenarios: [`cases/parton_case_tests_newarch_en.json`](cases/parton_case_tests_newarch_en.json) (English) · [`cases/parton_case_tests_newarch_tr.json`](cases/parton_case_tests_newarch_tr.json) (Turkish).
 
 ---
 
@@ -114,7 +118,7 @@ Case JSON SoR: [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json).
 | Topic | Truth | Do not say |
 | --- | --- | --- |
 | API envelope / Zod | **Accepted** ADR-0027 | “AO-6/AO-8 still open” |
-| Packages / tooling | **pnpm + Turborepo**; `api-contracts` / `shared-utils` / `design-tokens` — ADR-0038 | “AO-7 proposed” |
+| Packages / tooling | **Bun + Turborepo** (root); **npm** in `apps/mobile`; locked packages — ADR-0040 | “pnpm primary” / “AO-7 proposed” |
 | Prisma ORM | **Accepted** ADR-0003 | “Prisma proposed / pending confirm” |
 | Domain modules | **Final for v1** — [04-domain-modules](backend/04-domain-modules.md) | “names provisional” |
 | `api-contracts` package name | **Locked** | “name TBD” |
@@ -134,6 +138,7 @@ Case JSON SoR: [`../parton_case_tests_tr.json`](../parton_case_tests_tr.json).
 | Production coding | Docs ready — [agents/10](agents/10-production-ready.md) | Waiting on AO-5/7/Prisma “proposed” |
 | Visual UI | **DESIGN.md** + ADR-0017 tokens — ADR-0039 | Drop-in foreign brand DESIGN.md; purple-glow AI UI |
 | SLOs | **Proposed** in [05-nfr](05-quality-nfr.md) | Contractual guarantees |
+| Security audit | Method in [23](backend/23-security-audit-program.md); no code audit has run | Calling seed units “covered”; severity on `needs_validation`; CASE **Kritik** as CVSS |
 
 Full edit sync rules: [`DOC-COHESION.md`](DOC-COHESION.md).
 
@@ -150,6 +155,7 @@ Full edit sync rules: [`DOC-COHESION.md`](DOC-COHESION.md).
 | Notify | Template in [shared/05](shared/05-push-notifications-ux.md) §0 |
 | Privacy | Field classified; retention noted if PII |
 | Test | Case IDs in [06-testing-strategy](06-testing-strategy.md) layers |
+| Security boundary | Unit row in [23](backend/23-security-audit-program.md) §6, or a new row in the same change |
 
 ---
 

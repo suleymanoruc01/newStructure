@@ -102,4 +102,4 @@ Why monolith first:
 | BQ-2 | Prisma vs TypeORM | **Accepted** Prisma latest stable — [ADR-0003](adr/0003-orm-choice.md) |
 | BQ-3 | Redis day-1 | **No** — Stage B only; managed Redis when introduced — [ADR-0008](adr/0008-managed-redis.md) |
 | BQ-4 | Admin UI presentation | **Accepted** — Vite + shadcn/ui dark — [ADR-0014](adr/0014-web-ui-shadcn-dark.md) |
-| BQ-5 | Monorepo tool | **Accepted** pnpm + Turborepo — [ADR-0038](adr/0038-monorepo-tooling.md) |
+| BQ-5 | Monorepo tool | **Accepted** Bun + Turborepo — [ADR-0040](adr/0040-bun-monorepo-exclude-mobile.md) |

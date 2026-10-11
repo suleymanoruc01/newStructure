@@ -67,9 +67,9 @@ Do **not** ask the user about:
 | AO-3 | Stage A outbox in-process until perf evidence; no separate worker process in P0–P2 |
 | AO-4 | Use proposed SLOs in [05-quality-nfr](../05-quality-nfr.md) |
 | AO-5 | Use module names in [04-domain-modules](../backend/04-domain-modules.md) as **final for v1** |
-| AO-7 | **pnpm** + **Turborepo**; packages: `api-contracts`, `shared-utils`, `design-tokens` — [ADR-0038](../backend/adr/0038-monorepo-tooling.md) |
+| AO-7 | **Bun** + **Turborepo** at root; **`apps/mobile` = npm** (not Bun); packages: `api-contracts`, `shared-utils`, `design-tokens` — [ADR-0040](../backend/adr/0040-bun-monorepo-exclude-mobile.md) |
 | AO-9 | Latest stable bare RN; Flipper optional off; ship `ios/` + `android/`; dual CI; **Fastlane** under `apps/mobile/fastlane/` — [mobile/06](../mobile/06-ios-android-platforms.md) · [mobile/07](../mobile/07-fastlane.md) · ADR-0029/0030 |
-| AO-10 | Local/staging: Docker Compose Postgres (+ Redis optional). Cloud vendor: **do not block** — use Compose until human sets AO-10. Nest web: **PM2** + **NGINX** — [web/05](../web/05-pm2.md) · [web/06](../web/06-nginx.md) · ADR-0031/0032 |
+| AO-10 | Local/staging: **host or managed** Postgres (+ Redis optional). No Docker Compose in repo — [`docs/DEV.md`](../../docs/DEV.md). Nest web: **PM2** + **NGINX** — [web/05](../web/05-pm2.md) · [web/06](../web/06-nginx.md) · ADR-0031/0032 |
 | AO-11 | Manager is **first-class AuthZ role** with branch scope; ship manager tabs |
 | AO-12 | Support last **2** mobile native releases; deprecate with response header `X-API-Deprecated` later |
 | AO-13 | Eng controls on; **locked retention constants** from [17](../backend/17-privacy-kvkk-gdpr.md) / [22](../backend/22-legal-audit-logger.md) — **no TODOs**; supersede only via ADR |

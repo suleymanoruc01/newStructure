@@ -1,0 +1,17 @@
+{
+  "name": "@parton/design-tokens",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/tailwind-preset.js",
+  "exports": {
+    ".": "./src/tailwind-preset.js",
+    "./css-variables.css": {
+      "style": "./src/css-variables.css",
+      "default": "./src/css-variables.css"
+    },
+    "./tailwind-preset": "./src/tailwind-preset.js"
+  },
+  "scripts": {
+    "build": "node -e \"process.exit(0)\""
+  }
+}
