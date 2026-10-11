@@ -128,6 +128,7 @@ export const policyDocumentSchema = z.object({
   id: z.string().uuid(),
   slug: z.string(),
   title: z.string(),
+  body: z.string(),
   version: z.string(),
   required: z.boolean(),
   contentUrl: z.string().url().optional(),
@@ -145,8 +146,24 @@ export const policiesListResponseSchema = successEnvelopeSchema(
 
 export type PoliciesListResponse = z.infer<typeof policiesListResponseSchema>;
 
+export const policyReadBodySchema = z.object({
+  policyId: z.string().uuid(),
+  version: z.string().min(1).max(32),
+  reachedEnd: z.literal(true),
+});
+
+export type PolicyReadBody = z.infer<typeof policyReadBodySchema>;
+
+export const policyReadDataSchema = z.object({
+  readAt: z.string().datetime(),
+  version: z.string(),
+});
+
+export const policyReadResponseSchema = successEnvelopeSchema(policyReadDataSchema);
+
 export const policyAcceptanceBodySchema = z.object({
-  policyIds: z.array(z.string().uuid()).min(1),
+  policyId: z.string().uuid(),
+  version: z.string().min(1).max(32),
 });
 
 export type PolicyAcceptanceBody = z.infer<typeof policyAcceptanceBodySchema>;

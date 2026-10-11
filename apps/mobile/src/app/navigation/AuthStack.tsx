@@ -60,6 +60,7 @@ export function AuthStackNavigator() {
 
   return (
     <Stack.Navigator
+      key={startRoute}
       initialRouteName={startRoute}
       screenOptions={{ headerShown: false }}
     >

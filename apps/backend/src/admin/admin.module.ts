@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { FavoritesModule } from '../favorites/favorites.module.js';
+import { PoliciesModule } from '../policies/policies.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { PlatformModule } from '../platform/platform.module.js';
 import { TokensModule } from '../tokens/tokens.module.js';
@@ -18,6 +19,7 @@ import { AdminOpsService } from './admin-ops.service.js';
     TokensModule,
     FavoritesModule,
     WorkersModule,
+    PoliciesModule,
   ],
   controllers: [AdminOpsController],
   providers: [AdminOpsService, LegalAuditLogger],

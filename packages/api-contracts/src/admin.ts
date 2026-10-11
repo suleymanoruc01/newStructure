@@ -103,3 +103,10 @@ export const adminMatchingDiagnosticsDataSchema = z.object({
 export const adminMatchingDiagnosticsResponseSchema = successEnvelopeSchema(
   adminMatchingDiagnosticsDataSchema,
 );
+
+export const adminPolicyPatchSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(20000),
+});
+
+export type AdminPolicyPatchBody = z.infer<typeof adminPolicyPatchSchema>;

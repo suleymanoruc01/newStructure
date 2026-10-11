@@ -96,7 +96,7 @@ export class AdminOpsService {
       policyAcceptances: user.policyAcceptances.map((a) => ({
         policyId: a.policyId,
         slug: a.policy.slug,
-        version: a.policy.version,
+        version: a.acceptedVersion,
         acceptedAt: a.acceptedAt.toISOString(),
       })),
     };
@@ -293,6 +293,7 @@ export class AdminOpsService {
         id: row.id,
         slug: row.slug,
         title: row.title,
+        body: row.body,
         version: row.version,
         required: row.required,
         contentUrl: row.contentUrl,

@@ -15,6 +15,8 @@ import {
   policiesListResponseSchema,
   policyAcceptanceBodySchema,
   policyAcceptanceResponseSchema,
+  policyReadBodySchema,
+  policyReadResponseSchema,
   tokenRefreshBodySchema,
   tokenRefreshResponseSchema,
   assignRoleResponseSchema,
@@ -31,6 +33,7 @@ import {
   type PhonePasswordLoginBody,
   type SetPasswordBody,
   type PolicyAcceptanceBody,
+  type PolicyReadBody,
   type TokenRefreshBody,
 } from '@parton/api-contracts';
 
@@ -126,6 +129,10 @@ export async function listPolicies(accessToken: string) {
   });
 }
 
+export async function listPublishedPolicies() {
+  return apiRequest('/policies/catalog', policiesListResponseSchema);
+}
+
 export async function fetchIdentityProviders() {
   return apiRequest(
     '/auth/identity-providers',
@@ -156,6 +163,15 @@ export async function loginWithIdentity(body: IdentityLoginBody) {
   return apiRequest('/auth/identities/login', otpVerifyResponseSchema, {
     method: 'POST',
     body,
+  });
+}
+
+export async function readPolicy(body: PolicyReadBody, accessToken: string) {
+  policyReadBodySchema.parse(body);
+  return apiRequest('/policies/reads', policyReadResponseSchema, {
+    method: 'POST',
+    body,
+    accessToken,
   });
 }
 

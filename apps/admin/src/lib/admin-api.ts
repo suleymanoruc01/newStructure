@@ -39,6 +39,18 @@ export async function fetchAdminResource(path: string) {
   return adminGetLoose(path);
 }
 
+export async function updateAdminPolicy(
+  id: string,
+  body: { title: string; body: string },
+) {
+  const json = await apiRequest<unknown>(`/admin/policies/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body,
+  });
+  return envelopeDataSchema.parse(json).data;
+}
+
 export async function fetchAuditEvents(query?: string) {
   const path = query ? `/admin/audit/events?${query}` : "/admin/audit/events";
   const json = await apiRequest<unknown>(path, { auth: true });

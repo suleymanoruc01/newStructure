@@ -17,19 +17,24 @@ import {
   adminRemoteConfigSchema,
   adminTokenCreditSchema,
   adminUserPatchSchema,
+  adminPolicyPatchSchema,
   adminVerificationPatchSchema,
 } from '@parton/api-contracts';
 import type { Request } from 'express';
 
 import { successResponse } from '../common/response.util.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { PoliciesService } from '../policies/policies.service.js';
 import { PlatformAdminGuard } from './platform-admin.guard.js';
 import { AdminOpsService } from './admin-ops.service.js';
 
 @Controller('admin')
 @UseGuards(PlatformAdminGuard)
 export class AdminOpsController {
-  constructor(private readonly ops: AdminOpsService) {}
+  constructor(
+    private readonly ops: AdminOpsService,
+    private readonly policyDocs: PoliciesService,
+  ) {}
 
   @Get('dashboard')
   async dashboard(@Req() req: Request) {
@@ -323,6 +328,22 @@ export class AdminOpsController {
   @Get('policies')
   async policies(@Req() req: Request) {
     const data = await this.ops.listPolicies();
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch('policies/:id')
+  async updatePolicy(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(adminPolicyPatchSchema)) body: unknown,
+  ) {
+    const parsed = adminPolicyPatchSchema.parse(body);
+    const data = await this.policyDocs.updateDocument(
+      req.userId!,
+      id,
+      parsed,
+      req.requestId ?? '',
+    );
     return successResponse(req.requestId ?? '', data);
   }
 

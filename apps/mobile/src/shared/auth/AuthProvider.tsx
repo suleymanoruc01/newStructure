@@ -10,6 +10,7 @@ import React, {
 
 import {
   acceptPolicies,
+  readPolicy,
   assignRole,
   fetchContexts,
   listPolicies,
@@ -72,10 +73,13 @@ type AuthContextValue = {
   loginWithPassword: (phone: string, password: string) => Promise<MeUser>;
   signInWithLinkedIdentity: () => Promise<MeUser>;
   selectRole: (role: UserRole) => Promise<void>;
-  acceptAllPolicies: (policyIds: string[]) => Promise<void>;
-  loadPendingPolicies: () => Promise<
-    { id: string; title: string; required: boolean }[]
-  >;
+  recordPolicyRead: (policyId: string, version: string) => Promise<void>;
+  acknowledgePolicy: (
+    policyId: string,
+    version: string,
+  ) => Promise<PolicyRow[]>;
+  continueAfterPolicies: () => Promise<void>;
+  loadPendingPolicies: () => Promise<PolicyRow[]>;
   applyEmployerCreate: (data: EmployerCreateData) => void;
   applyManagerJoin: (data: ManagerJoinData) => void;
   completeOnboarding: () => Promise<void>;
@@ -84,6 +88,14 @@ type AuthContextValue = {
 };
 
 const AuthReactContext = createContext<AuthContextValue | null>(null);
+
+type PolicyRow = {
+  id: string;
+  title: string;
+  body: string;
+  version: string;
+  required: boolean;
+};
 
 function deriveRolePhase(user: MeUser | null): AuthPhase {
   if (!user) {
@@ -338,29 +350,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data.items.map((p) => ({
       id: p.id,
       title: p.title,
+      body: p.body,
+      version: p.version,
       required: p.required,
     }));
   }, []);
 
-  const acceptAllPolicies = useCallback(
-    async (policyIds: string[]) => {
+  const refreshPolicyGate = useCallback(async () => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
+    }
+    const me = user ?? (await fetchMe(token));
+    const ctx =
+      contexts.length > 0 ? contexts : (await fetchContexts(token)).items;
+    setUser(me);
+    setContexts(ctx);
+    await syncGate(token, me, ctx);
+  }, [contexts, syncGate, user]);
+
+  const recordPolicyRead = useCallback(async (policyId: string, version: string) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
+    }
+    await readPolicy({ policyId, version, reachedEnd: true }, token);
+  }, []);
+
+  const acknowledgePolicy = useCallback(
+    async (policyId: string, version: string) => {
       const token = getAccessToken();
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      if (policyIds.length > 0) {
-        await acceptPolicies({ policyIds }, token);
+      await acceptPolicies({ policyId, version }, token);
+      const pending = await listPolicies(token);
+      const rows = pending.items.map((p) => ({
+        id: p.id,
+        title: p.title,
+        body: p.body,
+        version: p.version,
+        required: p.required,
+      }));
+      if (rows.length === 0) {
+        await refreshPolicyGate();
       }
-      const me = user ?? (await fetchMe(token));
-      const ctx =
-        contexts.length > 0
-          ? contexts
-          : (await fetchContexts(token)).items;
-      setUser(me);
-      setContexts(ctx);
-      await syncGate(token, me, ctx);
+      return rows;
     },
-    [contexts, syncGate, user],
+    [refreshPolicyGate],
   );
 
   const applyEmployerCreate = useCallback(
@@ -461,7 +498,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loginWithPassword,
       signInWithLinkedIdentity,
       selectRole,
-      acceptAllPolicies,
+      recordPolicyRead,
+      acknowledgePolicy,
+      continueAfterPolicies: refreshPolicyGate,
       loadPendingPolicies,
       applyEmployerCreate,
       applyManagerJoin,
@@ -482,7 +521,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loginWithPassword,
       signInWithLinkedIdentity,
       selectRole,
-      acceptAllPolicies,
+      recordPolicyRead,
+      acknowledgePolicy,
+      refreshPolicyGate,
       loadPendingPolicies,
       applyEmployerCreate,
       applyManagerJoin,

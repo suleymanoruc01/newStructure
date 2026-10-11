@@ -36,6 +36,8 @@ export const FIELD_LABELS: Record<string, string> = {
   version: "Sürüm",
   required: "Zorunlu",
   contentUrl: "Bağlantı",
+  body: "Metin",
+  acceptedVersion: "Onaylanan sürüm",
   workerProfileId: "İş arayan",
   employerIds: "İşverenler",
   isPlatformAdmin: "Platform yöneticisi",

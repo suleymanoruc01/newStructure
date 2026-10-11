@@ -29,5 +29,7 @@
   "PAYMENT_DECLINED": "Ödeme tamamlanamadı.",
   "IDENTITY_NOT_LINKED": "Bu hesap bağlı değil. Önce telefon numarasıyla kayıt olun, sonra profilde bağlayın.",
   "IDENTITY_TOKEN_INVALID": "Kimlik doğrulanamadı.",
-  "IDENTITY_NOT_CONFIGURED": "Bu giriş yöntemi henüz yapılandırılmadı."
+  "IDENTITY_NOT_CONFIGURED": "Bu giriş yöntemi henüz yapılandırılmadı.",
+  "POLICY_READ_REQUIRED": "Bu metnin sonuna kadar okumadan onaylayamazsınız.",
+  "POLICY_VERSION_STALE": "Metin güncellendi. Güncel sürümü onaylayın."
 }

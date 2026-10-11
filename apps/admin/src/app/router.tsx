@@ -24,6 +24,7 @@ import {
   PerfMetricsPage,
   RemoteConfigPage,
 } from "@/routes/ops-special-pages";
+import { PoliciesManagePage } from "@/routes/policies-manage-page";
 import { ProtectedRoute } from "@/routes/protected-route";
 
 function LoginRoute() {
@@ -359,16 +360,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="policies"
-            element={
-              <AdminListRoute
-                title="Politikalar"
-                screenId="w.admin.policies.manage"
-                apiPath="/admin/policies"
-              />
-            }
-          />
+          <Route path="policies" element={<PoliciesManagePage />} />
           <Route path="config" element={<RemoteConfigPage />} />
           <Route
             path="audit"

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
@@ -52,7 +52,7 @@ export class AuditExportService {
 
     if (body.format === 'csv') {
       const header =
-        'id,category,action,actor_user_id,actor_role,resource_type,resource_id,request_id,created_at\n';
+        'id,category,action,actor_user_id,actor_role,resource_type,resource_id,request_id,created_at,metadata\n';
       const lines = rows.map((row) =>
         [
           row.id,
@@ -64,6 +64,7 @@ export class AuditExportService {
           row.resourceId ?? '',
           row.requestId ?? '',
           row.createdAt.toISOString(),
+          JSON.stringify(row.metadata ?? {}),
         ]
           .map((v) => `"${String(v).replace(/"/g, '""')}"`)
           .join(','),
@@ -72,6 +73,10 @@ export class AuditExportService {
     } else {
       await new Promise<void>((resolve, reject) => {
         const doc = new PDFDocument({ margin: 48 });
+        const font = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+        if (existsSync(font)) {
+          doc.font(font);
+        }
         const stream = doc.pipe(createWriteStream(filePath));
         doc.fontSize(16).text('PartOn Legal Audit Report', { underline: true });
         doc.moveDown();
@@ -81,8 +86,14 @@ export class AuditExportService {
         doc.text(`Generated: ${new Date().toISOString()}`);
         doc.moveDown();
         for (const row of rows) {
+          const meta =
+            row.metadata && typeof row.metadata === 'object'
+              ? (row.metadata as { slug?: string; version?: string })
+              : {};
+          const version =
+            typeof meta.version === 'string' ? ` | ${meta.slug ?? ''} v${meta.version}` : '';
           doc.text(
-            `${row.createdAt.toISOString()} | ${row.category} | ${row.action} | actor=${row.actorUserId ?? '-'} | resource=${row.resourceType ?? '-'}:${row.resourceId ?? '-'}`,
+            `${row.createdAt.toISOString()} | ${row.category} | ${row.action} | actor=${row.actorUserId ?? '-'} | resource=${row.resourceType ?? '-'}:${row.resourceId ?? '-'}${version}`,
           );
         }
         doc.end();
