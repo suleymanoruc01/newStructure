@@ -13,7 +13,7 @@ export function App() {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="dark"
+      forcedTheme="light"
       enableSystem={false}
       storageKey="parton-admin-theme"
     >

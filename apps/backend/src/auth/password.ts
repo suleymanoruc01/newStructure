@@ -3,6 +3,15 @@ import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
 
+export function passwordIsStrong(password: string): boolean {
+  return (
+    password.length >= 8 &&
+    password.length <= 128 &&
+    /\p{L}/u.test(password) &&
+    /\p{N}/u.test(password)
+  );
+}
+
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('hex');
   const hash = (await scryptAsync(password, salt, 32)) as Buffer;

@@ -12,7 +12,8 @@ import {
 } from '@parton/api-contracts';
 
 import { ApiException } from '../common/api.exception.js';
-import { verifyPassword } from './password.js';
+import { istanbulCivil, istanbulInstant } from '../common/istanbul-civil.js';
+import { hashPassword, passwordIsStrong, verifyPassword } from './password.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -36,6 +37,20 @@ import {
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
+const PASSWORD_RESETS_PER_DAY = 2;
+
+function istanbulDayStart(now = new Date()): Date {
+  const civil = istanbulCivil(now);
+  return istanbulInstant(civil.year, civil.month, civil.day, 0, 0);
+}
+
+function otpSkipsPassword(purpose: string): boolean {
+  return (
+    purpose === 'admin_login' ||
+    purpose === 'verify_phone' ||
+    purpose === 'step_up'
+  );
+}
 
 @Injectable()
 export class AuthService {
@@ -136,9 +151,65 @@ export class AuthService {
     });
   }
 
+  private assertPasswordAcceptable(password: string | undefined): string {
+    if (!password || !passwordIsStrong(password)) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Şifre en az 8 karakter olmalı ve harf ile rakam içermelidir.',
+      );
+    }
+    return password;
+  }
+
   async requestOtp(body: OtpRequestBody) {
     const phoneE164 = normalizePhoneE164(body.phone);
     await this.assertNotBanned(phoneE164);
+    const requested = body.purpose ?? 'register';
+    const existing = await this.prisma.user.findUnique({
+      where: { phoneE164 },
+      select: { id: true, passwordHash: true },
+    });
+    const purpose =
+      requested === 'login' && !existing?.passwordHash ? 'register' : requested;
+
+    if (purpose === 'login') {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.PASSWORD_REQUIRED,
+        'Giriş şifre ile yapılır. OTP kayıt ve şifre yenileme içindir.',
+      );
+    }
+
+    if (purpose === 'password_reset') {
+      if (!existing?.passwordHash) {
+        throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          ErrorCode.VALIDATION_FAILED,
+          'Bu numara için kayıtlı şifre yok.',
+        );
+      }
+      const usedToday = await this.prisma.otpChallenge.count({
+        where: {
+          phoneE164,
+          purpose: 'password_reset',
+          createdAt: { gte: istanbulDayStart() },
+        },
+      });
+      if (usedToday >= PASSWORD_RESETS_PER_DAY) {
+        throw new ApiException(
+          HttpStatus.TOO_MANY_REQUESTS,
+          ErrorCode.PASSWORD_RESET_LIMIT,
+          'Şifre yenileme hakkı günde iki kez kullanılabilir.',
+        );
+      }
+    } else if (!otpSkipsPassword(purpose) && existing?.passwordHash) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.PASSWORD_REQUIRED,
+        'Bu numara şifre ile giriş yapar. OTP kayıt ve şifre yenileme içindir.',
+      );
+    }
 
     const recent = await this.prisma.otpChallenge.findFirst({
       where: { phoneE164 },
@@ -160,19 +231,20 @@ export class AuthService {
     const codeHash = hashOtp(code, this.config.env.OTP_PEPPER);
     const expiresAt = new Date(Date.now() + OTP_TTL_MS);
 
-    let user = await this.prisma.user.findUnique({ where: { phoneE164 } });
-    if (!user) {
-      user = await this.prisma.user.create({
+    let userId = existing?.id;
+    if (!userId) {
+      const created = await this.prisma.user.create({
         data: { phoneE164 },
       });
+      userId = created.id;
     }
 
     const challenge = await this.prisma.otpChallenge.create({
       data: {
-        userId: user.id,
+        userId,
         phoneE164,
         codeHash,
-        purpose: body.purpose ?? 'login',
+        purpose,
         expiresAt,
       },
     });
@@ -231,11 +303,6 @@ export class AuthService {
       );
     }
 
-    await this.prisma.otpChallenge.update({
-      where: { id: challenge.id },
-      data: { consumedAt: new Date() },
-    });
-
     const user = await this.prisma.user.findUnique({
       where: { phoneE164: challenge.phoneE164 },
       include: { platformAdmin: true },
@@ -248,6 +315,17 @@ export class AuthService {
       );
     }
 
+    await this.assertIdentityAllowed(
+      user.id,
+      challenge.phoneE164,
+      body.deviceId,
+    );
+
+    await this.prisma.otpChallenge.update({
+      where: { id: challenge.id },
+      data: { consumedAt: new Date() },
+    });
+
     if (challenge.purpose === 'admin_login' && !user.platformAdmin) {
       throw new ApiException(
         HttpStatus.FORBIDDEN,
@@ -255,12 +333,6 @@ export class AuthService {
         'Admin erişimi yok.',
       );
     }
-
-    await this.assertIdentityAllowed(
-      user.id,
-      challenge.phoneE164,
-      body.deviceId,
-    );
 
     const contexts = await this.membership.listContexts(user.id);
     let activeContext: AuthContext;
@@ -296,6 +368,81 @@ export class AuthService {
 
     const me = await this.membership.toMeUser(user.id);
     return { tokens, user: me, contexts };
+  }
+
+  async setPassword(userId: string, password: string): Promise<void> {
+    const next = this.assertPasswordAcceptable(password);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!user) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Kullanıcı bulunamadı.',
+      );
+    }
+    if (user.passwordHash) {
+      const reset = await this.prisma.otpChallenge.findFirst({
+        where: {
+          userId,
+          purpose: 'password_reset',
+          consumedAt: { gte: new Date(Date.now() - OTP_TTL_MS) },
+        },
+      });
+      if (!reset) {
+        throw new ApiException(
+          HttpStatus.CONFLICT,
+          ErrorCode.CONFLICT,
+          'Şifre zaten tanımlı. Yenilemek için OTP kullanın.',
+        );
+      }
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hashPassword(next) },
+    });
+  }
+
+  async loginWithPhonePassword(
+    phone: string,
+    password: string,
+    userAgent?: string,
+  ) {
+    const phoneE164 = normalizePhoneE164(phone);
+    const user = await this.prisma.user.findUnique({ where: { phoneE164 } });
+    const matches = user?.passwordHash
+      ? await verifyPassword(password, user.passwordHash)
+      : false;
+    if (!user || !matches) {
+      throw new ApiException(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.UNAUTHORIZED,
+        'Telefon veya şifre hatalı.',
+      );
+    }
+    await this.assertIdentityAllowed(user.id, phoneE164);
+    const contexts = await this.membership.listContexts(user.id);
+    const activeContext =
+      contexts.length > 0
+        ? this.membership.pickDefaultContext(contexts)
+        : ({ role: 'worker' } as const);
+    const sessionResult = await this.sessions.createSession(
+      user.id,
+      activeContext,
+      userAgent,
+    );
+    const access = this.tokens.signAccess(
+      user.id,
+      sessionResult.sessionId,
+      activeContext,
+    );
+    return {
+      tokens: { ...sessionResult.tokens, ...access },
+      user: await this.membership.toMeUser(user.id),
+      contexts,
+    };
   }
 
   async loginWithAdminPassword(

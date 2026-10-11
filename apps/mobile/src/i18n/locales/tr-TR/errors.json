@@ -1,5 +1,7 @@
 {
   "RATE_LIMITED": "Çok fazla deneme. Lütfen bir süre sonra tekrar deneyin.",
+  "PASSWORD_REQUIRED": "Giriş şifre ile yapılır. OTP kayıt ve şifre yenileme içindir.",
+  "PASSWORD_RESET_LIMIT": "Şifre yenileme hakkı günde iki kez kullanılabilir.",
   "VALIDATION_FAILED": "Girdiğiniz bilgileri kontrol edin.",
   "UNAUTHORIZED": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
   "SESSION_EXPIRED": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",

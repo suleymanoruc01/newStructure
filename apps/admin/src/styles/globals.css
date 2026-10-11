@@ -24,7 +24,8 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-  --font-sans: "Source Sans 3", "DM Sans", system-ui, sans-serif;
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
 }
 
 @layer base {
@@ -37,7 +38,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   html.dark {
-    color-scheme: dark;
+    color-scheme: light;
   }
   @media (pointer: fine) {
     html {
@@ -69,4 +70,28 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+
+/* DESIGN-Light-full.md Colors + Components. */
+:root,
+.dark {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0d9488;
+  --primary-foreground: #ffffff;
+  --secondary: #06b6d4;
+  --secondary-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #06b6d4;
 }

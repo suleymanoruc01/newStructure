@@ -9,6 +9,9 @@ import {
   otpRequestResponseSchema,
   otpVerifyBodySchema,
   otpVerifyResponseSchema,
+  phonePasswordLoginBodySchema,
+  setPasswordBodySchema,
+  setPasswordResponseSchema,
   policiesListResponseSchema,
   policyAcceptanceBodySchema,
   policyAcceptanceResponseSchema,
@@ -25,6 +28,8 @@ import {
   type IdentityLoginBody,
   type OtpRequestBody,
   type OtpVerifyBody,
+  type PhonePasswordLoginBody,
+  type SetPasswordBody,
   type PolicyAcceptanceBody,
   type TokenRefreshBody,
 } from '@parton/api-contracts';
@@ -34,6 +39,26 @@ import { apiRequest } from './client';
 export async function requestOtp(body: OtpRequestBody) {
   otpRequestBodySchema.parse(body);
   return apiRequest('/auth/otp/request', otpRequestResponseSchema, {
+    method: 'POST',
+    body,
+  });
+}
+
+export async function setAccountPassword(
+  body: SetPasswordBody,
+  accessToken: string,
+) {
+  setPasswordBodySchema.parse(body);
+  return apiRequest('/auth/password', setPasswordResponseSchema, {
+    method: 'POST',
+    body,
+    accessToken,
+  });
+}
+
+export async function loginWithPhonePassword(body: PhonePasswordLoginBody) {
+  phonePasswordLoginBodySchema.parse(body);
+  return apiRequest('/auth/login', otpVerifyResponseSchema, {
     method: 'POST',
     body,
   });

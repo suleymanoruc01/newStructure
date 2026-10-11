@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 
 import { AuthOtpScreen } from '../../features/auth/screens/AuthOtpScreen';
+import { AuthPasswordScreen } from '../../features/auth/screens/AuthPasswordScreen';
 import { AuthPhoneScreen } from '../../features/auth/screens/AuthPhoneScreen';
 import { AuthPoliciesScreen } from '../../features/auth/screens/AuthPoliciesScreen';
 import { AuthRoleSelectScreen } from '../../features/auth/screens/AuthRoleSelectScreen';
@@ -65,6 +66,7 @@ export function AuthStackNavigator() {
       <Stack.Screen name="AuthTutorial" component={AuthTutorialScreen} />
       <Stack.Screen name="AuthPhone" component={AuthPhoneScreen} />
       <Stack.Screen name="AuthOtp" component={AuthOtpScreen} />
+      <Stack.Screen name="AuthPassword" component={AuthPasswordScreen} />
       <Stack.Screen name="AuthRoleSelect" component={AuthRoleSelectScreen} />
       <Stack.Screen name="AuthPolicies" component={AuthPoliciesScreen} />
       <Stack.Screen

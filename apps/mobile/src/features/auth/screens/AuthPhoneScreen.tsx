@@ -49,23 +49,43 @@ export function AuthPhoneScreen({ navigation }: Props) {
     }
   };
 
-  const onContinue = async () => {
+  const phoneReady = phone.replace(/\D/g, '').length >= 10;
+
+  const onSignUp = async () => {
     setError(null);
     setSubmitting(true);
     try {
       const e164 = normalizeTrPhone(phone);
-      const { challengeId } = await requestPhoneOtp(e164);
-      navigation.navigate('AuthOtp', { challengeId, phone: e164 });
+      const { challengeId } = await requestPhoneOtp(e164, 'register');
+      navigation.navigate('AuthOtp', {
+        challengeId,
+        phone: e164,
+        purpose: 'register',
+      });
     } catch (err) {
+      if (err instanceof ApiClientError && err.code === 'PASSWORD_REQUIRED') {
+        navigation.navigate('AuthPassword', {
+          mode: 'login',
+          phone: normalizeTrPhone(phone),
+        });
+        return;
+      }
       if (err instanceof ApiClientError) {
-        const key = `errors:${err.code}`;
-        setError(t(key, { defaultValue: err.message }));
+        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
       } else {
         setError(t('common:networkError'));
       }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const onSignIn = () => {
+    setError(null);
+    navigation.navigate('AuthPassword', {
+      mode: 'login',
+      phone: normalizeTrPhone(phone),
+    });
   };
 
   return (
@@ -85,10 +105,17 @@ export function AuthPhoneScreen({ navigation }: Props) {
       />
       <Text className="font-sans mb-4 text-sm text-text-low">{t('auth:phone.legalHint')}</Text>
       <Button
-        disabled={submitting || phone.replace(/\D/g, '').length < 10}
-        label={t('common:continue')}
-        onPress={() => void onContinue()}
+        disabled={submitting || !phoneReady}
+        label={t('auth:phone.signUp')}
+        onPress={() => void onSignUp()}
         testID="auth-phone-continue"
+      />
+      <Button
+        disabled={submitting || !phoneReady}
+        label={t('auth:phone.signIn')}
+        onPress={onSignIn}
+        testID="auth-phone-signin"
+        variant="secondary"
       />
       {identityProvider ? (
         <Button

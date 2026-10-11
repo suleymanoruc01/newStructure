@@ -25,10 +25,10 @@ export function DevopsErrorsListPage() {
       ) : (
         <ul className="space-y-2 text-sm">
           {items.map((item) => (
-            <li key={item.fingerprint} className="rounded-md border border-border p-3">
+            <li key={item.fingerprint} className="rounded-2xl border border-border bg-card px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
               <Link
                 to={`/devops/errors/${encodeURIComponent(item.fingerprint)}`}
-                className="font-medium text-primary hover:underline"
+                className="font-medium text-foreground underline-offset-2 hover:underline"
               >
                 {item.message}
               </Link>

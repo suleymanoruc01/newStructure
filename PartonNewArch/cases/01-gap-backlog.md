@@ -25,7 +25,7 @@ Items below were under-specified or missing in the first PartonNewArch pass. Clo
 | Gap ID | Cases | Question |
 | --- | --- | --- |
 | `gap-email-auth` | T-002 | Is email registration in v1 or phone-only? |
-| `gap-password` | T-008, T-248 | Password accounts vs OTP-only? If yes, reset flow required |
+| `gap-password` | T-008, T-248 | **Done (2026-10-11):** OTP only on first registration and password reset. Password needs a letter and a digit, minimum 8. Reset OTP is limited to two per Istanbul day. |
 | `gap-night-shift` | T-019, T-073 | Midnight-crossing availability & job windows |
 | `gap-3h-no-response` | T-117 | Timeout policy: alert only vs auto-release seat |
 | `gap-application-snapshot` | T-087, T-088 | Freeze applicant profile at apply vs live |

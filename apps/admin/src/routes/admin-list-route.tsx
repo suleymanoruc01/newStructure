@@ -45,7 +45,7 @@ export function AdminListRoute({
             placeholder="Telefon"
             aria-label="Telefon ara"
           />
-          <Button type="submit" variant="secondary">Ara</Button>
+          <Button type="submit">Ara</Button>
         </form>
       ) : null}
       <div className="mb-4 flex items-center justify-between gap-2">
@@ -58,7 +58,7 @@ export function AdminListRoute({
       </div>
       {error ? (
         <p className="text-sm text-destructive" role="alert">{error}</p>
-      ) : (
+      ) : loading ? null : (
         <JsonDataTable rows={rows} linkBase={linkBase} idKey={idKey} />
       )}
     </PageShell>

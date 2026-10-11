@@ -37,7 +37,7 @@ describe('Auth ban and device fingerprint (e2e) T-184 T-192', () => {
         userId: user.id,
         phoneE164,
         codeHash: hashOtp(code, process.env.OTP_PEPPER ?? ''),
-        purpose: 'login',
+        purpose: 'register',
         expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
     });

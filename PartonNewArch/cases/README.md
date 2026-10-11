@@ -36,7 +36,7 @@ This folder also binds every catalog case to **UI screens + components** and ope
 5. Mark PR with case IDs (`T-080`, `T-156`, …), REST paths, and screen IDs.
 6. Update matrix status when a gap is closed. A Nest-only PR without mapped UI is incomplete.
 
-v1 OTP-only **skip** (do not fake email/password): `T-002`, `T-008`, `T-248`. Absent catalog IDs (do not invent): `T-095`, `T-120`, `T-208`, `T-224`.
+v1 email-registration **skip** (do not fake email signup): `T-002`. Password accounts are in: `T-008`, `T-248`. Absent catalog IDs (do not invent): `T-095`, `T-120`, `T-208`, `T-224`.
 
 Regenerate mapped JSON after ID/title changes in the root inventory:
 

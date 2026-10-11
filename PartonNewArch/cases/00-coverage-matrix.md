@@ -57,7 +57,7 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-005` | Yanlış SMS doğrulama kodu | Kritik | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 | `T-006` | Süresi geçmiş doğrulama kodu | Kritik | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 | `T-007` | Çok sayıda yanlış kod girişinde bloke | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
-| `T-008` | Zayıf şifre ile kayıt denemesi | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `gap` | gap-password |
+| `T-008` | Zayıf şifre ile kayıt denemesi | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.password, m.worker.onboarding.*, m.employer.onboarding.* | `covered` | gap-password |
 | `T-009` | Konum izni vermeden kayıt tamamlama | Kritik | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 | `T-010` | Kayıt sonrası profil tamamlama zorunluluğu | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 | `T-011` | Geçerli firma bilgileri ile kayıt | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
@@ -419,7 +419,7 @@ Yetkilendirme, veri koruma, hassas veri, erişim kontrolü ve güvenlik akışla
 | `T-245` | İşveren sadece kendi adaylarını görebiliyor mu | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
 | `T-246` | Yetkisiz API erişim testi | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
 | `T-247` | Oturum yönetimi güvenliği | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
-| `T-248` | Şifre sıfırlama güvenliği | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `gap` | gap-password |
+| `T-248` | Şifre sıfırlama güvenliği | Kritik | Güvenlik | auth, users, policies, workers | m.auth.password, m.shared.profile.settings, w.admin.* | `covered` | gap-password |
 | `T-249` | Belge dosyalarının yetkisiz erişime kapalı olması | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` | gap-documents |
 | `T-250` | Konum verisinin güvenli saklanması | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |
 | `T-251` | Hassas alanların gereksiz gösterilmemesi | Kritik | Güvenlik | auth, users, policies, workers | m.shared.profile.settings, w.admin.* | `covered` |  |

@@ -59,12 +59,12 @@ export function JsonDataTable({
     .slice(0, 8);
 
   return (
-    <div className="overflow-x-auto rounded-md border border-border">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
       <table className="w-full min-w-[640px] text-left text-sm">
-        <thead className="border-b border-border bg-muted/30">
+        <thead className="bg-background">
           <tr>
             {columns.map((col) => (
-              <th key={col} className="px-3 py-2 font-medium text-foreground">
+              <th key={col} className="h-10 px-3 text-xs font-medium text-muted-foreground">
                 {fieldLabel(col)}
               </th>
             ))}
@@ -81,22 +81,23 @@ export function JsonDataTable({
             return (
               <tr
                 key={typeof rowId === "string" ? rowId : index}
-                className="border-b border-border/60 hover:bg-muted/20"
+                className="border-t border-background/50 hover:bg-background/30"
               >
-                {columns.map((col) => (
-                  <td key={col} className="px-3 py-2 text-muted-foreground">
-                    {col === idKey && to ? (
-                      <Link
-                        to={to}
-                        className="font-medium text-primary underline-offset-2 hover:underline"
-                      >
-                        {cellValue(record[col])}
-                      </Link>
-                    ) : (
-                      cellValue(record[col])
-                    )}
-                  </td>
-                ))}
+                {columns.map((col) => {
+                  const mono = col === idKey || col === "fingerprint" || col.endsWith("Id");
+                  const text = cellValue(record[col]);
+                  return (
+                    <td key={col} className={mono ? "h-10 px-3 font-sans text-sm tabular-nums text-foreground" : "h-10 px-3 text-foreground"}>
+                      {col === idKey && to ? (
+                        <Link to={to} className="underline-offset-2 hover:underline">
+                          {text}
+                        </Link>
+                      ) : (
+                        text
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             );
           })}

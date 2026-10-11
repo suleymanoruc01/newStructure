@@ -1,12 +1,66 @@
-import { LogOut } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { adminNavSections } from "@/config/admin-nav";
 import { useAuth } from "@/features/auth/auth-context";
 
-export function AdminLayout() {
+function SideNav() {
+  return (
+    <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-3 pb-4" aria-label="Ana menü">
+      {adminNavSections.map((section) => (
+        <div key={section.title}>
+          <p className="mb-1 px-2 text-xs text-muted-foreground">{section.title}</p>
+          <div className="flex flex-col">
+            {section.items.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                title={item.screenId}
+                className={({ isActive }) =>
+                  [
+                    "rounded-md px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    isActive
+                      ? "bg-[#F0FDFA] font-semibold text-[#0F766E]"
+                      : "text-muted-foreground hover:bg-[#F8FAFC] hover:text-foreground",
+                  ].join(" ")
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function OperatorBar() {
   const { state, signOut } = useAuth();
   const user = state.status === "authenticated" ? state.user : null;
+
+  return (
+    <div className="border-t border-border px-3 py-3">
+      {user ? (
+        <p className="mb-2 truncate text-xs tabular-nums text-foreground" translate="no">
+          {user.phone}
+        </p>
+      ) : null}
+      <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => void signOut()}>
+        Çıkış
+      </Button>
+    </div>
+  );
+}
+
+export function AdminLayout() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -16,84 +70,28 @@ export function AdminLayout() {
       >
         İçeriğe geç
       </a>
-      <aside className="hidden w-64 flex-col border-r border-border bg-card md:flex">
-        <div className="mb-6 px-4 pt-4">
-          <p className="text-lg font-semibold text-foreground">PartOn Admin</p>
-          <p className="text-xs text-muted-foreground">Operasyon konsolu</p>
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
+        <div className="px-5 pb-4 pt-5">
+          <p className="font-display text-xl font-semibold tracking-tight text-foreground">PartOn</p>
+          <p className="text-xs text-muted-foreground">Operasyon</p>
         </div>
-        <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-2 pb-4" aria-label="Ana menü">
-          {adminNavSections.map((section) => (
-            <div key={section.title}>
-              <p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {section.title}
-              </p>
-              <div className="flex flex-col gap-0.5">
-                {section.items.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    end={item.path === "/"}
-                    title={item.screenId}
-                    className={({ isActive }) =>
-                      [
-                        "rounded-md px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        isActive
-                          ? "bg-primary/15 text-foreground"
-                          : "text-muted-foreground hover:bg-background hover:text-foreground",
-                      ].join(" ")
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
-              </div>
-            </div>
-          ))}
-        </nav>
+        <SideNav />
+        <OperatorBar />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-6">
-          <details className="md:hidden">
-            <summary className="cursor-pointer text-sm font-medium text-foreground">Menü</summary>
-            <nav className="absolute left-4 right-4 z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-md border border-border bg-card p-2 shadow-sm" aria-label="Ana menü">
-              {adminNavSections.map((section) => (
-                <div key={section.title} className="mb-2">
-                  <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {section.title}
-                  </p>
-                  {section.items.map((item) => (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      end={item.path === "/"}
-                      className="block rounded-md px-2 py-2 text-sm text-foreground"
-                    >
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </div>
-              ))}
-            </nav>
-          </details>
-          <p className="hidden text-sm text-muted-foreground md:block">PartOn operasyon</p>
-          <div className="flex items-center gap-3">
-            {user ? (
-              <span className="text-sm tabular-nums text-foreground" translate="no">
-                {user.phone}
-              </span>
-            ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void signOut()}
-            >
-              <LogOut className="size-4" aria-hidden />
-              Çıkış
-            </Button>
-          </div>
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-card px-4 py-3 md:hidden">
+          <p className="font-display text-lg font-semibold text-foreground">PartOn</p>
+          <Button type="button" variant="outline" size="sm" onClick={() => setMenuOpen((open) => !open)}>
+            {menuOpen ? "Kapat" : "Menü"}
+          </Button>
         </header>
-        <main id="main" className="flex-1 p-4 md:p-6">
+        {menuOpen ? (
+          <div className="fixed inset-0 z-30 flex flex-col bg-card pt-14 md:hidden">
+            <SideNav />
+            <OperatorBar />
+          </div>
+        ) : null}
+        <main id="main" className="flex-1 px-4 py-6 md:px-8">
           <Outlet />
         </main>
       </div>

@@ -104,7 +104,7 @@ export function BroadcastPage() {
           <Label htmlFor="broadcast-audience">Kitle</Label>
           <select
             id="broadcast-audience"
-            className="flex h-10 w-full rounded-md border border-input bg-card px-3 text-sm"
+            className="flex h-11 w-full rounded-[0.5rem] border border-[#CBD5E1] bg-card px-3 text-sm"
             value={audience}
             onChange={(event) => setAudience(event.target.value)}
           >

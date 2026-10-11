@@ -12,6 +12,7 @@ type TextFieldProps = {
   testID?: string;
   multiline?: boolean;
   numberOfLines?: number;
+  secureTextEntry?: boolean;
 };
 
 export function TextField({
@@ -25,6 +26,7 @@ export function TextField({
   testID,
   multiline,
   numberOfLines,
+  secureTextEntry,
 }: TextFieldProps) {
   return (
     <View className="mb-4">
@@ -43,6 +45,7 @@ export function TextField({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#83947A"
+        secureTextEntry={secureTextEntry}
         testID={testID}
         value={value}
       />

@@ -14,9 +14,9 @@ import { SCREEN_IDS } from '../screen-ids';
 type Props = NativeStackScreenProps<AuthStackParamList, 'AuthOtp'>;
 
 export function AuthOtpScreen({ navigation, route }: Props) {
-  const { challengeId, phone } = route.params;
+  const { challengeId, phone, purpose } = route.params;
   const { t } = useTranslation(['auth', 'common', 'errors']);
-  const { verifyPhoneOtp, requestPhoneOtp } = useAuth();
+  const { requestPhoneOtp, verifyPhoneOtp } = useAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -25,10 +25,8 @@ export function AuthOtpScreen({ navigation, route }: Props) {
     setError(null);
     setSubmitting(true);
     try {
-      const user = await verifyPhoneOtp(challengeId, code);
-      navigation.replace(
-        user.roles.length === 0 ? 'AuthRoleSelect' : 'AuthPolicies',
-      );
+      await verifyPhoneOtp(challengeId, code, { holdPhase: true });
+      navigation.replace('AuthPassword', { mode: 'set', purpose });
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(
@@ -47,7 +45,8 @@ export function AuthOtpScreen({ navigation, route }: Props) {
   const onResend = async () => {
     setError(null);
     try {
-      await requestPhoneOtp(phone);
+      const next = await requestPhoneOtp(phone, purpose);
+      navigation.setParams({ challengeId: next.challengeId });
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -56,11 +55,23 @@ export function AuthOtpScreen({ navigation, route }: Props) {
   };
 
   return (
-    <ModulePage title={t('auth:otp.title')} testID={SCREEN_IDS.otp} scroll>
-      
+    <ModulePage
+      title={
+        purpose === 'password_reset'
+          ? t('auth:otp.resetTitle')
+          : t('auth:otp.signupTitle')
+      }
+      testID={SCREEN_IDS.otp}
+      scroll
+    >
       <Text className="font-sans mt-2 text-base text-text-medium">
         {t('auth:otp.subtitle', { phone })}
       </Text>
+      {purpose === 'password_reset' ? (
+        <Text className="font-sans mt-2 text-sm text-text-low">
+          {t('auth:otp.resetHint')}
+        </Text>
+      ) : null}
       <TextField
         label={t('auth:otp.codeLabel')}
         keyboardType="number-pad"

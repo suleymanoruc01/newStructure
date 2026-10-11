@@ -20,6 +20,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
               challengeId: (value: string) => value,
             },
           },
+          AuthPassword: 'auth/password',
           AuthRoleSelect: 'auth/role',
           AuthPolicies: 'auth/policies',
         },

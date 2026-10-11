@@ -16,6 +16,8 @@ import {
   fetchIdentityProviders,
   fetchMe,
   loginWithIdentity,
+  loginWithPhonePassword,
+  setAccountPassword,
   refreshTokens,
   requestOtp,
   switchAuthContext,
@@ -57,11 +59,17 @@ type AuthContextValue = {
   onboardingKind: OnboardingKind | null;
   employerOnboardingStep: EmployerOnboardingStep | null;
   bootError: string | null;
-  requestPhoneOtp: (phone: string) => Promise<{ challengeId: string }>;
+  requestPhoneOtp: (
+    phone: string,
+    purpose?: 'register' | 'password_reset',
+  ) => Promise<{ challengeId: string }>;
   verifyPhoneOtp: (
     challengeId: string,
     code: string,
+    options?: { password?: string; holdPhase?: boolean },
   ) => Promise<MeUser>;
+  saveSignupPassword: (password: string) => Promise<MeUser | null>;
+  loginWithPassword: (phone: string, password: string) => Promise<MeUser>;
   signInWithLinkedIdentity: () => Promise<MeUser>;
   selectRole: (role: UserRole) => Promise<void>;
   acceptAllPolicies: (policyIds: string[]) => Promise<void>;
@@ -183,15 +191,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [syncGate]);
 
-  const requestPhoneOtp = useCallback(async (phone: string) => {
-    const data = await requestOtp({ phone, purpose: 'login' });
-    return { challengeId: data.challengeId };
-  }, []);
+  const requestPhoneOtp = useCallback(
+    async (phone: string, purpose: 'register' | 'password_reset' = 'register') => {
+      const data = await requestOtp({ phone, purpose });
+      return { challengeId: data.challengeId };
+    },
+    [],
+  );
 
   const verifyPhoneOtp = useCallback(
-    async (challengeId: string, code: string) => {
+    async (
+      challengeId: string,
+      code: string,
+      options?: { password?: string; holdPhase?: boolean },
+    ) => {
       const deviceId = await loadOrCreateDeviceInstallId();
-      const data = await verifyOtp({ challengeId, code, deviceId });
+      const data = await verifyOtp({
+        challengeId,
+        code,
+        password: options?.password,
+        deviceId,
+      });
+      if (!data.accessToken || !data.refreshToken) {
+        throw new ApiClientError(
+          'Oturum yanıtı geçersiz.',
+          500,
+          'INTERNAL_ERROR',
+        );
+      }
+      applySession(
+        data.user,
+        data.contexts ?? [],
+        data.accessToken,
+        data.refreshToken,
+      );
+      if (!options?.holdPhase) {
+        setPhase(deriveRolePhase(data.user));
+      }
+      return data.user;
+    },
+    [applySession],
+  );
+
+  const saveSignupPassword = useCallback(
+    async (password: string) => {
+      const access = getAccessToken();
+      if (!access) {
+        throw new ApiClientError(
+          'Oturum yanıtı geçersiz.',
+          401,
+          'UNAUTHORIZED',
+        );
+      }
+      await setAccountPassword({ password }, access);
+      setPhase(deriveRolePhase(user));
+      return user;
+    },
+    [user],
+  );
+
+  const loginWithPassword = useCallback(
+    async (phone: string, password: string) => {
+      const data = await loginWithPhonePassword({ phone, password });
       if (!data.accessToken || !data.refreshToken) {
         throw new ApiClientError(
           'Oturum yanıtı geçersiz.',
@@ -396,6 +457,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       bootError,
       requestPhoneOtp,
       verifyPhoneOtp,
+      saveSignupPassword,
+      loginWithPassword,
       signInWithLinkedIdentity,
       selectRole,
       acceptAllPolicies,
@@ -415,6 +478,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       bootError,
       requestPhoneOtp,
       verifyPhoneOtp,
+      saveSignupPassword,
+      loginWithPassword,
       signInWithLinkedIdentity,
       selectRole,
       acceptAllPolicies,

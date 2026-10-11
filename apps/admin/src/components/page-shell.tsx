@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type PageShellProps = {
   title: string;
@@ -9,12 +8,14 @@ type PageShellProps = {
 
 export function PageShell({ title, screenId, children }: PageShellProps) {
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle>{title}</CardTitle>
+    <section>
+      <header className="mb-6">
+        <h1 className="font-display text-[2rem] font-semibold leading-10 tracking-[-0.01em] text-foreground">
+          {title}
+        </h1>
         <p className="sr-only">{screenId}</p>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+      </header>
+      {children}
+    </section>
   );
 }

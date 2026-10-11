@@ -12,7 +12,14 @@ export type AdminPasswordLoginBody = z.infer<typeof adminPasswordLoginBodySchema
 export const otpRequestBodySchema = z.object({
   phone: z.string().min(8).max(20),
   purpose: z
-    .enum(['login', 'register', 'admin_login', 'verify_phone', 'step_up'])
+    .enum([
+      'login',
+      'register',
+      'admin_login',
+      'verify_phone',
+      'step_up',
+      'password_reset',
+    ])
     .optional(),
 });
 
@@ -33,9 +40,31 @@ export const userRoleSchema = z.enum(['worker', 'employer', 'manager', 'admin'])
 export const otpVerifyBodySchema = z.object({
   challengeId: z.string().uuid(),
   code: z.string().length(6).regex(/^\d{6}$/),
+  password: z.string().min(8).max(128).optional(),
   roleIntent: userRoleSchema.optional(),
   deviceId: z.string().min(8).max(256).optional(),
 });
+
+export const setPasswordBodySchema = z.object({
+  password: z.string().min(8).max(128),
+});
+
+export type SetPasswordBody = z.infer<typeof setPasswordBodySchema>;
+
+export const setPasswordDataSchema = z.object({
+  ok: z.literal(true),
+});
+
+export const setPasswordResponseSchema = successEnvelopeSchema(
+  setPasswordDataSchema,
+);
+
+export const phonePasswordLoginBodySchema = z.object({
+  phone: z.string().min(8).max(20),
+  password: z.string().min(8).max(128),
+});
+
+export type PhonePasswordLoginBody = z.infer<typeof phonePasswordLoginBodySchema>;
 
 export type OtpVerifyBody = z.infer<typeof otpVerifyBodySchema>;
 

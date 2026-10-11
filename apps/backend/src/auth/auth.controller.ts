@@ -19,6 +19,8 @@ import {
   mePatchBodySchema,
   otpRequestBodySchema,
   otpVerifyBodySchema,
+  phonePasswordLoginBodySchema,
+  setPasswordBodySchema,
   tokenRefreshBodySchema,
 } from '@parton/api-contracts';
 import type { Request, Response } from 'express';
@@ -73,6 +75,48 @@ export class AuthController {
       user: result.user,
       contexts: result.contexts,
     });
+  }
+
+  @Post('auth/login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async phonePasswordLogin(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body(new ZodValidationPipe(phonePasswordLoginBodySchema)) body: unknown,
+  ) {
+    const parsed = phonePasswordLoginBodySchema.parse(body);
+    const result = await this.auth.loginWithPhonePassword(
+      parsed.phone,
+      parsed.password,
+      req.headers['user-agent'],
+    );
+    setAuthCookies(
+      res,
+      this.config,
+      result.tokens.refreshToken,
+      result.tokens.refreshExpiresAt,
+      result.tokens.csrfToken,
+    );
+    return successResponse(req.requestId ?? '', {
+      accessToken: result.tokens.accessToken,
+      accessExpiresAt: result.tokens.accessExpiresAt,
+      tokenType: 'Bearer' as const,
+      refreshToken: result.tokens.refreshToken,
+      user: result.user,
+      contexts: result.contexts,
+    });
+  }
+
+  @Post('auth/password')
+  @UseGuards(JwtAuthGuard)
+  async setPassword(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(setPasswordBodySchema)) body: unknown,
+  ) {
+    const parsed = setPasswordBodySchema.parse(body);
+    await this.auth.setPassword(req.userId!, parsed.password);
+    return successResponse(req.requestId ?? '', { ok: true as const });
   }
 
   @Post('auth/otp/request')
