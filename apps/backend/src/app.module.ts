@@ -21,6 +21,7 @@ import { FavoritesModule } from './favorites/favorites.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { DevopsModule } from './devops/devops.module.js';
+import { ModerationModule } from './moderation/moderation.module.js';
 import { RatingsModule } from './ratings/ratings.module.js';
 import { ApiExceptionFilter } from './common/api-exception.filter.js';
 import { StorageModule } from './storage/storage.module.js';
@@ -55,6 +56,7 @@ const adminDist = join(process.cwd(), '../admin/dist');
     ShiftsModule,
     FavoritesModule,
     RatingsModule,
+    ModerationModule,
     AdminModule,
     AuditModule,
     DevopsModule,

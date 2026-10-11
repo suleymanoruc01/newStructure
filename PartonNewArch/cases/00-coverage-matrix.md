@@ -83,8 +83,8 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-024` | Geçersiz belge yükleme | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `gap` | gap-documents |
 | `T-025` | Konum pinleme doğruluğu | Kritik | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 | `T-026` | Profil güncelleme sonrası eşleşme güncelleniyor mu | Yüksek | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
-| `T-027` | Yaş değişikliği sonrası ilan görünürlüğü değişiyor mu | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `gap` | gap-age-filter |
-| `T-028` | Cinsiyet değişikliği sonrası eşleşme güncelleniyor mu | Yüksek | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `gap` | gap-gender-filter |
+| `T-027` | Yaş değişikliği sonrası ilan görünürlüğü değişiyor mu | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` | gap-age-filter |
+| `T-028` | Cinsiyet değişikliği sonrası eşleşme güncelleniyor mu | Yüksek | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` | gap-gender-filter |
 | `T-029` | Eksik profille başvuru engeli | Kritik | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 | `T-030` | Profil silinince aktif başvuruların durumu | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 
@@ -114,7 +114,7 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-041` | Gelecek tarihli ilan oluşturma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-042` | Geçmiş tarihli ilan oluşturma denemesi | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-043` | Başlangıç saati bitiş saatinden sonra girilmesi | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
-| `T-044` | Cinsiyet filtresi ile ilan oluşturma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `gap` | gap-gender-filter |
+| `T-044` | Cinsiyet filtresi ile ilan oluşturma | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` | gap-gender-filter |
 | `T-045` | Belge zorunluluğu ekleme | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` | gap-documents |
 | `T-046` | Personel sayısı 1 olan ilan | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
 | `T-047` | Çoklu personel sayılı ilan | Orta | Fonksiyonel | jobs, tokens, favorites | m.employer.jobs.*, w.employer.jobs.* | `covered` |  |
@@ -244,8 +244,8 @@ Push/in-app bildirimler, tokenlar, bildirim tetikleri ve bildirim durumları.
 | `T-131` | Sahte konumla check-in denemesi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` | gap-mock-gps |
 | `T-132` | Konum izni kapalıyken check-in denemesi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` |  |
 | `T-133` | İşverenin işçi geldi bildirimi alması | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` |  |
-| `T-134` | Manuel doğrulama akışı varsa testi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `gap` | gap-checkin-dispute |
-| `T-135` | Hatalı reddedilmiş check-in için itiraz süreci | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `gap` | gap-checkin-dispute |
+| `T-134` | Manuel doğrulama akışı varsa testi | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` | gap-checkin-dispute |
+| `T-135` | Hatalı reddedilmiş check-in için itiraz süreci | Kritik | Uçtan Uca | shifts, location, notifications, tokens | m.worker.shift.check-in, m.worker.shift.in-shift, m.worker.shift.dispute | `covered` | gap-checkin-dispute |
 
 ### CASE-LOCATION — Konum Doğrulama
 
@@ -265,7 +265,7 @@ Konum izni, konum doğrulama, mesafe ve geo bağımlı kontroller.
 | `T-145` | Hareket halindeyken check-in | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
 | `T-146` | Arka planda konum izni yokken davranış | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
 | `T-147` | iOS ve Android farkları | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
-| `T-148` | Sahte GPS aracı tespiti | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `gap` | gap-mock-gps |
+| `T-148` | Sahte GPS aracı tespiti | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `covered` | gap-mock-gps |
 
 ### CASE-TOKEN — Jeton / Provizyon
 
@@ -333,10 +333,10 @@ Kötüye kullanım, negatif senaryolar, hile, tekrarlı işlem ve sınır ihlali
 | `T-185` | Sahte ilan açma girişimi | Kritik | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
 | `T-186` | Bot başvuru denemeleri | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` | gap-bot-protection |
 | `T-187` | Puan manipülasyonu | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
-| `T-188` | Sahte konumla jeton düşürme denemesi | Kritik | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `gap` | gap-mock-gps |
+| `T-188` | Sahte konumla jeton düşürme denemesi | Kritik | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` | gap-mock-gps |
 | `T-189` | İşverenin gelen işçiyi gelmedi göstermesi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
 | `T-190` | İşçinin gelmediği halde geldi göstermesi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` |  |
-| `T-191` | Yaş sınırını yanlış beyan etme | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `gap` | gap-age-filter |
+| `T-191` | Yaş sınırını yanlış beyan etme | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` | gap-age-filter |
 | `T-192` | Yasaklı kullanıcının tekrar kayıt denemesi | Orta | Negatif | moderation, auth, shifts, location | m.shared.abuse.report, m.shared.system.restriction, w.admin.abuse.* | `covered` | gap-ban-reentry |
 
 ### CASE-E2E — Uçtan Uca Senaryolar
@@ -363,7 +363,7 @@ Birden fazla modülü kapsayan tam kullanıcı yolculukları.
 | `T-209` | Jeton durumu doğru yönetilir | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-210` | İşçi fiziksel olarak gelir | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-211` | GPS doğrulaması başarısız olur | Kritik | Uçtan Uca | * | multi | `covered` |  |
-| `T-212` | Manuel itiraz açılır | Kritik | Uçtan Uca | * | multi | `gap` | gap-checkin-dispute |
+| `T-212` | Manuel itiraz açılır | Kritik | Uçtan Uca | * | multi | `covered` | gap-checkin-dispute |
 | `T-213` | İşveren doğrular | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-214` | Jeton kararı doğru uygulanır | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-215` | İşveren işçiyi favoriye alır | Kritik | Uçtan Uca | * | multi | `covered` |  |
@@ -429,9 +429,9 @@ Yetkilendirme, veri koruma, hassas veri, erişim kontrolü ve güvenlik akışla
 
 | Status | Count |
 | --- | ---: |
-| covered | 151 |
+| covered | 160 |
 | partial | 61 |
-| gap | 36 |
+| gap | 27 |
 | **total** | **248** |
 
 See [01-gap-backlog.md](01-gap-backlog.md) for remediation of `gap` / `partial` items.  

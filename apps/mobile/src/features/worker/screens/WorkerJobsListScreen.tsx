@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { ApiClientError } from '../../../api/client';
 import { fetchJobFeed } from '../../../api/jobs-api';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerJobsList'>;
 
@@ -22,6 +24,7 @@ type FeedItem = {
 
 export function WorkerJobsListScreen({ navigation }: Props) {
   const { t } = useTranslation(['worker', 'common', 'errors']);
+  const timeZone = useDisplayTimeZone();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +41,7 @@ export function WorkerJobsListScreen({ navigation }: Props) {
       setItems(
         data.items.map((job) => ({
           id: job.id,
-          title: job.title,
+          title: job.title ?? null,
           branchName: job.branchName,
           startsAt: job.startsAt,
           distanceKm: job.distanceKm,
@@ -61,97 +64,39 @@ export function WorkerJobsListScreen({ navigation }: Props) {
   }, [load]);
 
   return (
-    <Screen scroll testID="m.worker.jobs.list">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('worker:jobs.title')}
-      </Text>
-      <View className="mt-3 flex-row flex-wrap gap-2">
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-full bg-surface-1 px-3 py-2"
-          onPress={() => navigation.navigate('WorkerProfileRoot')}
-        >
-          <Text className="text-sm text-text-high">
-            {t('worker:jobs.navProfile')}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-full bg-surface-1 px-3 py-2"
-          onPress={() => navigation.navigate('WorkerApplicationsList')}
-        >
-          <Text className="text-sm text-text-high">
-            {t('worker:jobs.navApplications')}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-full bg-surface-1 px-3 py-2"
-          onPress={() => navigation.navigate('WorkerFavoritesList')}
-        >
-          <Text className="text-sm text-text-high">
-            {t('worker:jobs.navFavorites')}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-full bg-surface-1 px-3 py-2"
-          onPress={() => navigation.navigate('WorkerAvailabilityEdit')}
-        >
-          <Text className="text-sm text-text-high">
-            {t('worker:jobs.navAvailability')}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-full bg-surface-1 px-3 py-2"
-          onPress={() => navigation.navigate('WorkerDocumentsList')}
-        >
-          <Text className="text-sm text-text-high">
-            {t('worker:jobs.navDocuments')}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-full bg-surface-1 px-3 py-2"
-          onPress={() => navigation.navigate('SharedRatingsPending')}
-        >
-          <Text className="text-sm text-text-high">
-            {t('worker:jobs.navRatings')}
-          </Text>
-        </Pressable>
-      </View>
+    <ModulePage title={t('worker:jobs.title')} testID="m.worker.jobs.list" scroll dock>
+      
       {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <View className="mt-4 gap-3">
         {items.map((job) => (
           <Pressable
             key={job.id}
             accessibilityRole="button"
-            className="rounded-2xl bg-surface-1 p-4"
+            className="rounded-lg bg-surface-1 p-4"
             onPress={() =>
               navigation.navigate('WorkerJobDetail', { jobId: job.id })
             }
           >
-            <Text className="text-lg font-semibold text-text-high">
+            <Text className="font-sans text-lg font-semibold text-text-high">
               {job.title ?? job.branchName ?? t('worker:jobs.untitled')}
             </Text>
-            <Text className="mt-1 text-sm text-text-medium">
-              {new Date(job.startsAt).toLocaleString('tr-TR')}
+            <Text className="font-sans mt-1 text-sm text-text-medium">
+              {formatIstanbul(job.startsAt, timeZone)}
             </Text>
             {job.distanceKm != null ? (
-              <Text className="mt-1 text-sm text-text-low">
+              <Text className="font-sans mt-1 text-sm text-text-low">
                 {t('worker:jobs.distance', {
                   km: job.distanceKm.toFixed(1),
                 })}
               </Text>
             ) : null}
             {job.matchReasons && job.matchReasons.length > 0 ? (
-              <Text className="mt-2 text-xs text-text-medium">
+              <Text className="font-sans mt-2 text-xs text-text-medium">
                 {job.matchReasons
                   .map((reason) =>
                     t(`worker:jobs.matchReasons.${reason}`, {
@@ -164,9 +109,9 @@ export function WorkerJobsListScreen({ navigation }: Props) {
           </Pressable>
         ))}
         {!loading && items.length === 0 ? (
-          <Text className="text-text-medium">{t('worker:jobs.empty')}</Text>
+          <Text className="font-sans text-text-medium">{t('worker:jobs.empty')}</Text>
         ) : null}
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

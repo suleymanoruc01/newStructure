@@ -1,12 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { ApiClientError } from '../../../api/client';
 import { createFavorite, listFavorites } from '../../../api/favorites-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -78,11 +79,9 @@ export function EmployerFavoriteWorkersScreen(_props: Props) {
   };
 
   return (
-    <Screen scroll testID="m.employer.favorites.workers">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('employer:favorites.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('employer:favorites.title')} testID="m.employer.favorites.workers" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('employer:favorites.lead')}
       </Text>
       <View className="mt-4 gap-2">
@@ -93,39 +92,39 @@ export function EmployerFavoriteWorkersScreen(_props: Props) {
         />
         <Pressable
           accessibilityRole="button"
-          className="rounded-xl bg-brand-primary px-4 py-3"
+          className="rounded-lg bg-action-primary px-4 py-3"
           disabled={submitting}
           onPress={() => void onAdd()}
         >
-          <Text className="text-center font-semibold text-white">
+          <Text className="font-sans text-center font-semibold text-text-on">
             {submitting ? t('common:loading') : t('employer:favorites.add')}
           </Text>
         </Pressable>
       </View>
       {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <View className="mt-4 gap-3">
         {items.map((fav) => (
           <View key={fav.id} className="rounded-2xl bg-surface-1 p-4">
-            <Text className="font-semibold text-text-high">
+            <Text className="font-sans font-semibold text-text-high">
               {t('employer:favorites.workerLabel')}
             </Text>
-            <Text className="mt-1 text-xs text-text-low">{fav.targetId}</Text>
+            <Text className="font-sans mt-1 text-xs text-text-low">{fav.targetId}</Text>
             {fav.mutual ? (
-              <Text className="mt-2 text-xs text-brand-accent">
+              <Text className="font-sans mt-2 text-xs text-brand-accent">
                 {t('employer:favorites.mutual')}
               </Text>
             ) : null}
           </View>
         ))}
         {!loading && items.length === 0 ? (
-          <Text className="text-text-medium">{t('employer:favorites.empty')}</Text>
+          <Text className="font-sans text-text-medium">{t('employer:favorites.empty')}</Text>
         ) : null}
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

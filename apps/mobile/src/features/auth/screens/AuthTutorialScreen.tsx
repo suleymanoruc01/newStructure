@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { SCREEN_IDS } from '../screen-ids';
 
@@ -39,30 +39,28 @@ export function AuthTutorialScreen({ navigation }: Props) {
   const current = slides[slide];
 
   return (
-    <Screen testID={SCREEN_IDS.tutorial}>
+    <ModulePage title={t('tutorial.title')} testID={SCREEN_IDS.tutorial} scroll={false}>
       <View className="flex-1 justify-between">
         <View className="mt-8">
-          <Text className="text-2xl font-bold text-text-high">
-            {t('tutorial.title')}
-          </Text>
+          
           <View className="mt-8 rounded-2xl bg-surface-1 p-6">
-            <Text className="text-xl font-semibold text-forest">
+            <Text className="font-display text-xl font-semibold text-forest">
               {current.title}
             </Text>
-            <Text className="mt-3 text-base text-text-medium">{current.body}</Text>
+            <Text className="font-sans mt-3 text-base text-text-medium">{current.body}</Text>
           </View>
         </View>
         <View className="gap-3 pb-4">
           {slide < slides.length - 1 ? (
             <>
               <Button label={t('common:continue')} onPress={() => setSlide(slide + 1)} />
-              <Button label={t('common:skip')} onPress={goPhone} variant="ghost" />
+              <Button label={t('common:skip')} onPress={goPhone} variant="secondary" />
             </>
           ) : (
             <Button label={t('tutorial.done')} onPress={goPhone} />
           )}
         </View>
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

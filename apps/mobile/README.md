@@ -12,7 +12,7 @@ pnpm --filter @parton/mobile android
 pnpm --filter @parton/mobile ios
 ```
 
-Default API base: `http://localhost:3000/api/v1` (iOS) / `http://10.0.2.2:3000/api/v1` (Android emulator) — see `src/api/config.ts`.
+API base: `https://api.parton.app/api/v1` (`src/api/config.ts`). Release Android blocks cleartext; a debug build still allows `http://10.0.2.2:3000/api/v1`.
 
 ## Fastlane
 

@@ -3,11 +3,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { statusLabelTr } from '@parton/api-contracts';
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { listMyApplications } from '../../../api/applications-api';
 import { ApiClientError } from '../../../api/client';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
 type Props = NativeStackScreenProps<
   WorkerStackParamList,
@@ -16,6 +18,7 @@ type Props = NativeStackScreenProps<
 
 export function WorkerApplicationsListScreen(_props: Props) {
   const { t } = useTranslation(['worker', 'common', 'errors']);
+  const timeZone = useDisplayTimeZone();
   const [items, setItems] = useState<
     Awaited<ReturnType<typeof listMyApplications>>['items']
   >([]);
@@ -48,43 +51,36 @@ export function WorkerApplicationsListScreen(_props: Props) {
   }, [load]);
 
   return (
-    <Screen scroll testID="m.worker.applications.list">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('worker:applications.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
-        {t('worker:applications.lead')}
-      </Text>
-      {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
-      ) : null}
+    <ModulePage title={t('worker:applications.title')} testID="m.worker.applications.list" scroll>
+      
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
+      ) : null}
+      {loading ? (
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : null}
       <View className="mt-4 gap-3">
         {items.map((item) => (
           <View key={item.id} className="rounded-2xl bg-surface-1 p-4">
-            <Text className="font-semibold text-text-high">
+            <Text className="font-sans font-semibold text-text-high">
               {item.jobTitle ?? t('worker:jobs.untitled')}
             </Text>
-            <Text className="mt-2 text-sm text-text-medium">
-              {t(`worker:applications.status.${item.status}`, {
-                defaultValue: item.status,
-              })}
+            <Text className="font-sans mt-2 text-sm text-text-medium">
+              {statusLabelTr(item.status)}
             </Text>
             {item.jobStartsAt ? (
-              <Text className="mt-1 text-xs text-text-low">
-                {new Date(item.jobStartsAt).toLocaleString('tr-TR')}
+              <Text className="font-sans mt-1 text-xs text-text-low">
+                {formatIstanbul(item.jobStartsAt, timeZone)}
               </Text>
             ) : null}
           </View>
         ))}
         {!loading && items.length === 0 ? (
-          <Text className="text-text-medium">
+          <Text className="font-sans text-text-medium">
             {t('worker:applications.empty')}
           </Text>
         ) : null}
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

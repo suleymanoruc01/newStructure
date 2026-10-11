@@ -5,6 +5,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { collectFeedJobIds } from './feed-pages.js';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
@@ -169,13 +170,8 @@ describe('Favorites-only job publish (e2e) CASE-JOB-POSTING T-056', () => {
       role: 'worker',
     }).accessToken;
 
-    const feedRes = await request(app.getHttpServer())
-      .get('/api/v1/jobs/feed?limit=20')
-      .set('Authorization', `Bearer ${workerAccess}`);
-    expect(feedRes.status).toBe(200);
-    expect(
-      (feedRes.body.data.items as { id: string }[]).some((j) => j.id === jobId),
-    ).toBe(true);
+    const feedIds = await collectFeedJobIds(app, workerAccess);
+    expect(feedIds).toContain(jobId);
 
     const notify = await prisma.notification.findFirst({
       where: {

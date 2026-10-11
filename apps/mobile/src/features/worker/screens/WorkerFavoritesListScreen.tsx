@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { listFavorites } from '../../../api/favorites-api';
 import { ApiClientError } from '../../../api/client';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerFavoritesList'>;
@@ -45,39 +45,37 @@ export function WorkerFavoritesListScreen(_props: Props) {
   }, [load]);
 
   return (
-    <Screen scroll testID="m.worker.favorites.list">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('worker:favorites.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('worker:favorites.title')} testID="m.worker.favorites.list" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:favorites.lead')}
       </Text>
       {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <View className="mt-4 gap-3">
         {items.map((item) => (
           <View key={item.id} className="rounded-2xl bg-surface-1 p-4">
-            <Text className="font-semibold text-text-high">
+            <Text className="font-sans font-semibold text-text-high">
               {item.type === 'employer'
                 ? t('worker:favorites.employer')
                 : t('worker:favorites.worker')}
             </Text>
-            <Text className="mt-1 text-xs text-text-low">{item.targetId}</Text>
+            <Text className="font-sans mt-1 text-xs text-text-low">{item.targetId}</Text>
             {item.mutual ? (
-              <Text className="mt-2 text-sm text-brand-accent">
+              <Text className="font-sans mt-2 text-sm text-brand-accent">
                 {t('worker:favorites.mutual')}
               </Text>
             ) : null}
           </View>
         ))}
         {!loading && items.length === 0 ? (
-          <Text className="text-text-medium">{t('worker:favorites.empty')}</Text>
+          <Text className="font-sans text-text-medium">{t('worker:favorites.empty')}</Text>
         ) : null}
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

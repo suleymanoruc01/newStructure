@@ -16,6 +16,8 @@ export class RatingSchedulerService
   private readonly logger = new Logger(RatingSchedulerService.name);
   private timer: ReturnType<typeof setInterval> | null = null;
   private running = false;
+  private stopped = false;
+  private inflight: Promise<void> | null = null;
 
   constructor(
     private readonly config: AppConfigService,
@@ -29,11 +31,16 @@ export class RatingSchedulerService
     }, interval);
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
+    this.stopped = true;
     this.stop();
+    if (this.inflight) {
+      await this.inflight;
+    }
   }
 
   onApplicationShutdown(): void {
+    this.stopped = true;
     this.stop();
   }
 
@@ -45,18 +52,29 @@ export class RatingSchedulerService
   }
 
   async tick(): Promise<void> {
-    if (this.running) {
+    if (this.running || this.stopped) {
       return;
     }
     this.running = true;
+    const run = this.runTick();
+    this.inflight = run;
+    try {
+      await run;
+    } finally {
+      this.running = false;
+      if (this.inflight === run) {
+        this.inflight = null;
+      }
+    }
+  }
+
+  private async runTick(): Promise<void> {
     try {
       await this.ratings.sendDueRatingNotifications();
     } catch (error) {
       this.logger.warn(
         `Rating scheduler tick failed: ${error instanceof Error ? error.message : String(error)}`,
       );
-    } finally {
-      this.running = false;
     }
   }
 }

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RecordView } from "@/components/record-view";
 import { PageShell } from "@/components/page-shell";
 import {
   adminPatch,
@@ -22,9 +23,7 @@ export function PerfMetricsPage() {
   }, []);
   return (
     <PageShell title="Performans metrikleri" screenId="w.admin.perf.metrics">
-      <pre className="overflow-auto rounded-md bg-muted/40 p-4 text-xs">
-        {JSON.stringify(data, null, 2)}
-      </pre>
+      <RecordView value={data} />
     </PageShell>
   );
 }
@@ -64,11 +63,7 @@ export function MatchingDiagnosticsPage() {
         </div>
         <Button type="button" onClick={() => void run()}>Çalıştır</Button>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {result ? (
-          <pre className="overflow-auto rounded-md bg-muted/40 p-4 text-xs">
-            {JSON.stringify(result, null, 2)}
-          </pre>
-        ) : null}
+        {result ? <RecordView value={result} /> : null}
       </div>
     </PageShell>
   );
@@ -77,6 +72,7 @@ export function MatchingDiagnosticsPage() {
 export function BroadcastPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [audience, setAudience] = useState("all_workers");
   const [status, setStatus] = useState<string | null>(null);
 
   async function submit() {
@@ -85,7 +81,7 @@ export function BroadcastPage() {
       await adminPost("/admin/notifications/broadcast", {
         title,
         body,
-        audience: "all_workers",
+        audience,
       });
       setStatus("Yayın kuyruğa alındı.");
     } catch (err) {
@@ -104,11 +100,39 @@ export function BroadcastPage() {
           <Label htmlFor="broadcast-body">İçerik</Label>
           <Input id="broadcast-body" value={body} onChange={(e) => setBody(e.target.value)} />
         </div>
+        <div>
+          <Label htmlFor="broadcast-audience">Kitle</Label>
+          <select
+            id="broadcast-audience"
+            className="flex h-10 w-full rounded-md border border-input bg-card px-3 text-sm"
+            value={audience}
+            onChange={(event) => setAudience(event.target.value)}
+          >
+            <option value="all_workers">Tüm iş arayanlar</option>
+            <option value="all_employers">Tüm işverenler</option>
+          </select>
+        </div>
         <Button type="button" onClick={() => void submit()}>Gönder</Button>
         {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
       </div>
     </PageShell>
   );
+}
+
+const remoteConfigLabels: Record<string, string> = {
+  timeZone: "Saat dilimi (IANA)",
+  geofenceRadiusM: "Geofence yarıçapı (m)",
+  geofenceSoftRadiusM: "Yumuşak yarıçap (m)",
+  geofenceMaxAccuracyM: "Azami GPS sapması (m)",
+  checkinEarlyMinutes: "Erken check-in (dk)",
+  checkinLateMinutes: "Geç check-in (dk)",
+  maintenanceMode: "Bakım modu",
+  minMobileIosVersion: "En düşük iOS sürümü",
+  minMobileAndroidVersion: "En düşük Android sürümü",
+};
+
+function remoteConfigLabel(key: string): string {
+  return remoteConfigLabels[key] ?? key;
 }
 
 export function RemoteConfigPage() {
@@ -128,8 +152,25 @@ export function RemoteConfigPage() {
       return;
     }
     setMessage(null);
+    const emptyToNull = (value: unknown) => {
+      if (value === null || value === undefined || value === "") {
+        return null;
+      }
+      return String(value);
+    };
     try {
-      await adminPatch("/admin/config/remote", config);
+      await adminPatch("/admin/config/remote", {
+        geofenceRadiusM: Number(config.geofenceRadiusM),
+        geofenceSoftRadiusM: Number(config.geofenceSoftRadiusM),
+        geofenceMaxAccuracyM: Number(config.geofenceMaxAccuracyM),
+        checkinEarlyMinutes: Number(config.checkinEarlyMinutes),
+        checkinLateMinutes: Number(config.checkinLateMinutes),
+        maintenanceMode:
+          config.maintenanceMode === true || config.maintenanceMode === "true",
+        minMobileIosVersion: emptyToNull(config.minMobileIosVersion),
+        minMobileAndroidVersion: emptyToNull(config.minMobileAndroidVersion),
+        timeZone: String(config.timeZone ?? "Europe/Istanbul"),
+      });
       setMessage("Yapılandırma güncellendi.");
     } catch (err) {
       setMessage(isApiClientError(err) ? err.message : "Kayıt başarısız.");
@@ -140,9 +181,11 @@ export function RemoteConfigPage() {
     <PageShell title="Uzak yapılandırma" screenId="w.admin.config.remote">
       {config ? (
         <div className="grid max-w-lg gap-3">
-          {Object.entries(config).map(([key, value]) => (
+          {Object.entries(config)
+            .filter(([key]) => key !== "id" && key !== "updatedAt")
+            .map(([key, value]) => (
             <div key={key}>
-              <Label htmlFor={key}>{key}</Label>
+              <Label htmlFor={key}>{remoteConfigLabel(key)}</Label>
               <Input
                 id={key}
                 value={value === null ? "" : String(value)}
@@ -215,9 +258,7 @@ export function DevopsServicesPage() {
   }, []);
   return (
     <PageShell title="Servis durumu" screenId="w.admin.devops.services">
-      <pre className="overflow-auto rounded-md bg-muted/40 p-4 text-xs">
-        {JSON.stringify(data, null, 2)}
-      </pre>
+      <RecordView value={data} />
     </PageShell>
   );
 }
@@ -229,9 +270,7 @@ export function DevopsClientsPage() {
   }, []);
   return (
     <PageShell title="İstemci sürümleri" screenId="w.admin.devops.clients">
-      <pre className="overflow-auto rounded-md bg-muted/40 p-4 text-xs">
-        {JSON.stringify(data, null, 2)}
-      </pre>
+      <RecordView value={data} />
     </PageShell>
   );
 }
@@ -243,9 +282,7 @@ export function DevopsOverviewPage() {
   }, []);
   return (
     <PageShell title="DevOps özet" screenId="w.admin.devops.overview">
-      <pre className="overflow-auto rounded-md bg-muted/40 p-4 text-xs">
-        {JSON.stringify(data, null, 2)}
-      </pre>
+      <RecordView value={data} />
     </PageShell>
   );
 }
@@ -288,9 +325,7 @@ export function DevopsErrorDetailPage() {
         </Button>
       </div>
       {message ? <p className="mb-2 text-sm text-muted-foreground">{message}</p> : null}
-      <pre className="overflow-auto rounded-md bg-muted/40 p-4 text-xs">
-        {JSON.stringify(data, null, 2)}
-      </pre>
+      <RecordView value={data} />
     </PageShell>
   );
 }

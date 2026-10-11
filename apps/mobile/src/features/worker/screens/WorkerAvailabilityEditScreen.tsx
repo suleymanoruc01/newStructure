@@ -1,16 +1,18 @@
 import type { AvailabilityWindowInput } from '@parton/api-contracts';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { ApiClientError } from '../../../api/client';
+import { formErrorMessage } from '../../../api/form-error';
 import {
   fetchWorkerAvailability,
   putWorkerAvailability,
 } from '../../../api/workers-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import {
   DAY_NAMES_TR,
@@ -52,11 +54,7 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
       const data = await fetchWorkerAvailability(token);
       setWindows(data.windows.map(toEditable));
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(formErrorMessage(err, t));
     } finally {
       setLoading(false);
     }
@@ -129,30 +127,24 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
       );
       navigation.goBack();
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        if (err.code === 'AVAILABILITY_OVERLAP') {
-          setError(t('worker:availability.overlapError'));
-        } else {
-          setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-        }
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(
+        err instanceof ApiClientError && err.code === 'AVAILABILITY_OVERLAP'
+          ? t('worker:availability.overlapError')
+          : formErrorMessage(err, t),
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Screen scroll testID="m.worker.availability.edit">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('worker:availability.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('worker:availability.title')} testID="m.worker.availability.edit" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:availability.lead')}
       </Text>
       {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : null}
       <View className="mt-4 gap-2">
         {windows.map((w) => (
@@ -161,10 +153,10 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
             className="flex-row items-center justify-between rounded-xl bg-surface-1 p-3"
           >
             <View className="flex-1">
-              <Text className="font-semibold text-text-high">
+              <Text className="font-sans font-semibold text-text-high">
                 {DAY_NAMES_TR[w.dayOfWeek]}
               </Text>
-              <Text className="text-sm text-text-medium">
+              <Text className="font-sans text-sm text-text-medium">
                 {formatMinuteOfDay(w.startMinute)} –{' '}
                 {formatMinuteOfDay(w.endMinute)}
                 {w.crossesMidnight ? ` (${t('worker:availability.overnight')})` : ''}
@@ -174,7 +166,7 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
               accessibilityRole="button"
               onPress={() => onRemove(w.key)}
             >
-              <Text className="text-sm font-semibold text-feedback-error">
+              <Text className="font-sans text-sm font-semibold text-feedback-error">
                 {t('worker:availability.remove')}
               </Text>
             </Pressable>
@@ -182,7 +174,7 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
         ))}
       </View>
       <View className="mt-6 gap-2 rounded-xl border border-surface-2 p-4">
-        <Text className="font-semibold text-text-high">
+        <Text className="font-sans font-semibold text-text-high">
           {t('worker:availability.addTitle')}
         </Text>
         <TextField
@@ -190,19 +182,30 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
           value={newDay}
           onChangeText={setNewDay}
           keyboardType="number-pad"
+          error={error === t('worker:availability.invalidDay') ? error : undefined}
         />
-        <Text className="text-xs text-text-low">
+        <Text className="font-sans text-xs text-text-low">
           {t('worker:availability.dayHint')}
         </Text>
         <TextField
           label={t('worker:availability.startTime')}
           value={newStart}
           onChangeText={setNewStart}
+          error={
+            error === 'Saat biçimi HH:MM olmalı.' || error === 'Geçersiz saat.'
+              ? error
+              : undefined
+          }
         />
         <TextField
           label={t('worker:availability.endTime')}
           value={newEnd}
           onChangeText={setNewEnd}
+          error={
+            error === 'Saat biçimi HH:MM olmalı.' || error === 'Geçersiz saat.'
+              ? error
+              : undefined
+          }
         />
         <Pressable
           accessibilityRole="switch"
@@ -210,10 +213,10 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
           className="flex-row items-center justify-between py-2"
           onPress={() => setNewCrossesMidnight((v) => !v)}
         >
-          <Text className="text-sm text-text-high">
+          <Text className="font-sans text-sm text-text-high">
             {t('worker:availability.crossesMidnight')}
           </Text>
-          <Text className="text-sm font-semibold text-brand-primary">
+          <Text className="font-sans text-sm font-semibold text-text-high">
             {newCrossesMidnight ? t('common:yes') : t('common:no')}
           </Text>
         </Pressable>
@@ -221,23 +224,23 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
           className="rounded-xl bg-surface-1 px-4 py-3"
           onPress={() => onAddWindow()}
         >
-          <Text className="text-center font-semibold text-text-high">
+          <Text className="font-sans text-center font-semibold text-text-high">
             {t('worker:availability.addWindow')}
           </Text>
         </Pressable>
       </View>
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable
-        className="mt-8 rounded-xl bg-brand-primary px-4 py-3"
+        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
         disabled={submitting}
         onPress={() => void onSave()}
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text className="font-sans text-center text-base font-semibold text-text-on">
           {submitting ? t('common:loading') : t('worker:availability.save')}
         </Text>
       </Pressable>
-    </Screen>
+    </ModulePage>
   );
 }

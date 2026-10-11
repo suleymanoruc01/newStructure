@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { Message } from 'firebase-admin/messaging';
-
 import { PrismaService } from '../prisma/prisma.service.js';
+import { buildFcmMessage, categoryForType } from './fcm-message.js';
 import { FirebaseAdminProvider } from './firebase-admin.provider.js';
 
 @Injectable()
@@ -27,7 +26,7 @@ export class FcmDispatcherService {
     const prefs = await this.prisma.notificationPreference.findUnique({
       where: { userId: notification.userId },
     });
-    const category = this.categoryForType(notification.type);
+    const category = categoryForType(notification.type);
     if (prefs) {
       if (category === 'applications' && !prefs.applications) {
         return;
@@ -67,22 +66,14 @@ export class FcmDispatcherService {
 
     const fcm = this.firebase.messaging();
     for (const device of tokens) {
-      const message: Message = {
+      const message = buildFcmMessage({
         token: device.token,
-        notification: {
-          title: notification.title,
-          body: notification.body,
-        },
+        title: notification.title,
+        body: notification.body,
         data,
-        android: {
-          priority: 'high',
-          notification: { channelId: category === 'shifts' ? 'shifts' : 'applications' },
-        },
-        apns: {
-          headers: { 'apns-priority': '10' },
-          payload: { aps: { sound: 'default' } },
-        },
-      };
+        type: notification.type,
+        notificationId: notification.id,
+      });
       try {
         const messageId = await fcm.send(message);
         await this.prisma.$transaction([
@@ -109,7 +100,7 @@ export class FcmDispatcherService {
         });
         if (
           code === 'messaging/registration-token-not-registered' ||
-          code === 'messaging/invalid-argument'
+          code === 'messaging/invalid-registration-token'
         ) {
           await this.prisma.devicePushToken.update({
             where: { id: device.id },
@@ -118,19 +109,6 @@ export class FcmDispatcherService {
         }
       }
     }
-  }
-
-  private categoryForType(type: string): 'applications' | 'shifts' | 'matching' | 'favorites' | 'marketing' {
-    if (type.startsWith('shift.')) {
-      return 'shifts';
-    }
-    if (type.startsWith('job.matched') || type.startsWith('job.favorite')) {
-      return 'matching';
-    }
-    if (type.startsWith('job.favorites_only')) {
-      return 'favorites';
-    }
-    return 'applications';
   }
 
   private stringifyData(value: unknown): Record<string, string> {

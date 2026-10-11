@@ -1,5 +1,10 @@
 import {
   assignRoleBodySchema,
+  identityLinkBodySchema,
+  identityLinkResponseSchema,
+  identityListResponseSchema,
+  identityLoginBodySchema,
+  identityProvidersResponseSchema,
   otpRequestBodySchema,
   otpRequestResponseSchema,
   otpVerifyBodySchema,
@@ -16,6 +21,8 @@ import {
   meResponseSchema,
   type AuthContext,
   type AssignRoleBody,
+  type IdentityLinkBody,
+  type IdentityLoginBody,
   type OtpRequestBody,
   type OtpVerifyBody,
   type PolicyAcceptanceBody,
@@ -91,6 +98,39 @@ export async function listPolicies(accessToken: string) {
   return apiRequest('/policies', policiesListResponseSchema, {
     method: 'GET',
     accessToken,
+  });
+}
+
+export async function fetchIdentityProviders() {
+  return apiRequest(
+    '/auth/identity-providers',
+    identityProvidersResponseSchema,
+  );
+}
+
+export async function listLinkedIdentities(accessToken: string) {
+  return apiRequest('/auth/identities', identityListResponseSchema, {
+    accessToken,
+  });
+}
+
+export async function linkIdentity(
+  body: IdentityLinkBody,
+  accessToken: string,
+) {
+  identityLinkBodySchema.parse(body);
+  return apiRequest('/auth/identities/link', identityLinkResponseSchema, {
+    method: 'POST',
+    body,
+    accessToken,
+  });
+}
+
+export async function loginWithIdentity(body: IdentityLoginBody) {
+  identityLoginBodySchema.parse(body);
+  return apiRequest('/auth/identities/login', otpVerifyResponseSchema, {
+    method: 'POST',
+    body,
   });
 }
 

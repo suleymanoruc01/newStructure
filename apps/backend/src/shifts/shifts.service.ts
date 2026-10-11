@@ -16,6 +16,7 @@ import { assertValidCoordinates } from '../common/geo.util.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import { GeofenceService } from '../location/geofence.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { PlatformService } from '../platform/platform.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RatingsService } from '../ratings/ratings.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
@@ -37,6 +38,7 @@ export class ShiftsService {
     private readonly geofence: GeofenceService,
     private readonly tokens: TokensService,
     private readonly ratings: RatingsService,
+    private readonly platform: PlatformService,
   ) {}
 
   async createForAcceptedApplication(
@@ -408,10 +410,11 @@ export class ShiftsService {
 
     assertValidCoordinates(body.latitude, body.longitude);
 
+    const remote = await this.platform.getPublicRemoteConfig();
     const windowOpen = isCheckInWindowOpen(
       shift.startsAt,
-      this.config.env.CHECKIN_EARLY_MINUTES,
-      this.config.env.CHECKIN_LATE_MINUTES,
+      remote.checkinEarlyMinutes,
+      remote.checkinLateMinutes,
     );
     if (!windowOpen) {
       await this.recordFailedCheckIn(shiftId, body, idempotencyKey, {
@@ -427,15 +430,22 @@ export class ShiftsService {
 
     let geo: ReturnType<GeofenceService['evaluate']> | undefined;
     try {
-      geo = this.geofence.evaluate({
-        branchLatitude: Number(shift.branch.latitude),
-        branchLongitude: Number(shift.branch.longitude),
-        latitude: body.latitude,
-        longitude: body.longitude,
-        accuracyM: body.accuracyM,
-        mockLocation: body.mockLocation,
-        locationPermissionGranted: body.locationPermissionGranted,
-      });
+      geo = this.geofence.evaluate(
+        {
+          branchLatitude: Number(shift.branch.latitude),
+          branchLongitude: Number(shift.branch.longitude),
+          latitude: body.latitude,
+          longitude: body.longitude,
+          accuracyM: body.accuracyM,
+          mockLocation: body.mockLocation,
+          locationPermissionGranted: body.locationPermissionGranted,
+        },
+        {
+          radiusM: remote.geofenceRadiusM,
+          softRadiusM: remote.geofenceSoftRadiusM,
+          maxAccuracyM: remote.geofenceMaxAccuracyM,
+        },
+      );
       this.geofence.assertInsideOrSoft(geo);
     } catch (error) {
       if (error instanceof ApiException && error.code === ErrorCode.MOCK_LOCATION_DETECTED) {
@@ -468,6 +478,7 @@ export class ShiftsService {
           accuracyM: body.accuracyM,
           distanceM: geo.distanceM,
           mockLocation: body.mockLocation ?? false,
+          softPass: geo.softPass,
           success: true,
           idempotencyKey,
         },
@@ -544,15 +555,15 @@ export class ShiftsService {
         'Vardiya bulunamadı.',
       );
     }
-    const dispute = await this.prisma.checkInDispute.create({
-      data: {
-        shiftId,
-        workerUserId,
-        note: body.note,
-        status: 'open',
-      },
-    });
-    await this.prisma.$transaction(async (tx) => {
+    const dispute = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.checkInDispute.create({
+        data: {
+          shiftId,
+          workerUserId,
+          note: body.note,
+          status: 'open',
+        },
+      });
       const audience = await resolveEmployerAudience(
         tx,
         shift.employerId,
@@ -562,11 +573,12 @@ export class ShiftsService {
         await this.notifications.enqueueInTransaction(tx, {
           userId,
           type: 'shift.dispute_update',
-          dedupeKey: `shift.dispute_update:${dispute.id}:${userId}`,
+          dedupeKey: `shift.dispute_update:${created.id}:${userId}`,
           templateInput: { jobTitle: shift.job.title ?? shift.job.sectorCode },
-          data: { shiftId, disputeId: dispute.id },
+          data: { shiftId, disputeId: created.id },
         });
       }
+      return created;
     });
     return {
       id: dispute.id,

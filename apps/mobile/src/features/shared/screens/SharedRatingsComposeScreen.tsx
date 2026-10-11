@@ -1,11 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import { ApiClientError } from '../../../api/client';
 import { submitRating } from '../../../api/ratings-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
@@ -51,29 +52,23 @@ export function SharedRatingsComposeScreen({ route, navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.shared.ratings.compose">
-      <Text className="text-xl font-bold text-text-high">
-        {t('ratings:compose.title')}
-      </Text>
+    <ModulePage title={t('ratings:compose.title')} testID="m.shared.ratings.compose" scroll>
+      
       {jobTitle ? (
-        <Text className="mt-2 text-base text-text-high">{jobTitle}</Text>
+        <Text className="font-sans mt-2 text-base text-text-high">{jobTitle}</Text>
       ) : null}
-      <Text className="mt-1 text-sm text-text-medium">{counterpartLabel}</Text>
+      <Text className="font-sans mt-1 text-sm text-text-medium">{counterpartLabel}</Text>
       <View className="mt-6 flex-row justify-between gap-2">
         {SCORES.map((value) => (
           <Pressable
             key={value}
             accessibilityRole="button"
             className={`flex-1 rounded-xl py-3 ${
-              score === value ? 'bg-brand-primary' : 'bg-surface-1'
+              score === value ? 'bg-accent-mustard' : 'bg-surface-1'
             }`}
             onPress={() => setScore(value)}
           >
-            <Text
-              className={`text-center font-semibold ${
-                score === value ? 'text-white' : 'text-text-high'
-              }`}
-            >
+            <Text className="font-sans text-center font-semibold text-text-high">
               {value}
             </Text>
           </Pressable>
@@ -87,17 +82,17 @@ export function SharedRatingsComposeScreen({ route, navigation }: Props) {
         value={comment}
       />
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable
-        className="mt-8 rounded-xl bg-brand-primary px-4 py-3"
+        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
         disabled={submitting}
         onPress={() => void onSubmit()}
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text className="font-sans text-center text-base font-semibold text-text-on">
           {submitting ? t('common:loading') : t('ratings:compose.submit')}
         </Text>
       </Pressable>
-    </Screen>
+    </ModulePage>
   );
 }

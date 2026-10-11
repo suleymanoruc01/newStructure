@@ -23,5 +23,8 @@
   "LOCATION_UNAVAILABLE": "Konum alınamadı.",
   "CONFLICT": "Bu kayıt zaten mevcut.",
   "AVAILABILITY_OVERLAP": "Müsaitlik aralıkları çakışıyor.",
-  "PAYMENT_DECLINED": "Ödeme tamamlanamadı."
+  "PAYMENT_DECLINED": "Ödeme tamamlanamadı.",
+  "IDENTITY_NOT_LINKED": "Bu hesap bağlı değil. Önce telefon numarasıyla kayıt olun, sonra profilde bağlayın.",
+  "IDENTITY_TOKEN_INVALID": "Kimlik doğrulanamadı.",
+  "IDENTITY_NOT_CONFIGURED": "Bu giriş yöntemi henüz yapılandırılmadı."
 }

@@ -14,6 +14,7 @@ import { ApiException } from '../common/api.exception.js';
 import { evaluateJobEligibility } from '../matching/matching.service.js';
 import { FavoritesService } from '../favorites/favorites.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { PlatformService } from '../platform/platform.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
 import { WorkerDocumentsService } from '../workers/worker-documents.service.js';
@@ -37,6 +38,7 @@ export class AdminOpsService {
     private readonly workerDocuments: WorkerDocumentsService,
     private readonly audit: LegalAuditLogger,
     private readonly sessions: SessionService,
+    private readonly platform: PlatformService,
   ) {}
 
   async dashboard() {
@@ -657,6 +659,7 @@ export class AdminOpsService {
       ]);
     const uploadedDocumentTypes =
       await this.workerDocuments.uploadedTypesForUser(workerUserId);
+    const timeZone = await this.platform.timeZone();
     const required = Array.isArray(job.requiredDocumentTypes)
       ? job.requiredDocumentTypes.filter((v): v is string => typeof v === 'string')
       : [];
@@ -672,6 +675,8 @@ export class AdminOpsService {
         remainingHeadcount: job.remainingHeadcount,
         favoritesOnly: job.favoritesOnly,
         genderFilter: job.genderFilter,
+        minAge: job.minAge,
+        maxAge: job.maxAge,
         requiredDocumentTypes: required,
         branchLatitude: Number(job.branch.latitude),
         branchLongitude: Number(job.branch.longitude),
@@ -682,7 +687,7 @@ export class AdminOpsService {
         occupations: worker.occupations,
         windows: worker.availability,
       },
-      { favoredEmployerIds, uploadedDocumentTypes },
+      { favoredEmployerIds, uploadedDocumentTypes, timeZone },
     );
     return eligibility;
   }

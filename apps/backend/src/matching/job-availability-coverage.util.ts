@@ -1,3 +1,4 @@
+import { ISTANBUL_TIME_ZONE, istanbulCivil } from '../common/istanbul-civil.js';
 import { dayIntervals } from '../workers/availability.util.js';
 
 type Interval = { start: number; end: number };
@@ -9,8 +10,11 @@ export type AvailabilityRecord = {
   crossesMidnight: boolean;
 };
 
-function minutesSinceMidnightUtc(date: Date): number {
-  return date.getUTCHours() * 60 + date.getUTCMinutes();
+function minutesSinceMidnight(
+  date: Date,
+  timeZone: string,
+): number {
+  return istanbulCivil(date, timeZone).minutes;
 }
 
 export function buildDayIntervalMap(
@@ -40,14 +44,15 @@ export function buildDayIntervalMap(
 function jobToSegments(
   startsAt: Date,
   endsAt: Date,
+  timeZone: string,
 ): { day: number; start: number; end: number }[] {
   if (endsAt.getTime() <= startsAt.getTime()) {
     return [];
   }
-  const startDay = startsAt.getUTCDay();
-  const endDay = endsAt.getUTCDay();
-  const startMin = minutesSinceMidnightUtc(startsAt);
-  const endMin = minutesSinceMidnightUtc(endsAt);
+  const startDay = istanbulCivil(startsAt, timeZone).weekday;
+  const endDay = istanbulCivil(endsAt, timeZone).weekday;
+  const startMin = minutesSinceMidnight(startsAt, timeZone);
+  const endMin = minutesSinceMidnight(endsAt, timeZone);
 
   if (startDay === endDay) {
     return [{ day: startDay, start: startMin, end: endMin }];
@@ -80,9 +85,10 @@ export function availabilityCoversJob(
   windows: AvailabilityRecord[],
   startsAt: Date,
   endsAt: Date,
+  timeZone: string = ISTANBUL_TIME_ZONE,
 ): boolean {
   const byDay = buildDayIntervalMap(windows);
-  const segments = jobToSegments(startsAt, endsAt);
+  const segments = jobToSegments(startsAt, endsAt, timeZone);
   if (segments.length === 0) {
     return false;
   }
@@ -93,12 +99,16 @@ export function availabilityCoversJob(
 export function jobRequiresNightShiftAvailability(
   startsAt: Date,
   endsAt: Date,
+  timeZone: string = ISTANBUL_TIME_ZONE,
 ): boolean {
-  if (startsAt.getUTCDay() !== endsAt.getUTCDay()) {
+  if (
+    istanbulCivil(startsAt, timeZone).weekday !==
+    istanbulCivil(endsAt, timeZone).weekday
+  ) {
     return true;
   }
-  const startMin = minutesSinceMidnightUtc(startsAt);
-  const endMin = minutesSinceMidnightUtc(endsAt);
+  const startMin = minutesSinceMidnight(startsAt, timeZone);
+  const endMin = minutesSinceMidnight(endsAt, timeZone);
   if (endMin < startMin) {
     return true;
   }

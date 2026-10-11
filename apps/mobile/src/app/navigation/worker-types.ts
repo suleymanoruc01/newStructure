@@ -1,4 +1,6 @@
 export type WorkerStackParamList = {
+  WorkerHome: undefined;
+  WorkerCalendar: undefined;
   WorkerJobsList: undefined;
   WorkerApplicationsList: undefined;
   WorkerFavoritesList: undefined;
@@ -15,6 +17,10 @@ export type WorkerStackParamList = {
   WorkerShiftCheckOut: { shiftId: string };
   WorkerShiftDispute: { shiftId: string };
   SharedRatingsPending: undefined;
+  SharedAbuseReport: { targetUserId?: string } | undefined;
+  SharedNotificationsList: undefined;
+  SharedNotificationDetail: { notificationId: string };
+  SharedNotificationPrefs: undefined;
   SharedRatingsCompose: {
     shiftId: string;
     counterpartLabel: string;

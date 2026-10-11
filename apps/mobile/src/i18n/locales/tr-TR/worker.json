@@ -1,4 +1,17 @@
 {
+  "home": {
+    "title": "Bugün",
+    "empty": "Bu gün için planlanmış vardiya yok.",
+    "count": "{{count}} vardiya",
+    "sheet": "Vardiyalar",
+    "awaiting": "Teyit",
+    "active": "Sahada"
+  },
+  "calendar": {
+    "title": "Takvim",
+    "empty": "Planlanmış vardiya yok.",
+    "availability": "Müsaitlik saatleri"
+  },
   "jobs": {
     "title": "Uygun işler",
     "untitled": "Vardiya",
@@ -77,6 +90,16 @@
     "mutual": "Karşılıklı favori"
   },
   "shift": {
+    "status": {
+      "scheduled": "Planlandı",
+      "awaiting_confirm": "Teyit bekleniyor",
+      "can_come": "Gelecek",
+      "cannot_come": "Gelemiyor",
+      "released": "Koltuk serbest",
+      "checked_in": "Check-in yapıldı",
+      "completed": "Tamamlandı",
+      "manual_confirmed": "Manuel onaylandı"
+    },
     "availabilityTitle": "Gelebilir misiniz?",
     "availabilityLead": "Vardiya başlamadan yaklaşık 3 saat önce gelişinizi teyit ediyoruz. Cevap vermezseniz koltuk serbest kalabilir.",
     "canCome": "Gelebilirim",

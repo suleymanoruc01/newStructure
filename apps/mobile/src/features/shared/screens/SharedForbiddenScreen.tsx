@@ -1,31 +1,25 @@
 import React from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Screen } from '../../../components/ui/Screen';
+import { Button } from '../../../components/ui/Button';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { clearSystemRoute } from '../../../shared/system/system-route-store';
-import { ForbiddenState } from '../components/ForbiddenState';
-import { TenantMismatchExplain } from '../components/TenantMismatchExplain';
 
 export function SharedForbiddenScreen() {
   const { t } = useTranslation(['system', 'common']);
 
   return (
-    <Screen testID="m.shared.system.forbidden">
-      <ForbiddenState
-        title={t('system:forbidden.title')}
-        body={t('system:forbidden.body')}
-      />
-      <TenantMismatchExplain hint={t('system:forbidden.tenantHint')} />
-      <Pressable
-        accessibilityRole="button"
-        className="mt-8"
-        onPress={() => clearSystemRoute()}
-      >
-        <Text className="text-center text-base font-semibold text-brand-primary">
-          {t('common:back')}
-        </Text>
-      </Pressable>
-    </Screen>
+    <ModulePage back="off" scroll={false} testID="m.shared.system.forbidden" title={t('system:forbidden.title')}>
+      <Text className="font-sans text-base text-text-medium">
+        {t('system:forbidden.body')}
+      </Text>
+      <Text className="font-sans mt-4 text-sm text-feedback-error">
+        {t('system:forbidden.tenantHint')}
+      </Text>
+      <View className="mt-6">
+        <Button label={t('common:back')} onPress={() => clearSystemRoute()} />
+      </View>
+    </ModulePage>
   );
 }

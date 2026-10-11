@@ -5,6 +5,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { collectFeedJobIds } from './feed-pages.js';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { ObjectStorageService } from '../src/storage/object-storage.service.js';
@@ -160,13 +161,7 @@ describe('S7 favorites, ratings, documents (e2e)', () => {
       role: 'worker',
     }).accessToken;
 
-    const feedRes = await request(app.getHttpServer())
-      .get('/api/v1/jobs/feed')
-      .set('Authorization', `Bearer ${workerAccess}`);
-    expect(feedRes.status).toBe(200);
-    const feedIds = (feedRes.body.data.items as { id: string }[]).map(
-      (j) => j.id,
-    );
+    const feedIds = await collectFeedJobIds(app, workerAccess);
     expect(feedIds).toContain(job.id);
 
     const application = await prisma.application.create({

@@ -6,6 +6,7 @@ import type {
 } from '../generated/prisma/client.js';
 import { computeWorkerCompletion } from '../workers/worker-profile.util.js';
 import { haversineKm } from '../common/distance.util.js';
+import { ISTANBUL_TIME_ZONE, istanbulCivil } from '../common/istanbul-civil.js';
 import {
   availabilityCoversJob,
   jobRequiresNightShiftAvailability,
@@ -22,6 +23,8 @@ type JobCandidate = {
   remainingHeadcount: number;
   favoritesOnly: boolean;
   genderFilter: string | null;
+  minAge: number | null;
+  maxAge: number | null;
   requiredDocumentTypes: string[];
   branchLatitude: number;
   branchLongitude: number;
@@ -30,6 +33,7 @@ type JobCandidate = {
 export type MatchingContext = {
   favoredEmployerIds?: Set<string>;
   uploadedDocumentTypes?: Set<string>;
+  timeZone?: string;
 };
 
 type WorkerContext = {
@@ -46,11 +50,29 @@ export type EligibilityResult = {
   distanceKm: number | null;
 };
 
+export function ageYearsAt(
+  birthDate: Date,
+  at: Date,
+  timeZone: string = ISTANBUL_TIME_ZONE,
+): number {
+  const birth = istanbulCivil(birthDate, timeZone);
+  const when = istanbulCivil(at, timeZone);
+  let age = when.year - birth.year;
+  if (
+    when.month < birth.month ||
+    (when.month === birth.month && when.day < birth.day)
+  ) {
+    age -= 1;
+  }
+  return age;
+}
+
 export function evaluateJobEligibility(
   job: JobCandidate,
   worker: WorkerContext,
   context?: MatchingContext,
 ): EligibilityResult {
+  const timeZone = context?.timeZone ?? ISTANBUL_TIME_ZONE;
   const reasons: string[] = [];
   const matchReasons: string[] = [];
 
@@ -94,6 +116,18 @@ export function evaluateJobEligibility(
     reasons.push('gender_mismatch');
   }
 
+  if (job.minAge !== null || job.maxAge !== null) {
+    const birth = worker.profile.birthDate;
+    const age = birth ? ageYearsAt(birth, job.startsAt, timeZone) : null;
+    if (
+      age === null ||
+      (job.minAge !== null && age < job.minAge) ||
+      (job.maxAge !== null && age > job.maxAge)
+    ) {
+      reasons.push('age_mismatch');
+    }
+  }
+
   if (job.favoritesOnly) {
     const favored = context?.favoredEmployerIds?.has(job.employerId) ?? false;
     if (!favored) {
@@ -120,6 +154,7 @@ export function evaluateJobEligibility(
       availabilityWindows,
       job.startsAt,
       job.endsAt,
+      timeZone,
     )
   ) {
     reasons.push('availability_mismatch');
@@ -128,7 +163,7 @@ export function evaluateJobEligibility(
   }
 
   if (
-    jobRequiresNightShiftAvailability(job.startsAt, job.endsAt) &&
+    jobRequiresNightShiftAvailability(job.startsAt, job.endsAt, timeZone) &&
     !worker.profile.nightShiftAvailable
   ) {
     reasons.push('night_shift_unavailable');

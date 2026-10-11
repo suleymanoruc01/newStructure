@@ -31,15 +31,33 @@ model User {
   favoritesOwned        Favorite[]            @relation("FavoriteOwner")
   ratingsAuthored       Rating[]              @relation("RatingAuthor")
   deviceFingerprints    DeviceFingerprint[]
+  linkedIdentities      LinkedIdentity[]
 
   @@map("users")
 }
 
-model PlatformAdmin {
+model LinkedIdentity {
   id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @map("user_id") @db.Uuid
-  role      String   @default("ops")
+  userId    String   @map("user_id") @db.Uuid
+  provider  String
+  subject   String
+  email     String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
+  @@unique([userId, provider])
+  @@map("linked_identities")
+}
+
+model PlatformAdmin {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  role         String   @default("ops")
+  email        String?  @unique
+  passwordHash String?  @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -317,6 +335,8 @@ model Job {
   payCurrency          String   @default("TRY") @map("pay_currency")
   favoritesOnly        Boolean  @default(false) @map("favorites_only")
   genderFilter         String?  @map("gender_filter")
+  minAge               Int?     @map("min_age")
+  maxAge               Int?     @map("max_age")
   requiredDocumentTypes Json    @default("[]") @map("required_document_types")
   notes                String?
   publishedAt          DateTime? @map("published_at") @db.Timestamptz(6)
@@ -549,6 +569,7 @@ model CheckIn {
   accuracyM       Decimal  @map("accuracy_m") @db.Decimal(8, 2)
   distanceM       Decimal  @map("distance_m") @db.Decimal(10, 2)
   mockLocation    Boolean  @default(false) @map("mock_location")
+  softPass        Boolean  @default(false) @map("soft_pass")
   success         Boolean
   failureCode     String?  @map("failure_code")
   idempotencyKey  String?  @unique @map("idempotency_key")
@@ -738,7 +759,11 @@ model RemoteConfig {
   id                    String   @id @default("default")
   geofenceRadiusM       Int      @map("geofence_radius_m")
   geofenceSoftRadiusM   Int      @map("geofence_soft_radius_m")
+  geofenceMaxAccuracyM  Int      @default(30) @map("geofence_max_accuracy_m")
+  checkinEarlyMinutes   Int      @default(15) @map("checkin_early_minutes")
+  checkinLateMinutes    Int      @default(30) @map("checkin_late_minutes")
   maintenanceMode       Boolean  @default(false) @map("maintenance_mode")
+  timeZone              String   @default("Europe/Istanbul") @map("time_zone")
   minMobileIosVersion   String?  @map("min_mobile_ios_version")
   minMobileAndroidVersion String? @map("min_mobile_android_version")
   updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)

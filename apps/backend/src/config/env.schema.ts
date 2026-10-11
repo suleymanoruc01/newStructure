@@ -35,7 +35,7 @@ export const envSchema = z.object({
     .default(30),
   AVAILABILITY_CONFIRM_HOURS: z.coerce.number().int().positive().default(3),
   GEOFENCE_RADIUS_M: z.coerce.number().int().positive().default(100),
-  GEOFENCE_MAX_ACCURACY_M: z.coerce.number().int().positive().default(80),
+  GEOFENCE_MAX_ACCURACY_M: z.coerce.number().int().positive().default(30),
   GEOFENCE_SOFT_RADIUS_M: z.coerce.number().int().positive().default(150),
   CHECKIN_EARLY_MINUTES: z.coerce.number().int().nonnegative().default(15),
   CHECKIN_LATE_MINUTES: z.coerce.number().int().nonnegative().default(30),
@@ -82,12 +82,23 @@ export const envSchema = z.object({
     .min(5000)
     .max(120_000)
     .default(30_000),
+  APPLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  // shortcut: local RSA key for e2e only; unset on any shared or production server
+  IDENTITY_TEST_JWK: z.string().min(2).optional(),
 }).superRefine((env, ctx) => {
   if (env.BULLMQ_ENABLED && !env.REDIS_QUEUE_URL) {
     ctx.addIssue({
       code: 'custom',
       path: ['REDIS_QUEUE_URL'],
       message: 'REDIS_QUEUE_URL is required when BULLMQ_ENABLED=true',
+    });
+  }
+  if (env.IDENTITY_TEST_JWK && env.NODE_ENV !== 'test') {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['IDENTITY_TEST_JWK'],
+      message: 'IDENTITY_TEST_JWK is only allowed when NODE_ENV=test',
     });
   }
 });

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Text, View } from 'react-native';
+import { Pressable } from '../../../../components/ui/Pressable';
 
 import { Button } from '../../../../components/ui/Button';
 
@@ -39,14 +40,14 @@ export function TopUpConfirmSheet({
           className="rounded-t-3xl bg-surface-2 p-6"
           onPress={(e) => e.stopPropagation()}
         >
-          <Text className="text-xl font-bold text-text-high">{title}</Text>
-          <Text className="mt-2 text-base text-text-medium">{body}</Text>
-          <Text className="mt-4 text-2xl font-bold text-text-high">
+          <Text className="font-display text-xl font-bold text-text-high">{title}</Text>
+          <Text className="font-sans mt-2 text-base text-text-medium">{body}</Text>
+          <Text className="font-display mt-4 text-2xl font-bold text-text-high">
             {amountLabel}
           </Text>
           <View className="mt-6 gap-3">
             <Button label={confirmLabel} onPress={onConfirm} />
-            <Button label={cancelLabel} variant="ghost" onPress={onCancel} />
+            <Button label={cancelLabel} variant="secondary" onPress={onCancel} />
           </View>
         </Pressable>
       </Pressable>

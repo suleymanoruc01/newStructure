@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { RoleContextGuard } from '../common/role-context.guard.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
+import { PlatformModule } from '../platform/platform.module.js';
 import { ShiftsModule } from '../shifts/shifts.module.js';
 import { FavoritesModule } from '../favorites/favorites.module.js';
 import { TokensModule } from '../tokens/tokens.module.js';
@@ -15,6 +16,7 @@ import { JobApplicationsController } from './job-applications.controller.js';
   imports: [
     AuthModule,
     NotificationsModule,
+    PlatformModule,
     ShiftsModule,
     TokensModule,
     FavoritesModule,

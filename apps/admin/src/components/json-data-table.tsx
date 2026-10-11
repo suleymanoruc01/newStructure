@@ -1,4 +1,6 @@
+import { statusLabelTr } from "@parton/api-contracts";
 import { Link } from "react-router-dom";
+import { fieldLabel, isHiddenField } from "@/components/field-labels";
 
 type JsonDataTableProps = {
   rows: unknown[];
@@ -7,11 +9,29 @@ type JsonDataTableProps = {
 };
 
 function cellValue(value: unknown): string {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || value === "") {
     return "—";
   }
+  if (typeof value === "boolean") {
+    return value ? "Evet" : "Hayır";
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => cellValue(item)).join(", ");
+  }
   if (typeof value === "object") {
-    return JSON.stringify(value);
+    const record = value as Record<string, unknown>;
+    const label =
+      record.title ?? record.legalName ?? record.tradeName ?? record.name ?? record.slug;
+    return typeof label === "string" ? label : "…";
+  }
+  if (typeof value === "string") {
+    if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
+      const date = new Date(value);
+      if (!Number.isNaN(date.getTime())) {
+        return date.toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" });
+      }
+    }
+    return statusLabelTr(value);
   }
   return String(value);
 }
@@ -34,7 +54,9 @@ export function JsonDataTable({
       </pre>
     );
   }
-  const columns = Object.keys(first as Record<string, unknown>).slice(0, 8);
+  const columns = Object.keys(first as Record<string, unknown>)
+    .filter((key) => !isHiddenField(key))
+    .slice(0, 8);
 
   return (
     <div className="overflow-x-auto rounded-md border border-border">
@@ -43,7 +65,7 @@ export function JsonDataTable({
           <tr>
             {columns.map((col) => (
               <th key={col} className="px-3 py-2 font-medium text-foreground">
-                {col}
+                {fieldLabel(col)}
               </th>
             ))}
           </tr>

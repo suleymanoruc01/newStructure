@@ -1,12 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { ApiClientError } from '../../../api/client';
 import { createShiftDispute } from '../../../api/shifts-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -46,11 +47,9 @@ export function WorkerShiftDisputeScreen({ route, navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.worker.shift.dispute">
-      <Text className="text-xl font-bold text-text-high">
-        {t('worker:dispute.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('worker:dispute.title')} testID="m.worker.shift.dispute" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:dispute.lead')}
       </Text>
       <TextField
@@ -61,18 +60,18 @@ export function WorkerShiftDisputeScreen({ route, navigation }: Props) {
         value={note}
       />
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable
-        className="mt-8 rounded-xl bg-brand-primary px-4 py-3"
+        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
         disabled={submitting}
         onPress={() => void onSubmit()}
         testID="DisputeSubmitButton"
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text className="font-sans text-center text-base font-semibold text-text-on">
           {submitting ? t('common:loading') : t('worker:dispute.submit')}
         </Text>
       </Pressable>
-    </Screen>
+    </ModulePage>
   );
 }

@@ -11,8 +11,11 @@ import {
 } from '@nestjs/common';
 import { ErrorCode } from '@parton/api-contracts';
 import {
+  adminPasswordLoginBodySchema,
   assignRoleBodySchema,
   contextSwitchBodySchema,
+  identityLinkBodySchema,
+  identityLoginBodySchema,
   mePatchBodySchema,
   otpRequestBodySchema,
   otpVerifyBodySchema,
@@ -40,6 +43,37 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly config: AppConfigService,
   ) {}
+
+  @Post('auth/admin/login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async adminPasswordLogin(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body(new ZodValidationPipe(adminPasswordLoginBodySchema)) body: unknown,
+  ) {
+    const parsed = adminPasswordLoginBodySchema.parse(body);
+    const result = await this.auth.loginWithAdminPassword(
+      parsed.email,
+      parsed.password,
+      req.headers['user-agent'],
+    );
+    setAuthCookies(
+      res,
+      this.config,
+      result.tokens.refreshToken,
+      result.tokens.refreshExpiresAt,
+      result.tokens.csrfToken,
+    );
+    return successResponse(req.requestId ?? '', {
+      accessToken: result.tokens.accessToken,
+      accessExpiresAt: result.tokens.accessExpiresAt,
+      tokenType: 'Bearer' as const,
+      refreshToken: result.tokens.refreshToken,
+      user: result.user,
+      contexts: result.contexts,
+    });
+  }
 
   @Post('auth/otp/request')
   @UseGuards(ThrottlerGuard)
@@ -140,6 +174,64 @@ export class AuthController {
     }
     clearAuthCookies(res, this.config);
     return successResponse(req.requestId ?? '', { ok: true });
+  }
+
+  @Get('auth/identity-providers')
+  identityProviders(@Req() req: Request) {
+    return successResponse(
+      req.requestId ?? '',
+      this.auth.identityProviders(),
+    );
+  }
+
+  @Get('auth/identities')
+  @UseGuards(JwtAuthGuard)
+  async identities(@Req() req: Request) {
+    const data = await this.auth.listIdentities(req.userId!);
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post('auth/identities/link')
+  @UseGuards(JwtAuthGuard, CsrfGuard)
+  async linkIdentity(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(identityLinkBodySchema)) body: unknown,
+  ) {
+    const data = await this.auth.linkIdentity(
+      req.userId!,
+      identityLinkBodySchema.parse(body),
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post('auth/identities/login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  async identityLogin(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body(new ZodValidationPipe(identityLoginBodySchema)) body: unknown,
+  ) {
+    const parsed = identityLoginBodySchema.parse(body);
+    const result = await this.auth.loginWithIdentity(
+      parsed,
+      req.headers['user-agent'],
+    );
+    setAuthCookies(
+      res,
+      this.config,
+      result.tokens.refreshToken,
+      result.tokens.refreshExpiresAt,
+      result.tokens.csrfToken,
+    );
+    return successResponse(req.requestId ?? '', {
+      accessToken: result.tokens.accessToken,
+      accessExpiresAt: result.tokens.accessExpiresAt,
+      tokenType: 'Bearer' as const,
+      refreshToken: result.tokens.refreshToken,
+      user: result.user,
+      contexts: result.contexts,
+    });
   }
 
   @Get('auth/contexts')

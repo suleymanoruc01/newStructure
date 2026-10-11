@@ -5,16 +5,18 @@ import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { ApiClientError } from '../../../api/client';
 import { fetchJobDetail } from '../../../api/jobs-api';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerJobDetail'>;
 
 export function WorkerJobDetailScreen({ route, navigation }: Props) {
   const { jobId } = route.params;
   const { t } = useTranslation(['worker', 'common', 'errors']);
+  const timeZone = useDisplayTimeZone();
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<Awaited<
     ReturnType<typeof fetchJobDetail>
@@ -40,26 +42,24 @@ export function WorkerJobDetailScreen({ route, navigation }: Props) {
   }, [jobId, t]);
 
   return (
-    <Screen scroll testID="m.worker.jobs.detail">
+    <ModulePage title={detail?.title ?? detail?.branchName ?? t('worker:jobs.untitled')} testID="m.worker.jobs.detail" scroll>
       {detail ? (
         <View>
-          <Text className="text-2xl font-bold text-text-high">
-            {detail.title ?? detail.branchName ?? t('worker:jobs.untitled')}
-          </Text>
-          <Text className="mt-2 text-base text-text-medium">
-            {new Date(detail.startsAt).toLocaleString('tr-TR')} –{' '}
-            {new Date(detail.endsAt).toLocaleString('tr-TR')}
+          
+          <Text className="font-sans mt-2 text-base text-text-medium">
+            {formatIstanbul(detail.startsAt, timeZone)} –{' '}
+            {formatIstanbul(detail.endsAt, timeZone)}
           </Text>
           {detail.eligibility ? (
             <View className="mt-4">
-              <Text className="text-base text-text-high">
+              <Text className="font-sans text-base text-text-high">
                 {detail.eligibility.eligible
                   ? t('worker:jobs.eligible')
                   : t('worker:jobs.notEligible')}
               </Text>
               {!detail.eligibility.eligible &&
               detail.eligibility.reasons.length > 0 ? (
-                <Text className="mt-2 text-sm text-text-medium">
+                <Text className="font-sans mt-2 text-sm text-text-medium">
                   {detail.eligibility.reasons.join(', ')}
                 </Text>
               ) : null}
@@ -67,10 +67,10 @@ export function WorkerJobDetailScreen({ route, navigation }: Props) {
           ) : null}
           {detail.matchReasons && detail.matchReasons.length > 0 ? (
             <View className="mt-4">
-              <Text className="text-sm font-semibold text-text-high">
+              <Text className="font-sans text-sm font-semibold text-text-high">
                 {t('worker:jobs.matchReasonsTitle')}
               </Text>
-              <Text className="mt-1 text-sm text-text-medium">
+              <Text className="font-sans mt-1 text-sm text-text-medium">
                 {detail.matchReasons
                   .map((reason) =>
                     t(`worker:jobs.matchReasons.${reason}`, {
@@ -94,8 +94,8 @@ export function WorkerJobDetailScreen({ route, navigation }: Props) {
         </View>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-    </Screen>
+    </ModulePage>
   );
 }

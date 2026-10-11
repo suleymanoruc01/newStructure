@@ -1,12 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { ApiClientError } from '../../../api/client';
 import { checkInToShift, fetchShift } from '../../../api/shifts-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { readDeviceCoordinates } from '../../../shared/location/device-coordinates';
 
@@ -74,45 +75,43 @@ export function WorkerShiftCheckInScreen({ route, navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.worker.shift.check-in">
-      <Text className="text-xl font-bold text-text-high">
-        {t('worker:shift.checkInTitle')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('worker:shift.checkInTitle')} testID="m.worker.shift.check-in" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:shift.checkInLead')}
       </Text>
       {branchLabel ? (
-        <Text className="mt-2 text-sm text-text-low">{branchLabel}</Text>
+        <Text className="font-sans mt-2 text-sm text-text-low">{branchLabel}</Text>
       ) : null}
-      <Text className="mt-2 text-sm text-text-low">
+      <Text className="font-sans mt-2 text-sm text-text-low">
         {t('worker:shift.locationRationale')}
       </Text>
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable
-        className="mt-8 rounded-xl bg-brand-primary px-4 py-3"
+        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
         disabled={submitting}
         onPress={() => void onCheckIn()}
         testID="CheckInButton"
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text className="font-sans text-center text-base font-semibold text-text-on">
           {submitting ? t('common:loading') : t('worker:shift.checkInCta')}
         </Text>
       </Pressable>
       {disputeEligible ? (
         <Pressable
-          className="mt-4 rounded-xl border border-brand-primary px-4 py-3"
+          className="mt-4 rounded-xl border border-surface-2 px-4 py-3"
           onPress={() =>
             navigation.navigate('WorkerShiftDispute', { shiftId })
           }
           testID="OpenDisputeButton"
         >
-          <Text className="text-center text-base font-semibold text-brand-primary">
+          <Text className="font-sans text-center text-base font-semibold text-text-high">
             {t('worker:dispute.openFromCheckIn')}
           </Text>
         </Pressable>
       ) : null}
-    </Screen>
+    </ModulePage>
   );
 }

@@ -4,11 +4,15 @@ import {
   type AssignRoleBody,
   type AuthContext,
   type ContextSwitchBody,
+  type IdentityLinkBody,
+  type IdentityLoginBody,
+  type IdentityProvider,
   type OtpRequestBody,
   type OtpVerifyBody,
 } from '@parton/api-contracts';
 
 import { ApiException } from '../common/api.exception.js';
+import { verifyPassword } from './password.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -25,6 +29,10 @@ import { SessionService } from './session.service.js';
 import { SmsService } from './sms.service.js';
 import { TokenService } from './token.service.js';
 import type { SessionIssueResult } from './auth.types.js';
+import {
+  IdentityTokenError,
+  verifyIdentityToken,
+} from './identity-token.js';
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -290,6 +298,51 @@ export class AuthService {
     return { tokens, user: me, contexts };
   }
 
+  async loginWithAdminPassword(
+    email: string,
+    password: string,
+    userAgent?: string,
+  ) {
+    const admin = await this.prisma.platformAdmin.findUnique({
+      where: { email },
+      include: { user: true },
+    });
+    const matches = admin?.passwordHash
+      ? await verifyPassword(password, admin.passwordHash)
+      : false;
+    if (!admin || !matches) {
+      throw new ApiException(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.UNAUTHORIZED,
+        'E-posta veya parola hatalı.',
+      );
+    }
+    if (admin.user.status === 'banned') {
+      this.throwBanned();
+    }
+    await this.assertIdentityAllowed(admin.user.id, admin.user.phoneE164);
+    const contexts = await this.membership.listContexts(admin.user.id);
+    const activeContext = this.membership.assertContextAllowed(contexts, {
+      role: 'admin',
+    });
+    const sessionResult = await this.sessions.createSession(
+      admin.user.id,
+      activeContext,
+      userAgent,
+    );
+    const access = this.tokens.signAccess(
+      admin.user.id,
+      sessionResult.sessionId,
+      activeContext,
+    );
+    const tokens: SessionIssueResult = {
+      ...sessionResult.tokens,
+      ...access,
+    };
+    const me = await this.membership.toMeUser(admin.user.id);
+    return { tokens, user: me, contexts };
+  }
+
   async refresh(refreshToken: string, userAgent?: string) {
     const rotated = await this.sessions.rotateSession(refreshToken, userAgent);
     const access = this.tokens.signAccess(
@@ -395,6 +448,192 @@ export class AuthService {
       },
     });
     return refreshToken;
+  }
+
+  identityProviders() {
+    return {
+      appleClientId: this.config.env.APPLE_CLIENT_ID ?? null,
+      googleClientId: this.config.env.GOOGLE_CLIENT_ID ?? null,
+    };
+  }
+
+  async listIdentities(userId: string) {
+    const rows = await this.prisma.linkedIdentity.findMany({
+      where: { userId },
+      select: { provider: true, email: true },
+    });
+    return {
+      items: rows.map((row) => ({
+        provider: row.provider as IdentityProvider,
+        email: row.email,
+      })),
+    };
+  }
+
+  async linkIdentity(userId: string, body: IdentityLinkBody) {
+    const claims = await this.readIdentityClaims(body.provider, body.idToken);
+    const existing = await this.prisma.linkedIdentity.findUnique({
+      where: {
+        provider_subject: { provider: body.provider, subject: claims.sub },
+      },
+    });
+    if (existing && existing.userId !== userId) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        ErrorCode.CONFLICT,
+        'Bu hesap başka bir kullanıcıya bağlı.',
+      );
+    }
+    if (existing) {
+      return { provider: body.provider, linked: true as const };
+    }
+    const mine = await this.prisma.linkedIdentity.findUnique({
+      where: { userId_provider: { userId, provider: body.provider } },
+    });
+    if (mine) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        ErrorCode.CONFLICT,
+        'Bu sağlayıcı zaten başka bir hesaba bağlı.',
+      );
+    }
+    await this.prisma.linkedIdentity.create({
+      data: {
+        userId,
+        provider: body.provider,
+        subject: claims.sub,
+        email: claims.email,
+      },
+    });
+    return { provider: body.provider, linked: true as const };
+  }
+
+  async loginWithIdentity(body: IdentityLoginBody, userAgent?: string) {
+    const claims = await this.readIdentityClaims(body.provider, body.idToken);
+    const link = await this.prisma.linkedIdentity.findUnique({
+      where: {
+        provider_subject: { provider: body.provider, subject: claims.sub },
+      },
+    });
+    if (!link) {
+      throw new ApiException(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.IDENTITY_NOT_LINKED,
+        'Bu hesap bağlı değil. Önce telefon numarasıyla kayıt olun, sonra profilde bağlayın.',
+      );
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { id: link.userId },
+    });
+    if (!user) {
+      throw new ApiException(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.IDENTITY_NOT_LINKED,
+        'Bu hesap bağlı değil. Önce telefon numarasıyla kayıt olun, sonra profilde bağlayın.',
+      );
+    }
+    return this.issueSession(user.id, user.phoneE164, body.deviceId, userAgent);
+  }
+
+  private async readIdentityClaims(provider: IdentityProvider, idToken: string) {
+    const settings = this.identitySettings(provider);
+    let testJwk: { kty: 'RSA'; n: string; e: string; kid?: string } | undefined;
+    const testJwkRaw =
+      process.env.NODE_ENV === 'test'
+        ? (this.config.env.IDENTITY_TEST_JWK ?? process.env.IDENTITY_TEST_JWK)
+        : undefined;
+    if (testJwkRaw) {
+      testJwk = JSON.parse(testJwkRaw) as {
+        kty: 'RSA';
+        n: string;
+        e: string;
+        kid?: string;
+      };
+    }
+    const testAudience =
+      process.env.NODE_ENV === 'test'
+        ? process.env[provider === 'apple' ? 'APPLE_CLIENT_ID' : 'GOOGLE_CLIENT_ID']
+        : undefined;
+    const audience = testAudience ?? settings.audience;
+    try {
+      return await verifyIdentityToken(idToken, {
+        issuer: settings.issuer,
+        audience,
+        jwksUrl: settings.jwksUrl,
+        testJwk,
+      });
+    } catch (error) {
+      if (
+        error instanceof IdentityTokenError &&
+        error.reason === 'unconfigured'
+      ) {
+        throw new ApiException(
+          HttpStatus.SERVICE_UNAVAILABLE,
+          ErrorCode.IDENTITY_NOT_CONFIGURED,
+          'Bu giriş yöntemi henüz yapılandırılmadı.',
+        );
+      }
+      throw new ApiException(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.IDENTITY_TOKEN_INVALID,
+        'Kimlik doğrulanamadı.',
+      );
+    }
+  }
+
+  private identitySettings(provider: IdentityProvider): {
+    issuer: string;
+    jwksUrl: string;
+    audience: string | undefined;
+  } {
+    switch (provider) {
+      case 'apple':
+        return {
+          issuer: 'https://appleid.apple.com',
+          jwksUrl: 'https://appleid.apple.com/auth/keys',
+          audience: this.config.env.APPLE_CLIENT_ID,
+        };
+      case 'google':
+        return {
+          issuer: 'https://accounts.google.com',
+          jwksUrl: 'https://www.googleapis.com/oauth2/v3/certs',
+          audience: this.config.env.GOOGLE_CLIENT_ID,
+        };
+      default: {
+        const neverProvider: never = provider;
+        return neverProvider;
+      }
+    }
+  }
+
+  private async issueSession(
+    userId: string,
+    phoneE164: string,
+    deviceId: string | undefined,
+    userAgent?: string,
+  ) {
+    await this.assertIdentityAllowed(userId, phoneE164, deviceId);
+    const contexts = await this.membership.listContexts(userId);
+    const activeContext =
+      contexts.length > 0
+        ? this.membership.pickDefaultContext(contexts)
+        : { role: 'worker' as const };
+    const sessionResult = await this.sessions.createSession(
+      userId,
+      activeContext,
+      userAgent,
+    );
+    const access = this.tokens.signAccess(
+      userId,
+      sessionResult.sessionId,
+      activeContext,
+    );
+    const tokens: SessionIssueResult = {
+      ...sessionResult.tokens,
+      ...access,
+    };
+    const me = await this.membership.toMeUser(userId);
+    return { tokens, user: me, contexts };
   }
 
   async getMe(userId: string, activeContext?: AuthContext) {

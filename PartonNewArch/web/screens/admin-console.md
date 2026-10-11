@@ -266,7 +266,7 @@
 | **Route** | `/config` |
 | **MVP** | P0 |
 | **Cases** | `CASE-UX`, `CASE-LOCATION` |
-| **Components** | `RemoteConfigForm`, `GeofenceDefaultEditor`, `MaintenanceToggle` |
+| **Components** | `RemoteConfigForm`, `GeofenceDefaultEditor`, `MaintenanceToggle`, IANA `timeZone` (default `Europe/Istanbul`), `geofenceMaxAccuracyM`, `checkinEarlyMinutes`, `checkinLateMinutes` |
 
 ### `w.admin.audit.log`
 

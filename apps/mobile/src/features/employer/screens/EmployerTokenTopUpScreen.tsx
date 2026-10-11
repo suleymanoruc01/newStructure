@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { ApiClientError } from '../../../api/client';
 import { topUpTokens } from '../../../api/tokens-api';
-import { Screen } from '../../../components/ui/Screen';
+import { Button } from '../../../components/ui/Button';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { PaymentMethodList } from '../components/tokens/PaymentMethodList';
 import { TopUpAmountPicker } from '../components/tokens/TopUpAmountPicker';
@@ -69,14 +70,9 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.employer.tokens.top-up">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('employer:tokens.topUpTitle')}
-      </Text>
-      <Text className="mt-2 text-base text-text-medium">
-        {t('employer:tokens.topUpLead')}
-      </Text>
-      <View className="mt-6">
+    <ModulePage title={t('employer:tokens.topUpTitle')} testID="m.employer.tokens.top-up" scroll>
+      
+      <View className="mt-2">
         <TopUpAmountPicker
           selected={amount}
           onSelect={setAmount}
@@ -91,9 +87,12 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
           sandboxLabel={t('employer:tokens.sandboxCard')}
         />
       </View>
-      <View className="mt-8">
-        <Text
-          className="text-center text-base font-semibold text-brand-primary"
+      {error ? (
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
+      ) : null}
+      <View className="mt-6">
+        <Button
+          label={t('employer:tokens.continueToPay')}
           onPress={() => {
             if (!amount) {
               setError(t('employer:tokens.pickAmount'));
@@ -101,15 +100,10 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
             }
             setConfirmOpen(true);
           }}
-        >
-          {t('employer:tokens.continueToPay')}
-        </Text>
+        />
       </View>
-      {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
       {success ? (
-        <Text className="mt-4 text-sm text-feedback-success">{success}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-success">{success}</Text>
       ) : null}
       <TopUpConfirmSheet
         visible={confirmOpen}
@@ -129,6 +123,6 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
         onConfirm={() => void runTopUp('approve')}
         onCancel={() => void runTopUp('cancel')}
       />
-    </Screen>
+    </ModulePage>
   );
 }

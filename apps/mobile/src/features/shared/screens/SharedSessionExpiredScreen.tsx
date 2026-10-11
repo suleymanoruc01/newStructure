@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { clearSystemRoute } from '../../../shared/system/system-route-store';
 import { SessionExpiredCard } from '../components/SessionExpiredCard';
@@ -11,9 +11,8 @@ export function SharedSessionExpiredScreen() {
   const { signOut } = useAuth();
 
   return (
-    <Screen testID="m.shared.system.session-expired">
+    <ModulePage back="off" scroll={false} testID="m.shared.system.session-expired" title={t('system:sessionExpired.title')}>
       <SessionExpiredCard
-        title={t('system:sessionExpired.title')}
         body={t('system:sessionExpired.body')}
         ctaLabel={t('system:sessionExpired.reauth')}
         onReauth={() => {
@@ -21,6 +20,6 @@ export function SharedSessionExpiredScreen() {
           void signOut();
         }}
       />
-    </Screen>
+    </ModulePage>
   );
 }

@@ -1,11 +1,12 @@
 import type { UserRole } from '@parton/api-contracts';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { ApiClientError } from '../../../api/client';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { SCREEN_IDS } from '../screen-ids';
@@ -54,8 +55,8 @@ export function AuthRoleSelectScreen({ navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID={SCREEN_IDS.roleSelect}>
-      <Text className="text-2xl font-bold text-text-high">{t('auth:role.title')}</Text>
+    <ModulePage title={t('auth:role.title')} testID={SCREEN_IDS.roleSelect} scroll>
+      
       <View className="mt-6 gap-3">
         {ROLES.map((item) => (
           <Pressable
@@ -65,18 +66,18 @@ export function AuthRoleSelectScreen({ navigation }: Props) {
             onPress={() => void onSelect(item.role)}
             className="rounded-2xl bg-surface-1 p-4 active:bg-surface-2"
           >
-            <Text className="text-lg font-semibold text-forest">
+            <Text className="font-sans text-lg font-semibold text-forest">
               {t(`auth:${item.titleKey}`)}
             </Text>
-            <Text className="mt-1 text-base text-text-medium">
+            <Text className="font-sans mt-1 text-base text-text-medium">
               {t(`auth:${item.bodyKey}`)}
             </Text>
           </Pressable>
         ))}
       </View>
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-    </Screen>
+    </ModulePage>
   );
 }

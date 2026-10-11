@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
+import { formErrorMessage } from '../../../api/form-error';
 import {
   patchWorkerProfile,
   putWorkerAvailability,
@@ -87,29 +88,20 @@ export function WorkerOnboardingProfileScreen(_props: Props) {
       await putWorkerAvailability({ windows: DEFAULT_WINDOWS }, token);
       await completeOnboarding();
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(formErrorMessage(err, t));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Screen scroll testID={ONBOARDING_SCREEN_IDS.workerProfile}>
-      <Text className="text-2xl font-bold text-text-high">
-        {t('onboarding:worker.title')}
-      </Text>
-      <Text className="mt-2 text-base text-text-medium">
-        {t('onboarding:worker.step', { current: step + 1, total: 3 })}
-      </Text>
-      {step === 0 ? (
-        <Text className="mt-1 text-sm text-text-low">
-          {t('onboarding:worker.timeBudget')}
-        </Text>
-      ) : null}
+    <ModulePage
+      back={step > 0 ? () => setStep(step - 1) : 'auto'}
+      eyebrow={t('onboarding:worker.step', { current: step + 1, total: 3 })}
+      scroll
+      testID={ONBOARDING_SCREEN_IDS.workerProfile}
+      title={t('onboarding:worker.title')}
+    >
       {step === 0 ? (
         <View className="mt-6 gap-3">
           <TextField
@@ -159,40 +151,39 @@ export function WorkerOnboardingProfileScreen(_props: Props) {
                 : t('onboarding:worker.nightShiftOff')
             }
             onPress={() => setNightShift(!nightShift)}
-            variant="ghost"
+            variant="secondary"
           />
           <TextField
             label={t('onboarding:worker.latitude')}
             value={homeLat}
             onChangeText={setHomeLat}
             keyboardType="decimal-pad"
+            error={
+              error === t('onboarding:worker.invalidCoords') ? error : undefined
+            }
           />
           <TextField
             label={t('onboarding:worker.longitude')}
             value={homeLng}
             onChangeText={setHomeLng}
             keyboardType="decimal-pad"
+            error={
+              error === t('onboarding:worker.invalidCoords') ? error : undefined
+            }
           />
         </View>
       ) : null}
       {step === 2 ? (
         <View className="mt-6 gap-3">
-          <Text className="text-base text-text-medium">
+          <Text className="font-sans text-base text-text-medium">
             {t('onboarding:worker.availabilityHint')}
           </Text>
         </View>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <View className="mt-6 gap-3">
-        {step > 0 ? (
-          <Button
-            label={t('common:back')}
-            variant="ghost"
-            onPress={() => setStep(step - 1)}
-          />
-        ) : null}
+      <View className="mt-6">
         <Button
           disabled={submitting}
           label={
@@ -201,6 +192,6 @@ export function WorkerOnboardingProfileScreen(_props: Props) {
           onPress={() => void onNext()}
         />
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

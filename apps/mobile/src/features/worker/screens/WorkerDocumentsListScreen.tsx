@@ -1,12 +1,14 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { statusLabelTr } from '@parton/api-contracts';
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { ApiClientError } from '../../../api/client';
 import { listWorkerDocuments } from '../../../api/worker-documents-api';
-import { Screen } from '../../../components/ui/Screen';
+import { Button } from '../../../components/ui/Button';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerDocumentsList'>;
@@ -45,44 +47,36 @@ export function WorkerDocumentsListScreen({ navigation }: Props) {
   }, [load]);
 
   return (
-    <Screen scroll testID="m.worker.documents.list">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('worker:documents.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
-        {t('worker:documents.lead')}
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        className="mt-4 self-start rounded-full bg-brand-primary px-4 py-2"
-        onPress={() => navigation.navigate('WorkerDocumentsUpload')}
-      >
-        <Text className="text-sm font-semibold text-white">
-          {t('worker:documents.uploadCta')}
-        </Text>
-      </Pressable>
-      {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
-      ) : null}
+    <ModulePage title={t('worker:documents.title')} testID="m.worker.documents.list" scroll>
+      
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
+      ) : null}
+      <View className="mt-4">
+        <Button
+          label={t('worker:documents.uploadCta')}
+          onPress={() => navigation.navigate('WorkerDocumentsUpload')}
+        />
+      </View>
+      {loading ? (
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : null}
       <View className="mt-4 gap-3">
         {items.map((doc) => (
           <View key={doc.id} className="rounded-2xl bg-surface-1 p-4">
-            <Text className="font-semibold text-text-high">
+            <Text className="font-sans font-semibold text-text-high">
               {t(`worker:documents.types.${doc.documentType}`)}
             </Text>
-            <Text className="mt-1 text-sm text-text-medium">{doc.fileName}</Text>
-            <Text className="mt-1 text-xs text-text-low">
-              {t(`worker:documents.status.${doc.status}`)}
+            <Text className="font-sans mt-1 text-sm text-text-medium">{doc.fileName}</Text>
+            <Text className="font-sans mt-1 text-xs text-text-low">
+              {statusLabelTr(doc.status)}
             </Text>
           </View>
         ))}
         {!loading && items.length === 0 ? (
-          <Text className="text-text-medium">{t('worker:documents.empty')}</Text>
+          <Text className="font-sans text-text-medium">{t('worker:documents.empty')}</Text>
         ) : null}
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

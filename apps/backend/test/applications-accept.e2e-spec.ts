@@ -176,15 +176,6 @@ describe('Applications accept + notify (e2e)', () => {
     expect(acceptRes.status).toBe(201);
     expect(acceptRes.body.data.status).toBe('accepted');
 
-    const pendingEvents = await prisma.outboxEvent.count({
-      where: { status: 'pending' },
-    });
-    expect(pendingEvents).toBeGreaterThan(0);
-
-    for (let i = 0; i < 10; i += 1) {
-      await outbox.drainOnce();
-    }
-
     const workerNotification = await prisma.notification.findFirst({
       where: {
         userId: workerUserId,
@@ -192,7 +183,20 @@ describe('Applications accept + notify (e2e)', () => {
       },
     });
     expect(workerNotification).toBeTruthy();
-    expect(workerNotification!.deliveryAttempts).toBeGreaterThan(0);
+
+    const pending = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT id FROM outbox_events
+      WHERE status = 'pending'
+        AND payload->>'notificationId' = ${workerNotification!.id}
+    `;
+    for (const row of pending) {
+      await outbox.processEvent(row.id);
+    }
+
+    const dispatched = await prisma.notification.findUnique({
+      where: { id: workerNotification!.id },
+    });
+    expect(dispatched?.deliveryAttempts).toBeGreaterThan(0);
 
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     expect(job?.status).toBe('closed');

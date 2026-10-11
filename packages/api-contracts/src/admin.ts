@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { successEnvelopeSchema } from './envelope.js';
+import { ianaTimeZoneSchema } from './platform.js';
 
 export const adminUserSummarySchema = z.object({
   id: z.string().uuid(),
@@ -79,9 +80,13 @@ export const adminBroadcastSchema = z.object({
 export const adminRemoteConfigSchema = z.object({
   geofenceRadiusM: z.number().int().positive(),
   geofenceSoftRadiusM: z.number().int().positive(),
+  geofenceMaxAccuracyM: z.number().int().positive(),
+  checkinEarlyMinutes: z.number().int().nonnegative(),
+  checkinLateMinutes: z.number().int().nonnegative(),
   maintenanceMode: z.boolean(),
   minMobileIosVersion: z.string().nullable().optional(),
   minMobileAndroidVersion: z.string().nullable().optional(),
+  timeZone: ianaTimeZoneSchema,
 });
 
 export const adminMatchingDiagnosticsQuerySchema = z.object({

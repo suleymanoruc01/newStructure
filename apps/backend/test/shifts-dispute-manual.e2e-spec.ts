@@ -18,6 +18,7 @@ describe('Shifts dispute and manual confirm (e2e) @T-134 @T-135', () => {
   let workerSessionId: string;
   let employerSessionId: string;
   let employerId: string;
+  let adminAccess: string;
   let shiftId: string;
   const branchLat = 41.01;
   const branchLng = 28.98;
@@ -97,6 +98,26 @@ describe('Shifts dispute and manual confirm (e2e) @T-134 @T-135', () => {
         city: 'İstanbul',
       },
     });
+    const admin = await prisma.user.create({
+      data: { phoneE164: `+905558${Date.now().toString().slice(-7)}` },
+    });
+    await prisma.platformAdmin.create({
+      data: { userId: admin.id, role: 'ops' },
+    });
+    const adminSessionId = (
+      await prisma.refreshSession.create({
+        data: {
+          userId: admin.id,
+          tokenHash: 'a-dispute',
+          expiresAt: new Date(Date.now() + 86400000),
+          activeContext: { role: 'admin' },
+        },
+      })
+    ).id;
+    adminAccess = tokens.signAccess(admin.id, adminSessionId, {
+      role: 'admin',
+    }).accessToken;
+
     employerSessionId = (
       await prisma.refreshSession.create({
         data: {
@@ -205,6 +226,32 @@ describe('Shifts dispute and manual confirm (e2e) @T-134 @T-135', () => {
       });
     expect([200, 201]).toContain(disputeRes.status);
     expect(disputeRes.body.data.status).toBe('open');
+    const disputeId = disputeRes.body.data.id as string;
+
+    const disputeNotice = await prisma.notification.findFirst({
+      where: {
+        userId: employerUserId,
+        type: 'shift.dispute_update',
+        dedupeKey: `shift.dispute_update:${disputeId}:${employerUserId}`,
+      },
+    });
+    expect(disputeNotice).toBeTruthy();
+    const disputeOutbox = await prisma.outboxEvent.findFirst({
+      where: {
+        type: 'notification.dispatch',
+        payload: { path: ['notificationId'], equals: disputeNotice!.id },
+      },
+    });
+    expect(disputeOutbox).toBeTruthy();
+
+    const adminQueue = await request(app.getHttpServer())
+      .get('/api/v1/admin/disputes')
+      .set('Authorization', `Bearer ${adminAccess}`);
+    expect(adminQueue.status).toBe(200);
+    const queuedIds = (adminQueue.body.data.items as { id: string }[]).map(
+      (item) => item.id,
+    );
+    expect(queuedIds).toContain(disputeId);
 
     const listRes = await request(app.getHttpServer())
       .get('/api/v1/shifts/employer/open-disputes')
@@ -218,6 +265,22 @@ describe('Shifts dispute and manual confirm (e2e) @T-134 @T-135', () => {
       .set('Idempotency-Key', `manual-${shiftId}`);
     expect([200, 201]).toContain(manualRes.status);
     expect(manualRes.body.data.status).toBe('manual_confirmed');
+
+    const confirmNotice = await prisma.notification.findFirst({
+      where: {
+        userId: workerUserId,
+        type: 'shift.manual_confirmed',
+        dedupeKey: `shift.manual_confirmed:${shiftId}`,
+      },
+    });
+    expect(confirmNotice).toBeTruthy();
+    const confirmOutbox = await prisma.outboxEvent.findFirst({
+      where: {
+        type: 'notification.dispatch',
+        payload: { path: ['notificationId'], equals: confirmNotice!.id },
+      },
+    });
+    expect(confirmOutbox).toBeTruthy();
 
     const capture = await prisma.tokenLedgerEntry.findFirst({
       where: { type: 'capture', refId: shiftId },

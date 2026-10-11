@@ -3,13 +3,16 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { statusLabelTr } from '@parton/api-contracts';
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { ApiClientError } from '../../../api/client';
+import { formErrorMessage } from '../../../api/form-error';
 import { fetchJobDetail, patchEmployerJob } from '../../../api/jobs-api';
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { confirmDestructive } from '../../../shared/ui/confirm-destructive';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerJobDetail'>;
 
@@ -34,11 +37,7 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
       setStatus(job.status);
       setHeadcount(String(job.headcount));
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(formErrorMessage(err, t));
     }
   }, [jobId, t]);
 
@@ -63,17 +62,22 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
       await patchEmployerJob(jobId, { headcount: parsed }, token, idem);
       await load();
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(formErrorMessage(err, t));
     } finally {
       setSubmitting(false);
     }
   };
 
   const closeJob = async () => {
+    const confirmed = await confirmDestructive(
+      t('employer:jobs.detail.closeJob'),
+      t('employer:jobs.detail.closeJobBody'),
+      t('employer:jobs.detail.closeJob'),
+      t('common:cancel'),
+    );
+    if (!confirmed) {
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -89,11 +93,7 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
       );
       await load();
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(formErrorMessage(err, t));
     } finally {
       setSubmitting(false);
     }
@@ -102,22 +102,22 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
   const published = status === 'published';
 
   return (
-    <Screen scroll testID="m.employer.jobs.detail">
-      <Text className="text-2xl font-bold text-text-high">{title}</Text>
-      <Text className="mt-2 text-sm text-text-medium">
-        {t('employer:jobs.detail.status', { status })}
+    <ModulePage title={title} testID="m.employer.jobs.detail" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
+        {statusLabelTr(status)}
       </Text>
       {published ? (
         <View className="mt-6 gap-3">
-          <Text className="text-base text-text-medium">
-            {t('employer:jobs.detail.headcountHint')}
-          </Text>
           <TextField
             label={t('employer:jobs.headcount')}
             value={headcount}
             onChangeText={setHeadcount}
             keyboardType="number-pad"
           />
+          {error ? (
+            <Text className="font-sans text-sm text-feedback-error">{error}</Text>
+          ) : null}
           <Button
             label={
               submitting
@@ -129,13 +129,13 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
           />
           <Button
             label={t('employer:jobs.detail.closeJob')}
-            variant="ghost"
+            variant="destructive"
             onPress={() => void closeJob()}
             disabled={submitting}
           />
           <Button
             label={t('employer:jobs.applicants')}
-            variant="ghost"
+            variant="secondary"
             onPress={() =>
               navigation.navigate('EmployerApplicants', {
                 jobId,
@@ -144,10 +144,11 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
             }
           />
         </View>
-      ) : null}
-      {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-    </Screen>
+      ) : (
+        error ? (
+          <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
+        ) : null
+      )}
+    </ModulePage>
   );
 }

@@ -1,6 +1,7 @@
 import {
   errorEnvelopeSchema,
   meResponseSchema,
+  adminPasswordLoginBodySchema,
   otpRequestBodySchema,
   otpRequestResponseSchema,
   otpVerifyBodySchema,
@@ -153,6 +154,23 @@ async function request<T>(
     );
   }
   return json as T;
+}
+
+export async function loginWithPassword(body: {
+  email: string;
+  password: string;
+}) {
+  const payload = adminPasswordLoginBodySchema.parse(body);
+  const json = await request<unknown>("/auth/admin/login", {
+    method: "POST",
+    body: payload,
+  });
+  const parsed = otpVerifyResponseSchema.parse(json);
+  setAccessSession({
+    accessToken: parsed.data.accessToken,
+    accessExpiresAt: parsed.data.accessExpiresAt,
+  });
+  return parsed;
 }
 
 export async function requestOtp(body: OtpRequestBody) {

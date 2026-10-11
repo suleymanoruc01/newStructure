@@ -12,7 +12,7 @@ export function PageShell({ title, screenId, children }: PageShellProps) {
     <Card>
       <CardHeader className="space-y-1">
         <CardTitle>{title}</CardTitle>
-        <p className="text-xs text-muted-foreground">{screenId}</p>
+        <p className="sr-only">{screenId}</p>
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>

@@ -1,7 +1,17 @@
-# NGINX templates
+# NGINX
 
-See [PartonNewArch/web/06-nginx.md](../../PartonNewArch/web/06-nginx.md).
+Hosts on this edge:
 
-1. Copy `parton.conf.template` to your host config.
-2. Point marketing `root` at `apps/marketing/dist` after `bun run --filter '@parton/marketing' build`.
-3. `nginx -t && systemctl reload nginx`
+| Host | What |
+| --- | --- |
+| `api.parton.app` | Nest `/api/` and `/health/`. SSE `/api/v1/realtime/` is unbuffered. |
+| `xadmin.parton.app` | Admin SPA (`/admin/`, files in `/var/www/parton/admin`) plus same-origin `/api/`. |
+| `devops.parton.app` | Same SPA, opening `/admin/devops`, plus same-origin `/api/`. |
+
+`parton.app` marketing stays its own site. DevOps MCP is stdio and calls the API; it is not an HTTP vhost.
+
+1. Copy `snippets/*.conf` to `/etc/nginx/snippets/`.
+2. Copy `parton.conf.template` to `/etc/nginx/sites-available/parton-apps` and enable it.
+3. Publish the admin build: `rsync -a --delete apps/admin/dist/ /var/www/parton/admin/`.
+4. Issue the cert once: `certbot certonly --webroot -w /var/www/certbot -d api.parton.app -d xadmin.parton.app -d devops.parton.app`.
+5. `nginx -t && systemctl reload nginx`.

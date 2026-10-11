@@ -25,7 +25,10 @@ export type GeofenceResult = {
 export class GeofenceService {
   constructor(private readonly config: AppConfigService) {}
 
-  evaluate(input: GeofenceInput): GeofenceResult {
+  evaluate(
+    input: GeofenceInput,
+    radii?: { radiusM: number; softRadiusM: number; maxAccuracyM: number },
+  ): GeofenceResult {
     if (!input.locationPermissionGranted) {
       throw new ApiException(
         HttpStatus.BAD_REQUEST,
@@ -49,15 +52,14 @@ export class GeofenceService {
         input.branchLongitude,
       ) * 1000;
 
-    const radiusM = this.config.env.GEOFENCE_RADIUS_M;
-    const softRadiusM = this.config.env.GEOFENCE_SOFT_RADIUS_M;
-    const maxAccuracyM = this.config.env.GEOFENCE_MAX_ACCURACY_M;
+    const radiusM = radii?.radiusM ?? this.config.env.GEOFENCE_RADIUS_M;
+    const softRadiusM = radii?.softRadiusM ?? this.config.env.GEOFENCE_SOFT_RADIUS_M;
+    const maxAccuracyM =
+      radii?.maxAccuracyM ?? this.config.env.GEOFENCE_MAX_ACCURACY_M;
 
-    const inside = distanceM <= radiusM;
-    const softPass =
-      !inside &&
-      distanceM <= softRadiusM &&
-      input.accuracyM <= maxAccuracyM;
+    const accurate = input.accuracyM <= maxAccuracyM;
+    const inside = distanceM <= radiusM && accurate;
+    const softPass = !inside && distanceM <= softRadiusM;
 
     return { distanceM, inside, softPass };
   }

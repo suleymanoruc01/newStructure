@@ -22,7 +22,7 @@ flowchart LR
 | Sector | Intersection with worker sectors | T-062, T-063, T-069 |
 | Occupation | Intersection with worker occupations | T-064, T-065, T-070 |
 | Documents | Worker has all required doc types | T-066, T-067 |
-| Demographics | Age/gender match job constraints if set | T-027, T-028, T-044 |
+| Demographics | Age/gender match job constraints if set. Optional `jobs.min_age` / `jobs.max_age` (0–120, min ≤ max). Age is full years on the Europe/Istanbul calendar from `worker_profiles.birth_date` at `jobs.starts_at`; a missing birth date fails the filter. Optional `jobs.gender_filter` must equal `worker_profiles.gender`. | T-027, T-028, T-044 |
 | Favorites-only | Worker is favorited by employer (or mutual — product) | T-075, T-168, T-169 |
 | Profile complete | Worker may apply (also enforced on apply) | T-029, T-082 |
 | Job state | Published, not expired, seats remaining | T-083, T-084 |
@@ -34,7 +34,7 @@ flowchart LR
 | `full_cover` | Worker range fully contains job interval | T-072 |
 | `partial_overlap` | Any overlap counts | T-071 |
 
-Night shifts (cross-midnight) must use interval normalization (T-019, T-073).
+Night shifts (cross-midnight) must use interval normalization (T-019, T-073). Day and clock for coverage, night-shift, age, and notification times use `remote_config.time_zone` (default `Europe/Istanbul`, edited on `w.admin.config.remote`). Instants stay UTC in Postgres.
 
 ## Ranking (soft)
 

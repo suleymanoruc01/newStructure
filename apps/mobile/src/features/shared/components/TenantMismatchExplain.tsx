@@ -8,7 +8,7 @@ type Props = {
 export function TenantMismatchExplain({ hint }: Props) {
   return (
     <View className="mt-6 rounded-2xl bg-surface-1 p-4">
-      <Text className="text-sm text-text-medium">{hint}</Text>
+      <Text className="font-sans text-sm text-text-medium">{hint}</Text>
     </View>
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../../components/ui/Pressable';
 
 type MethodId = 'sandbox_card';
 
@@ -19,7 +20,7 @@ export function PaymentMethodList({
   const active = selected === 'sandbox_card';
   return (
     <View className="gap-2">
-      <Text className="text-sm font-semibold text-text-medium">{title}</Text>
+      <Text className="font-sans text-sm font-semibold text-text-medium">{title}</Text>
       <Pressable
         accessibilityRole="radio"
         accessibilityState={{ selected: active }}
@@ -28,7 +29,7 @@ export function PaymentMethodList({
         }`}
         onPress={() => onSelect('sandbox_card')}
       >
-        <Text className="text-base font-medium text-text-high">
+        <Text className="font-sans text-base font-medium text-text-high">
           {sandboxLabel}
         </Text>
       </Pressable>

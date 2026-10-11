@@ -2,6 +2,13 @@ import { z } from 'zod';
 
 import { successEnvelopeSchema } from '../envelope.js';
 
+export const adminPasswordLoginBodySchema = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email()),
+  password: z.string().min(8).max(128),
+});
+
+export type AdminPasswordLoginBody = z.infer<typeof adminPasswordLoginBodySchema>;
+
 export const otpRequestBodySchema = z.object({
   phone: z.string().min(8).max(20),
   purpose: z
@@ -171,3 +178,51 @@ export const contextSwitchResponseSchema = successEnvelopeSchema(
 );
 
 export type ContextSwitchResponse = z.infer<typeof contextSwitchResponseSchema>;
+
+export const identityProviderSchema = z.enum(['apple', 'google']);
+
+export type IdentityProvider = z.infer<typeof identityProviderSchema>;
+
+export const identityLinkBodySchema = z.object({
+  provider: identityProviderSchema,
+  idToken: z.string().min(20).max(8192),
+});
+
+export type IdentityLinkBody = z.infer<typeof identityLinkBodySchema>;
+
+export const identityLoginBodySchema = identityLinkBodySchema.extend({
+  deviceId: z.string().min(8).max(256).optional(),
+});
+
+export type IdentityLoginBody = z.infer<typeof identityLoginBodySchema>;
+
+export const identityLinkDataSchema = z.object({
+  provider: identityProviderSchema,
+  linked: z.literal(true),
+});
+
+export const identityLinkResponseSchema = successEnvelopeSchema(
+  identityLinkDataSchema,
+);
+
+export const identityListDataSchema = z.object({
+  items: z.array(
+    z.object({
+      provider: identityProviderSchema,
+      email: z.string().nullable(),
+    }),
+  ),
+});
+
+export const identityListResponseSchema = successEnvelopeSchema(
+  identityListDataSchema,
+);
+
+export const identityProvidersDataSchema = z.object({
+  appleClientId: z.string().nullable(),
+  googleClientId: z.string().nullable(),
+});
+
+export const identityProvidersResponseSchema = successEnvelopeSchema(
+  identityProvidersDataSchema,
+);

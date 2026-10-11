@@ -13,7 +13,9 @@ import {
   assignRole,
   fetchContexts,
   listPolicies,
+  fetchIdentityProviders,
   fetchMe,
+  loginWithIdentity,
   refreshTokens,
   requestOtp,
   switchAuthContext,
@@ -21,6 +23,7 @@ import {
 } from '../../api/auth-api';
 import type { EmployerCreateData } from '../../api/employers-api-types';
 import type { ManagerJoinData } from '../../api/manager-api-types';
+import { unregisterPushToken } from '../../notifications/push-registration';
 import { ApiClientError } from '../../api/client';
 import {
   clearSessionMemory,
@@ -37,6 +40,10 @@ import {
   loadRefreshToken,
   saveRefreshToken,
 } from './secure-storage';
+import {
+  platformIdentityProvider,
+  requestIdentityToken,
+} from '../../features/auth/linked-sign-in';
 import {
   resolveAuthPhase,
   type EmployerOnboardingStep,
@@ -55,6 +62,7 @@ type AuthContextValue = {
     challengeId: string,
     code: string,
   ) => Promise<MeUser>;
+  signInWithLinkedIdentity: () => Promise<MeUser>;
   selectRole: (role: UserRole) => Promise<void>;
   acceptAllPolicies: (policyIds: string[]) => Promise<void>;
   loadPendingPolicies: () => Promise<
@@ -203,6 +211,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [applySession],
   );
 
+  const signInWithLinkedIdentity = useCallback(async () => {
+    const provider = platformIdentityProvider();
+    if (!provider) {
+      throw new ApiClientError(
+        'Bu giriş yöntemi henüz yapılandırılmadı.',
+        503,
+        'IDENTITY_NOT_CONFIGURED',
+      );
+    }
+    const setup = await fetchIdentityProviders();
+    const clientId =
+      provider === 'apple' ? setup.appleClientId : setup.googleClientId;
+    if (!clientId) {
+      throw new ApiClientError(
+        'Bu giriş yöntemi henüz yapılandırılmadı.',
+        503,
+        'IDENTITY_NOT_CONFIGURED',
+      );
+    }
+    const idToken = await requestIdentityToken(provider, clientId);
+    const deviceId = await loadOrCreateDeviceInstallId();
+    const data = await loginWithIdentity({ provider, idToken, deviceId });
+    if (!data.accessToken || !data.refreshToken) {
+      throw new ApiClientError(
+        'Oturum yanıtı geçersiz.',
+        500,
+        'INTERNAL_ERROR',
+      );
+    }
+    applySession(
+      data.user,
+      data.contexts ?? [],
+      data.accessToken,
+      data.refreshToken,
+    );
+    setPhase(deriveRolePhase(data.user));
+    return data.user;
+  }, [applySession]);
+
   const selectRole = useCallback(
     async (role: UserRole) => {
       const token = getAccessToken();
@@ -322,6 +369,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    const access = getAccessToken();
+    if (access) {
+      try {
+        await unregisterPushToken(access);
+      } catch {
+        // Sign-out still clears the local session if the token delete fails.
+      }
+    }
     await clearRefreshToken();
     clearSessionMemory();
     setUser(null);
@@ -341,6 +396,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       bootError,
       requestPhoneOtp,
       verifyPhoneOtp,
+      signInWithLinkedIdentity,
       selectRole,
       acceptAllPolicies,
       loadPendingPolicies,
@@ -359,6 +415,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       bootError,
       requestPhoneOtp,
       verifyPhoneOtp,
+      signInWithLinkedIdentity,
       selectRole,
       acceptAllPolicies,
       loadPendingPolicies,

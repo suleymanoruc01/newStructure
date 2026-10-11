@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { istanbulCivil } from '../src/common/istanbul-civil.js';
 import {
   availabilityCoversJob,
   jobRequiresNightShiftAvailability,
@@ -7,9 +8,9 @@ import {
 
 describe('job-availability-coverage', () => {
   it('covers same-day job within window', () => {
-    const startsAt = new Date('2026-10-15T10:00:00.000Z');
-    const endsAt = new Date('2026-10-15T18:00:00.000Z');
-    const day = startsAt.getUTCDay();
+    const startsAt = new Date('2026-10-15T10:00:00+03:00');
+    const endsAt = new Date('2026-10-15T18:00:00+03:00');
+    const day = istanbulCivil(startsAt).weekday;
     const ok = availabilityCoversJob(
       [
         {
@@ -26,9 +27,9 @@ describe('job-availability-coverage', () => {
   });
 
   it('covers cross-midnight job with overnight window', () => {
-    const startsAt = new Date('2026-10-15T23:00:00.000Z');
-    const endsAt = new Date('2026-10-16T05:00:00.000Z');
-    const day = startsAt.getUTCDay();
+    const startsAt = new Date('2026-10-15T23:00:00+03:00');
+    const endsAt = new Date('2026-10-16T05:00:00+03:00');
+    const day = istanbulCivil(startsAt).weekday;
     const ok = availabilityCoversJob(
       [
         {

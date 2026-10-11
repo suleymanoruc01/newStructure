@@ -15,6 +15,7 @@ Generated from the React Native **0.87.1** template in `apps/mobile` (bare RN, n
 | NDK | **27.1.12297006** | `android/build.gradle` |
 | Kotlin | **2.2.0** | `android/build.gradle` |
 | Application ID (Android) | `com.partonmobile` | `android/app/build.gradle` |
+| Bundle ID (iOS) | `com.parton.app` | `ios/PartonMobile.xcodeproj` — Sign in with Apple audience |
 
 ## QA targets
 

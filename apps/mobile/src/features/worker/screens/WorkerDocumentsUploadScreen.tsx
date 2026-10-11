@@ -1,7 +1,8 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { pick, types as docTypes } from '@react-native-documents/picker';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 import type { WorkerDocumentType } from '@parton/api-contracts';
 
@@ -12,7 +13,7 @@ import {
   createWorkerDocumentUpload,
   putFileToPresignedUrl,
 } from '../../../api/worker-documents-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerDocumentsUpload'>;
@@ -96,11 +97,9 @@ export function WorkerDocumentsUploadScreen({ navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.worker.documents.upload">
-      <Text className="text-xl font-bold text-text-high">
-        {t('worker:documents.uploadTitle')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('worker:documents.uploadTitle')} testID="m.worker.documents.upload" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:documents.uploadLead')}
       </Text>
       <View className="mt-4 flex-row flex-wrap gap-2">
@@ -109,15 +108,11 @@ export function WorkerDocumentsUploadScreen({ navigation }: Props) {
             key={type}
             accessibilityRole="button"
             className={`rounded-full px-3 py-2 ${
-              documentType === type ? 'bg-brand-primary' : 'bg-surface-1'
+              documentType === type ? 'bg-accent-mustard' : 'bg-surface-1'
             }`}
             onPress={() => setDocumentType(type)}
           >
-            <Text
-              className={`text-sm ${
-                documentType === type ? 'text-white' : 'text-text-high'
-              }`}
-            >
+            <Text className="font-sans text-sm text-text-high">
               {t(`worker:documents.types.${type}`)}
             </Text>
           </Pressable>
@@ -128,22 +123,22 @@ export function WorkerDocumentsUploadScreen({ navigation }: Props) {
         className="mt-6 rounded-xl border border-surface-2 px-4 py-3"
         onPress={() => void onPickFile()}
       >
-        <Text className="text-center text-base text-text-high">
+        <Text className="font-sans text-center text-base text-text-high">
           {pickedName ?? t('worker:documents.pickFile')}
         </Text>
       </Pressable>
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable
-        className="mt-8 rounded-xl bg-brand-primary px-4 py-3"
+        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
         disabled={submitting}
         onPress={() => void onUpload()}
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text className="font-sans text-center text-base font-semibold text-text-on">
           {submitting ? t('common:loading') : t('worker:documents.uploadSubmit')}
         </Text>
       </Pressable>
-    </Screen>
+    </ModulePage>
   );
 }

@@ -1,9 +1,13 @@
-import type { LinkingOptions } from '@react-navigation/native';
+import {
+  getStateFromPath as parseNavigationState,
+  type LinkingOptions,
+} from '@react-navigation/native';
 
-import type { AuthStackParamList, RootStackParamList } from './types';
+import { parseAppPath, queueDeepLink } from './deep-link';
+import type { RootStackParamList } from './types';
 
 export const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['parton://', 'https://app.parton.com'],
+  prefixes: ['parton://', 'https://app.parton.app'],
   config: {
     screens: {
       Auth: {
@@ -21,5 +25,13 @@ export const linking: LinkingOptions<RootStackParamList> = {
         },
       },
     },
+  },
+  getStateFromPath(path, options) {
+    const target = parseAppPath(path);
+    if (target) {
+      queueDeepLink(target);
+      return undefined;
+    }
+    return parseNavigationState(path, options);
   },
 };

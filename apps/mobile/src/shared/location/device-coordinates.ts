@@ -2,6 +2,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
 
 import { ApiClientError } from '../../api/client';
+import { mayRequestLocation } from '../privacy/permission-moment';
 
 export type DeviceCoordinates = {
   latitude: number;
@@ -22,6 +23,13 @@ async function ensureLocationPermission(): Promise<boolean> {
 }
 
 export async function readDeviceCoordinates(): Promise<DeviceCoordinates> {
+  if (!mayRequestLocation('check-in')) {
+    throw new ApiClientError(
+      'Konum izni bu adımda istenmez.',
+      403,
+      'LOCATION_PERMISSION_DENIED',
+    );
+  }
   const permissionGranted = await ensureLocationPermission();
   if (!permissionGranted) {
     throw new ApiClientError(

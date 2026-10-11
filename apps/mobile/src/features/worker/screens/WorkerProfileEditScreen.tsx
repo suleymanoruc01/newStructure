@@ -1,16 +1,19 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { ApiClientError } from '../../../api/client';
+import { formErrorMessage } from '../../../api/form-error';
 import {
   fetchWorkerProfile,
   patchWorkerProfile,
 } from '../../../api/workers-api';
+import { AccountLinkSection } from '../../shared/AccountLinkSection';
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -54,11 +57,7 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
       setSectorCodes(profile.sectorCodes.join(', '));
       setOccupationCodes(profile.occupationCodes.join(', '));
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(formErrorMessage(err, t));
     }
   }, [t]);
 
@@ -107,22 +106,16 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
       );
       navigation.navigate('WorkerProfileRoot');
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-      } else {
-        setError(t('common:networkError'));
-      }
+      setError(formErrorMessage(err, t));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Screen scroll testID="m.worker.profile.edit">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('worker:profile.editTitle')}
-      </Text>
-      <Text className="mt-2 text-base text-text-medium">
+    <ModulePage title={t('worker:profile.editTitle')} testID="m.worker.profile.edit" scroll>
+      
+      <Text className="font-sans mt-2 text-base text-text-medium">
         {t('worker:profile.editLead')}
       </Text>
       <View className="mt-6 gap-3">
@@ -149,12 +142,14 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
           value={homeLat}
           onChangeText={setHomeLat}
           keyboardType="decimal-pad"
+          error={error === t('worker:profile.invalidCoords') ? error : undefined}
         />
         <TextField
           label={t('worker:profile.homeLng')}
           value={homeLng}
           onChangeText={setHomeLng}
           keyboardType="decimal-pad"
+          error={error === t('worker:profile.invalidCoords') ? error : undefined}
         />
         <TextField
           label={t('worker:profile.sectors')}
@@ -172,10 +167,10 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
           className="flex-row items-center justify-between rounded-2xl bg-surface-1 px-4 py-3"
           onPress={() => setNightShift(!nightShift)}
         >
-          <Text className="text-base text-text-high">
+          <Text className="font-sans text-base text-text-high">
             {t('worker:profile.nightShift')}
           </Text>
-          <Text className="text-sm font-semibold text-brand-primary">
+          <Text className="font-sans text-sm font-semibold text-text-high">
             {nightShift ? t('common:yes') : t('common:no')}
           </Text>
         </Pressable>
@@ -186,31 +181,28 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
               accessibilityRole="radio"
               accessibilityState={{ selected: gender === g }}
               className={`rounded-full px-3 py-2 ${
-                gender === g ? 'bg-brand-primary' : 'bg-surface-1'
+                gender === g ? 'bg-accent-mustard' : 'bg-surface-1'
               }`}
               onPress={() => setGender(g)}
             >
-              <Text
-                className={
-                  gender === g ? 'text-text-on-color' : 'text-text-high'
-                }
-              >
+              <Text className="font-sans text-text-high">
                 {t(`worker:profile.gender.${g}`)}
               </Text>
             </Pressable>
           ))}
         </View>
       </View>
-      <View className="mt-8">
+      <AccountLinkSection />
+      {error ? (
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
+      ) : null}
+      <View className="mt-4">
         <Button
           label={submitting ? t('common:loading') : t('worker:profile.save')}
           onPress={() => void onSave()}
           disabled={submitting}
         />
       </View>
-      {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-    </Screen>
+    </ModulePage>
   );
 }

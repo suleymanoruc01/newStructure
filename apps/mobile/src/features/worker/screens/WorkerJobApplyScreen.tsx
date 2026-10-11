@@ -1,13 +1,14 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { applyToJob } from '../../../api/applications-api';
 import { ApiClientError } from '../../../api/client';
 import { fetchJobDetail } from '../../../api/jobs-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import {
   OverlapConflictCard,
   type OverlapConflict,
@@ -83,26 +84,24 @@ export function WorkerJobApplyScreen({ route, navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.worker.jobs.apply-confirm">
-      <Text className="text-xl font-bold text-text-high">
-        {t('worker:apply.title')}
-      </Text>
+    <ModulePage title={t('worker:apply.title')} testID="m.worker.jobs.apply-confirm" scroll>
+      
       {title ? (
-        <Text className="mt-2 text-base text-text-medium">{title}</Text>
+        <Text className="font-sans mt-2 text-base text-text-medium">{title}</Text>
       ) : null}
       {overlapAck ? (
         <OverlapConflictCard conflicts={conflicts} />
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable
-        className="mt-8 rounded-xl bg-brand-primary px-4 py-3"
+        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
         disabled={submitting}
         onPress={() => void onConfirm()}
         testID="ApplyConfirmSheet"
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text className="font-sans text-center text-base font-semibold text-text-on">
           {submitting
             ? t('common:loading')
             : overlapAck
@@ -110,6 +109,6 @@ export function WorkerJobApplyScreen({ route, navigation }: Props) {
               : t('worker:apply.confirm')}
         </Text>
       </Pressable>
-    </Screen>
+    </ModulePage>
   );
 }

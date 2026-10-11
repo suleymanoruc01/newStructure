@@ -3,6 +3,7 @@ import { Platform, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { fetchPlatformRemoteConfig } from '../../api/platform-api';
+import { setDisplayTimeZone } from '../datetime/istanbul';
 import { ApiClientError } from '../../api/client';
 
 type PlatformGateProps = {
@@ -40,6 +41,7 @@ export function PlatformGate({ children }: PlatformGateProps) {
     void (async () => {
       try {
         const config = await fetchPlatformRemoteConfig();
+        setDisplayTimeZone(config.timeZone);
         if (config.maintenanceMode) {
           setBlocked(t('common:maintenance'));
           return;
@@ -63,7 +65,7 @@ export function PlatformGate({ children }: PlatformGateProps) {
   if (blocked) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
-        <Text className="text-center text-base text-text-high">{blocked}</Text>
+        <Text className="font-sans text-center text-base text-text-high">{blocked}</Text>
       </View>
     );
   }

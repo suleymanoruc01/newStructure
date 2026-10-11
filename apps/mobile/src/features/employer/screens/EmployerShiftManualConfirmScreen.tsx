@@ -1,12 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { ApiClientError } from '../../../api/client';
 import { manualConfirmShift } from '../../../api/shifts-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<
@@ -42,37 +43,35 @@ export function EmployerShiftManualConfirmScreen({ route, navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.employer.shift.manual-confirm">
-      <Text className="text-xl font-bold text-text-high">
-        {t('employer:manualConfirm.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('employer:manualConfirm.title')} testID="m.employer.shift.manual-confirm" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('employer:manualConfirm.lead')}
       </Text>
       {jobTitle ? (
-        <Text className="mt-4 text-base text-text-high">{jobTitle}</Text>
+        <Text className="font-sans mt-4 text-base text-text-high">{jobTitle}</Text>
       ) : null}
       {workerDisplayName ? (
-        <Text className="mt-1 text-sm text-text-medium">{workerDisplayName}</Text>
+        <Text className="font-sans mt-1 text-sm text-text-medium">{workerDisplayName}</Text>
       ) : null}
       {disputeNote ? (
-        <Text className="mt-4 rounded-xl bg-surface-1 p-3 text-sm text-text-medium">
+        <Text className="font-sans mt-4 rounded-xl bg-surface-1 p-3 text-sm text-text-medium">
           {disputeNote}
         </Text>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable
-        className="mt-8 rounded-xl bg-brand-primary px-4 py-3"
+        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
         disabled={submitting}
         onPress={() => void onConfirm()}
         testID="ManualConfirmButton"
       >
-        <Text className="text-center text-base font-semibold text-white">
+        <Text className="font-sans text-center text-base font-semibold text-text-on">
           {submitting ? t('common:loading') : t('employer:manualConfirm.cta')}
         </Text>
       </Pressable>
-    </Screen>
+    </ModulePage>
   );
 }

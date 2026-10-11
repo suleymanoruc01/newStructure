@@ -1,23 +1,25 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 
+import { statusLabelTr } from '@parton/api-contracts';
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import {
   acceptApplication,
   listJobApplications,
 } from '../../../api/applications-api';
 import { ApiClientError } from '../../../api/client';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerApplicants'>;
 
-export function EmployerApplicantsScreen({ route }: Props) {
+export function EmployerApplicantsScreen({ route, navigation }: Props) {
   const { jobId, jobTitle } = route.params;
-  const { t } = useTranslation(['employer', 'common', 'errors']);
+  const { t } = useTranslation(['employer', 'common', 'errors', 'system']);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<
     Awaited<ReturnType<typeof listJobApplications>>['items']
@@ -69,36 +71,36 @@ export function EmployerApplicantsScreen({ route }: Props) {
   };
 
   return (
-    <Screen testID="m.employer.applicants.list">
-      <Text className="text-xl font-bold text-text-high">
-        {jobTitle ?? t('employer:applicants.title')}
-      </Text>
+    <ModulePage title={jobTitle ?? t('employer:applicants.title')} testID="m.employer.applicants.list" scroll={false}>
+      
       {error ? (
-        <Text className="mt-2 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
       ) : null}
       {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : (
         <FlatList
-          className="mt-4"
+          style={{ flex: 1 }}
           data={items}
           keyExtractor={(item) => item.id}
           ListEmptyComponent={
-            <Text className="text-text-medium">{t('employer:applicants.empty')}</Text>
+            <Text className="font-sans text-text-medium">{t('employer:applicants.empty')}</Text>
           }
           renderItem={({ item }) => (
-            <View className="mb-3 rounded-xl border border-border-subtle bg-surface-elevated p-4">
-              <Text className="text-base font-semibold text-text-high">
+            <View className="mb-3 rounded-lg bg-surface-1 p-4">
+              <Text className="font-sans text-base font-semibold text-text-high">
                 {item.workerDisplayName ??
                   `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`.trim()}
               </Text>
-              <Text className="mt-1 text-sm text-text-medium">{item.status}</Text>
+              <Text className="font-sans mt-1 text-sm text-text-medium">
+                {statusLabelTr(item.status)}
+              </Text>
               {item.status === 'pending' ? (
                 <Pressable
-                  className="mt-3 rounded-lg bg-brand-primary px-3 py-2"
+                  className="mt-3 rounded-lg bg-action-primary px-3 py-2"
                   onPress={() => void onAccept(item.id)}
                 >
-                  <Text className="text-center text-sm font-semibold text-white">
+                  <Text className="font-sans text-center text-sm font-semibold text-text-on">
                     {t('employer:applicants.accept')}
                   </Text>
                 </Pressable>
@@ -107,6 +109,6 @@ export function EmployerApplicantsScreen({ route }: Props) {
           )}
         />
       )}
-    </Screen>
+    </ModulePage>
   );
 }

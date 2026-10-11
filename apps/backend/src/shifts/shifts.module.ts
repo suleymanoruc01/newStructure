@@ -4,6 +4,7 @@ import { AuthModule } from '../auth/auth.module.js';
 import { RoleContextGuard } from '../common/role-context.guard.js';
 import { LocationModule } from '../location/location.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
+import { PlatformModule } from '../platform/platform.module.js';
 import { RatingsModule } from '../ratings/ratings.module.js';
 import { TokensModule } from '../tokens/tokens.module.js';
 import { ShiftSchedulerService } from './shift-scheduler.service.js';
@@ -14,6 +15,7 @@ import { ShiftsService } from './shifts.service.js';
   imports: [
     AuthModule,
     NotificationsModule,
+    PlatformModule,
     TokensModule,
     LocationModule,
     RatingsModule,

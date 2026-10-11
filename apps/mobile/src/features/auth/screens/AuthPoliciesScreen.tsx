@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { ApiClientError } from '../../../api/client';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { SCREEN_IDS } from '../screen-ids';
@@ -64,33 +64,31 @@ export function AuthPoliciesScreen({ navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID={SCREEN_IDS.policies}>
-      <Text className="text-2xl font-bold text-text-high">
-        {t('auth:policies.title')}
-      </Text>
-      <Text className="mt-2 text-base text-text-medium">
+    <ModulePage title={t('auth:policies.title')} testID={SCREEN_IDS.policies} scroll>
+      
+      <Text className="font-sans mt-2 text-base text-text-medium">
         {t('auth:policies.subtitle')}
       </Text>
       {loading ? (
-        <Text className="mt-6 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans mt-6 text-text-medium">{t('common:loading')}</Text>
       ) : policies.length === 0 ? (
-        <Text className="mt-6 text-text-medium">{t('auth:policies.empty')}</Text>
+        <Text className="font-sans mt-6 text-text-medium">{t('auth:policies.empty')}</Text>
       ) : (
         <View className="mt-6 gap-2">
           {policies.map((p) => (
             <View key={p.id} className="rounded-xl bg-surface-1 p-4">
-              <Text className="text-base font-medium text-text-high">
+              <Text className="font-sans text-base font-medium text-text-high">
                 {p.title}
               </Text>
               {p.required ? (
-                <Text className="mt-1 text-sm text-text-low">Zorunlu</Text>
+                <Text className="font-sans mt-1 text-sm text-text-low">Zorunlu</Text>
               ) : null}
             </View>
           ))}
         </View>
       )}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <View className="mt-6 gap-3">
         <Button
@@ -102,10 +100,10 @@ export function AuthPoliciesScreen({ navigation }: Props) {
           <Button
             label={t('common:back')}
             onPress={() => navigation.goBack()}
-            variant="ghost"
+            variant="secondary"
           />
         ) : null}
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

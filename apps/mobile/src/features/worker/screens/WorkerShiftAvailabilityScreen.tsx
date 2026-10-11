@@ -1,12 +1,14 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { ApiClientError } from '../../../api/client';
 import { confirmAvailability, fetchShift } from '../../../api/shifts-api';
-import { Screen } from '../../../components/ui/Screen';
+import { Button } from '../../../components/ui/Button';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<
@@ -58,39 +60,34 @@ export function WorkerShiftAvailabilityScreen({ route, navigation }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.worker.shift.availability-confirm">
-      <Text className="text-xl font-bold text-text-high">
-        {t('worker:shift.availabilityTitle')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('worker:shift.availabilityTitle')} testID="m.worker.shift.availability-confirm" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:shift.availabilityLead')}
       </Text>
       {title ? (
-        <Text className="mt-2 text-base text-text-medium">{title}</Text>
+        <Text className="font-sans mt-2 text-base text-text-medium">{title}</Text>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <View className="mt-8 gap-3">
         <Pressable
-          className="rounded-xl bg-brand-primary px-4 py-3"
+          className="rounded-lg bg-action-primary px-4 py-3"
           disabled={submitting}
           onPress={() => void onDecision('can_come')}
         >
-          <Text className="text-center font-semibold text-white">
+          <Text className="font-sans text-center font-semibold text-text-on">
             {t('worker:shift.canCome')}
           </Text>
         </Pressable>
-        <Pressable
-          className="rounded-xl border border-border-subtle px-4 py-3"
+        <Button
           disabled={submitting}
+          label={t('worker:shift.cannotCome')}
           onPress={() => void onDecision('cannot_come')}
-        >
-          <Text className="text-center font-semibold text-text-high">
-            {t('worker:shift.cannotCome')}
-          </Text>
-        </Pressable>
+          variant="secondary"
+        />
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

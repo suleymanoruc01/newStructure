@@ -84,6 +84,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [usesCleartextTraffic: "false"]
     }
     signingConfigs {
         debug {
@@ -96,6 +97,7 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            manifestPlaceholders = [usesCleartextTraffic: "true"]
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
@@ -116,4 +118,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+}
+
+// shortcut: FCM stays off until android/app/google-services.json from the Firebase project is added
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
 }

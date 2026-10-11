@@ -1,10 +1,11 @@
 import type { AuthContext } from '@parton/api-contracts';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import { ApiClientError } from '../../../api/client';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { getActiveContext } from '../../../shared/auth/session-memory';
 
@@ -50,11 +51,9 @@ export function RoleContextSwitchScreen({ onClose }: Props) {
   };
 
   return (
-    <Screen scroll testID="m.shared.auth.context-switch">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('auth:contextSwitch.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('auth:contextSwitch.title')} testID="m.shared.auth.context-switch" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('auth:contextSwitch.lead')}
       </Text>
       <View className="mt-6 gap-2">
@@ -69,24 +68,18 @@ export function RoleContextSwitchScreen({ onClose }: Props) {
               key={`${ctx.role}-${ctx.employerId ?? 'none'}-${index}`}
               accessibilityRole="button"
               className={`rounded-xl px-4 py-3 ${
-                isActive ? 'bg-brand-primary' : 'bg-surface-1'
+                isActive ? 'bg-accent-mustard' : 'bg-surface-1'
               }`}
               disabled={submitting || isActive}
               onPress={() => void onSelect(ctx)}
               testID="MembershipListItem"
             >
-              <Text
-                className={`font-semibold ${
-                  isActive ? 'text-white' : 'text-text-high'
-                }`}
-              >
+              <Text className="font-sans font-semibold text-text-high">
                 {contextLabel(ctx, t)}
               </Text>
               {ctx.employerId ? (
                 <Text
-                  className={`mt-1 text-xs ${
-                    isActive ? 'text-white/80' : 'text-text-low'
-                  }`}
+                  className="font-sans mt-1 text-xs text-text-medium"
                 >
                   {ctx.employerId}
                 </Text>
@@ -96,13 +89,13 @@ export function RoleContextSwitchScreen({ onClose }: Props) {
         })}
       </View>
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <Pressable className="mt-8" onPress={onClose}>
-        <Text className="text-center text-base text-text-medium">
+        <Text className="font-sans text-center text-base text-text-medium">
           {t('common:back')}
         </Text>
       </Pressable>
-    </Screen>
+    </ModulePage>
   );
 }

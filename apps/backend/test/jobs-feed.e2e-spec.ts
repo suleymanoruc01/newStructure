@@ -5,6 +5,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { collectFeedJobIds } from './feed-pages.js';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
@@ -120,16 +121,9 @@ describe('Jobs feed (e2e)', () => {
     const access = tokens.signAccess(workerUserId, sessionId, {
       role: 'worker',
     });
-    const res = await request(app.getHttpServer())
-      .get('/api/v1/jobs/feed?limit=10')
-      .set('Authorization', `Bearer ${access.accessToken}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.items.length).toBeGreaterThanOrEqual(1);
-    expect(res.body.data.items.some((j: { id: string }) => j.id === jobId)).toBe(
-      true,
-    );
-    expect(res.body.meta.pagination).toBeDefined();
+    const ids = await collectFeedJobIds(app, access.accessToken);
+    expect(ids.length).toBeGreaterThanOrEqual(1);
+    expect(ids).toContain(jobId);
   });
 
   it('GET /api/v1/job-catalog returns seeded items', async () => {

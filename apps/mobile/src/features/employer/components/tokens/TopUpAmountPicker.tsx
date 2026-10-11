@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../../components/ui/Pressable';
 
 const PACKAGES = [10, 25, 50, 100, 250] as const;
 
@@ -20,15 +21,11 @@ export function TopUpAmountPicker({ selected, onSelect, labelFor }: Props) {
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             className={`rounded-2xl px-4 py-3 ${
-              active ? 'bg-brand-primary' : 'bg-surface-1'
+              active ? 'bg-accent-mustard' : 'bg-surface-1'
             }`}
             onPress={() => onSelect(amount)}
           >
-            <Text
-              className={`text-base font-semibold ${
-                active ? 'text-text-on-color' : 'text-text-high'
-              }`}
-            >
+            <Text className="font-sans text-base font-semibold text-text-high">
               {labelFor(amount)}
             </Text>
           </Pressable>

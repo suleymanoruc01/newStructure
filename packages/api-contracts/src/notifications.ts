@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { successEnvelopeSchema } from './envelope.js';
+
 export const notificationTypeSchema = z.string().min(1);
 
 export const notificationSchema = z.object({
@@ -41,3 +43,26 @@ export const notificationPreferencesPatchSchema =
 export type NotificationPreferencesPatch = z.infer<
   typeof notificationPreferencesPatchSchema
 >;
+
+export const notificationListDataSchema = z.object({
+  items: z.array(notificationSchema),
+});
+
+export const notificationListResponseSchema = successEnvelopeSchema(
+  notificationListDataSchema,
+);
+
+export const notificationResponseSchema =
+  successEnvelopeSchema(notificationSchema);
+
+export const notificationPreferencesResponseSchema = successEnvelopeSchema(
+  notificationPreferencesSchema,
+);
+
+export const notificationReadAllDataSchema = z.object({
+  ok: z.literal(true),
+});
+
+export const notificationReadAllResponseSchema = successEnvelopeSchema(
+  notificationReadAllDataSchema,
+);

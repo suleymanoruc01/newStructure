@@ -1,10 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
-import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { istanbulCivil, istanbulInstant } from '../src/common/istanbul-civil.js';
 import { AppModule } from '../src/app.module.js';
+import { collectFeedJobIds } from './feed-pages.js';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
@@ -64,11 +65,10 @@ describe('Matching overnight availability (e2e) @T-073', () => {
       data: { workerProfileId: profile.id, occupationCode: 'waiter' },
     });
 
-    const base = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
-    base.setUTCHours(23, 0, 0, 0);
-    const startsAt = new Date(base);
+    const civil = istanbulCivil(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000));
+    const startsAt = istanbulInstant(civil.year, civil.month, civil.day, 23, 0);
     const endsAt = new Date(startsAt.getTime() + 6 * 60 * 60 * 1000);
-    const startDay = startsAt.getUTCDay();
+    const startDay = istanbulCivil(startsAt).weekday;
 
     await prisma.availabilityWindow.create({
       data: {
@@ -124,11 +124,7 @@ describe('Matching overnight availability (e2e) @T-073', () => {
       role: 'worker',
     }).accessToken;
 
-    const feedRes = await request(app.getHttpServer())
-      .get('/api/v1/jobs/feed')
-      .set('Authorization', `Bearer ${access}`);
-    expect(feedRes.status).toBe(200);
-    const ids = (feedRes.body.data.items as { id: string }[]).map((j) => j.id);
+    const ids = await collectFeedJobIds(app, access);
     expect(ids).toContain(overnightJobId);
   });
 });

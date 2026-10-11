@@ -9,13 +9,15 @@ import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
-describe('Shifts mock GPS (e2e) CASE-CHECKIN T-131', () => {
+describe('Shifts mock GPS and admin geofence (e2e) T-131 T-148 T-188', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let tokens: TokenService;
   let workerUserId: string;
   let workerSessionId: string;
   let shiftId: string;
+  let jobId: string;
+  let employerId: string;
   let branchLat = 41.01;
   let branchLng = 28.98;
 
@@ -85,6 +87,7 @@ describe('Shifts mock GPS (e2e) CASE-CHECKIN T-131', () => {
 
     const startsAt = new Date(Date.now() + 10 * 60 * 1000);
     const endsAt = new Date(startsAt.getTime() + 4 * 60 * 60 * 1000);
+    employerId = employer.id;
     const job = await prisma.job.create({
       data: {
         employerId: employer.id,
@@ -99,6 +102,11 @@ describe('Shifts mock GPS (e2e) CASE-CHECKIN T-131', () => {
         remainingHeadcount: 1,
         publishedAt: new Date(),
       },
+    });
+
+    jobId = job.id;
+    await prisma.tokenHold.create({
+      data: { employerId, jobId, amount: 1, status: 'held' },
     });
 
     const application = await prisma.application.create({
@@ -134,6 +142,10 @@ describe('Shifts mock GPS (e2e) CASE-CHECKIN T-131', () => {
   }, 120_000);
 
   afterAll(async () => {
+    await prisma.remoteConfig.update({
+      where: { id: 'default' },
+      data: { geofenceRadiusM: 100, geofenceSoftRadiusM: 150 },
+    });
     await app?.close();
   }, 30_000);
 
@@ -156,5 +168,42 @@ describe('Shifts mock GPS (e2e) CASE-CHECKIN T-131', () => {
 
     expect(checkInRes.status).toBe(422);
     expect(checkInRes.body.error.code).toBe('MOCK_LOCATION_DETECTED');
+
+    const risk = await prisma.riskEvent.findFirst({
+      where: { userId: workerUserId, shiftId, type: 'mock_gps' },
+    });
+    expect(risk).toBeTruthy();
+
+    const capture = await prisma.tokenLedgerEntry.findFirst({
+      where: { type: 'capture', refId: shiftId },
+    });
+    expect(capture).toBeNull();
+    const hold = await prisma.tokenHold.findUnique({ where: { jobId } });
+    expect(hold?.status).toBe('held');
+    expect(hold?.amount).toBe(1);
+  });
+
+  it('uses the admin geofence radii, not the process env', async () => {
+    await prisma.remoteConfig.update({
+      where: { id: 'default' },
+      data: { geofenceRadiusM: 50, geofenceSoftRadiusM: 60 },
+    });
+    const workerAccess = tokens.signAccess(workerUserId, workerSessionId, {
+      role: 'worker',
+    });
+    const eightyMetersNorth = branchLat + 80 / 111_320;
+    const checkInRes = await request(app.getHttpServer())
+      .post(`/api/v1/shifts/${shiftId}/check-in`)
+      .set('Authorization', `Bearer ${workerAccess.accessToken}`)
+      .set('Idempotency-Key', `radius-${shiftId}`)
+      .send({
+        latitude: eightyMetersNorth,
+        longitude: branchLng,
+        accuracyM: 12,
+        locationPermissionGranted: true,
+        mockLocation: false,
+      });
+    expect(checkInRes.status).toBe(422);
+    expect(checkInRes.body.error.code).toBe('OUTSIDE_GEOFENCE');
   });
 });

@@ -8,6 +8,7 @@ import { Prisma } from '../generated/prisma/client.js';
 import type { AuthContext } from '@parton/api-contracts';
 
 import { ApiException } from '../common/api.exception.js';
+import { formatIstanbulDateTime } from '../common/istanbul-civil.js';
 import { parseRequiredDocumentTypes } from '../common/parse-required-document-types.util.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import {
@@ -18,6 +19,7 @@ import { FavoritesService } from '../favorites/favorites.service.js';
 import { evaluateJobEligibility } from '../matching/matching.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { PlatformService } from '../platform/platform.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
 import { WorkerDocumentsService } from '../workers/worker-documents.service.js';
 
@@ -30,6 +32,7 @@ export class JobsService {
     private readonly favorites: FavoritesService,
     private readonly workerDocuments: WorkerDocumentsService,
     private readonly notifications: NotificationsService,
+    private readonly platform: PlatformService,
   ) {}
 
   private favoriteAudienceJobInput(
@@ -42,6 +45,8 @@ export class JobsService {
       endsAt: Date;
       headcount: number;
       genderFilter: string | null | undefined;
+      minAge: number | null | undefined;
+      maxAge: number | null | undefined;
       requiredDocumentTypes: string[];
     },
   ) {
@@ -56,6 +61,8 @@ export class JobsService {
       remainingHeadcount: job.headcount,
       favoritesOnly: true,
       genderFilter: job.genderFilter ?? null,
+      minAge: job.minAge ?? null,
+      maxAge: job.maxAge ?? null,
       requiredDocumentTypes: job.requiredDocumentTypes,
       branchLatitude: Number(branch.latitude),
       branchLongitude: Number(branch.longitude),
@@ -72,6 +79,8 @@ export class JobsService {
       endsAt: Date;
       headcount: number;
       genderFilter: string | null | undefined;
+      minAge: number | null | undefined;
+      maxAge: number | null | undefined;
       requiredDocumentTypes: string[];
     },
   ): Promise<string[]> {
@@ -110,6 +119,7 @@ export class JobsService {
         availability: true,
       },
     });
+    const timeZone = await this.platform.timeZone();
     const favoredEmployerIds = new Set([employerId]);
     const candidateJob = this.favoriteAudienceJobInput(employerId, branch, job);
     const documentTypesByUser =
@@ -131,6 +141,7 @@ export class JobsService {
         {
           favoredEmployerIds,
           uploadedDocumentTypes,
+          timeZone,
         },
       );
       if (result.eligible) {
@@ -150,6 +161,8 @@ export class JobsService {
       endsAt: Date;
       headcount: number;
       genderFilter: string | null | undefined;
+      minAge: number | null | undefined;
+      maxAge: number | null | undefined;
       requiredDocumentTypes: string[];
     },
   ): Promise<number> {
@@ -161,11 +174,15 @@ export class JobsService {
     return ids.length;
   }
 
-  private formatStartLocal(startsAt: Date): string {
-    return startsAt.toLocaleString('tr-TR', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    });
+  private formatStartLocal(startsAt: Date, timeZone: string): string {
+    return formatIstanbulDateTime(
+      startsAt,
+      {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      },
+      timeZone,
+    );
   }
 
   private async notifyWorkersAfterJobPublish(
@@ -181,6 +198,8 @@ export class JobsService {
       remainingHeadcount: number;
       favoritesOnly: boolean;
       genderFilter: string | null;
+      minAge: number | null;
+      maxAge: number | null;
       requiredDocumentTypes: unknown;
       status: string;
     },
@@ -192,8 +211,9 @@ export class JobsService {
       name: string;
     },
   ) {
+    const timeZone = await this.platform.timeZone();
     const branchArea = branch.city ?? branch.name;
-    const startLocal = this.formatStartLocal(job.startsAt);
+    const startLocal = this.formatStartLocal(job.startsAt, timeZone);
     const jobTitle = job.title ?? 'İlan';
 
     if (job.favoritesOnly) {
@@ -207,6 +227,8 @@ export class JobsService {
           endsAt: job.endsAt,
           headcount: job.headcount,
           genderFilter: job.genderFilter,
+          minAge: job.minAge,
+          maxAge: job.maxAge,
           requiredDocumentTypes: parseRequiredDocumentTypes(
             job.requiredDocumentTypes,
           ),
@@ -277,6 +299,7 @@ export class JobsService {
           {
             favoredEmployerIds: new Set<string>(),
             uploadedDocumentTypes,
+            timeZone,
           },
         );
         if (result.eligible) {
@@ -356,6 +379,8 @@ export class JobsService {
     remainingHeadcount: number;
     favoritesOnly: boolean;
     genderFilter: string | null;
+    minAge: number | null;
+    maxAge: number | null;
     requiredDocumentTypes: unknown;
     branch: { latitude: Prisma.Decimal; longitude: Prisma.Decimal };
   }) {
@@ -370,6 +395,8 @@ export class JobsService {
       remainingHeadcount: job.remainingHeadcount,
       favoritesOnly: job.favoritesOnly,
       genderFilter: job.genderFilter,
+      minAge: job.minAge,
+      maxAge: job.maxAge,
       requiredDocumentTypes: parseRequiredDocumentTypes(
         job.requiredDocumentTypes,
       ),
@@ -394,6 +421,8 @@ export class JobsService {
     payCurrency: string;
     favoritesOnly: boolean;
     genderFilter: string | null;
+    minAge: number | null;
+    maxAge: number | null;
     requiredDocumentTypes: unknown;
     notes: string | null;
     publishedAt: Date | null;
@@ -417,10 +446,29 @@ export class JobsService {
       payCurrency: job.payCurrency,
       favoritesOnly: job.favoritesOnly,
       genderFilter: job.genderFilter,
+      minAge: job.minAge,
+      maxAge: job.maxAge,
       requiredDocumentTypes: docs,
       notes: job.notes,
       publishedAt: job.publishedAt?.toISOString() ?? null,
     };
+  }
+
+  private assertAgeBounds(
+    minAge: number | null | undefined,
+    maxAge: number | null | undefined,
+  ) {
+    if (
+      minAge != null &&
+      maxAge != null &&
+      minAge > maxAge
+    ) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Alt yaş üst yaştan büyük olamaz.',
+      );
+    }
   }
 
   private assertPublishAllowed(verificationStatus: string) {
@@ -514,6 +562,7 @@ export class JobsService {
     const endsAt = new Date(body.endsAt);
     this.validateSchedule(startsAt, endsAt);
 
+    this.assertAgeBounds(body.minAge, body.maxAge);
     const publish = body.publish === true;
     const favoritesOnly = body.favoritesOnly ?? false;
     const requiredDocumentTypes = body.requiredDocumentTypes ?? [];
@@ -533,6 +582,8 @@ export class JobsService {
           endsAt,
           headcount: body.headcount,
           genderFilter: body.genderFilter,
+          minAge: body.minAge,
+          maxAge: body.maxAge,
           requiredDocumentTypes,
         },
       );
@@ -557,6 +608,8 @@ export class JobsService {
         payCurrency: body.payCurrency ?? 'TRY',
         favoritesOnly,
         genderFilter: body.genderFilter,
+        minAge: body.minAge,
+        maxAge: body.maxAge,
         requiredDocumentTypes,
         notes: body.notes,
         publishedAt: publish ? new Date() : null,
@@ -662,6 +715,7 @@ export class JobsService {
       await this.favorites.favoredEmployerIdsForWorker(userId, employerIds);
     const uploadedDocumentTypes =
       await this.workerDocuments.uploadedTypesForUser(userId);
+    const timeZone = await this.platform.timeZone();
 
     const eligibility = evaluateJobEligibility(
       this.jobEligibilityInput({ ...job, branch: job.branch }),
@@ -671,7 +725,7 @@ export class JobsService {
         occupations: worker.occupations,
         windows: worker.availability,
       },
-      { favoredEmployerIds, uploadedDocumentTypes },
+      { favoredEmployerIds, uploadedDocumentTypes, timeZone },
     );
 
     return {
@@ -707,6 +761,7 @@ export class JobsService {
       );
     }
 
+    this.assertAgeBounds(body.minAge ?? job.minAge, body.maxAge ?? job.maxAge);
     const startsAt = body.startsAt ? new Date(body.startsAt) : job.startsAt;
     const endsAt = body.endsAt ? new Date(body.endsAt) : job.endsAt;
     if (body.startsAt || body.endsAt) {
@@ -751,6 +806,8 @@ export class JobsService {
             endsAt,
             headcount: body.headcount ?? job.headcount,
             genderFilter: body.genderFilter ?? job.genderFilter,
+            minAge: body.minAge ?? job.minAge,
+            maxAge: body.maxAge ?? job.maxAge,
             requiredDocumentTypes: docs,
           },
         );
@@ -810,6 +867,8 @@ export class JobsService {
         payCurrency: body.payCurrency,
         favoritesOnly: body.favoritesOnly,
         genderFilter: body.genderFilter,
+        minAge: body.minAge,
+        maxAge: body.maxAge,
         requiredDocumentTypes: body.requiredDocumentTypes,
         notes: body.notes,
         status,
@@ -854,6 +913,7 @@ export class JobsService {
     const limitClamped = Math.min(Math.max(limit, 1), 50);
     const cursor = decodeFeedCursor(cursorRaw);
 
+    const timeZone = await this.platform.timeZone();
     const sectorCodes = worker.sectors.map((s) => s.sectorCode);
     if (sectorCodes.length === 0) {
       return {
@@ -955,6 +1015,7 @@ export class JobsService {
       const matchingContext = {
         favoredEmployerIds,
         uploadedDocumentTypes,
+        timeZone,
       };
 
       for (const job of jobs) {

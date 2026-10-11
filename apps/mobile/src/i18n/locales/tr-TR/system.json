@@ -1,4 +1,48 @@
 {
+  "abuse": {
+    "title": "Şikayet",
+    "lead": "Kategori seçin ve ne olduğunu yazın. Şikayet yönetici kuyruğuna düşer.",
+    "noteLabel": "Açıklama",
+    "noteTooShort": "Açıklama en az 10 karakter olmalı.",
+    "categoryRequired": "Bir kategori seçin.",
+    "submit": "Şikayeti gönder",
+    "categories": {
+      "T-181": "Aynı saatte iki işe onay",
+      "T-182": "Geleceğim deyip gelmeme",
+      "T-183": "Son dakika iptal",
+      "T-184": "Aynı cihazdan çoklu hesap",
+      "T-185": "Sahte ilan",
+      "T-186": "Bot başvuru",
+      "T-187": "Puan manipülasyonu",
+      "T-188": "Sahte konum",
+      "T-189": "Gelen işçiyi gelmedi gösterme",
+      "T-190": "Gelmediği halde geldi gösterme",
+      "T-191": "Yaş sınırını yanlış beyan",
+      "T-192": "Yasaklı kullanıcının yeniden kaydı"
+    }
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "empty": "Henüz bildirim yok. Push kapalı olsa da gelen kayıtlar burada durur.",
+    "readAll": "Tümünü okundu işaretle",
+    "prefs": "Bildirim tercihleri",
+    "prefsTitle": "Bildirim tercihleri",
+    "prefsLead": "Kapalı kategori için anlık bildirim gitmez. Uygulama içi kutu dolmaya devam eder.",
+    "today": "Bugün",
+    "yesterday": "Dün",
+    "earlier": "Daha önce",
+    "openTarget": "İlgili kayda git",
+    "openOsSettings": "Telefon ayarlarında bildirimleri aç",
+    "permissionWhy": "Vardiya ve başvuru uyarıları bu telefona gelsin diye bildirim izni gerekir.",
+    "permissionCta": "Bildirim izni ver",
+    "categories": {
+      "shifts": "Vardiya",
+      "applications": "Başvurular",
+      "matching": "Eşleşme",
+      "favorites": "Favoriler",
+      "marketing": "Pazarlama"
+    }
+  },
   "forbidden": {
     "title": "Erişim yok",
     "body": "Bu kaynağa erişim yetkiniz yok veya yanlış hesap bağlamındasınız.",

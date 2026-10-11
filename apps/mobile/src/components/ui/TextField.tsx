@@ -6,7 +6,8 @@ type TextFieldProps = {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
-  keyboardType?: 'default' | 'phone-pad' | 'number-pad';
+  keyboardType?: 'default' | 'phone-pad' | 'number-pad' | 'decimal-pad';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   error?: string | null;
   testID?: string;
   multiline?: boolean;
@@ -19,6 +20,7 @@ export function TextField({
   onChangeText,
   placeholder,
   keyboardType = 'default',
+  autoCapitalize,
   error,
   testID,
   multiline,
@@ -26,10 +28,15 @@ export function TextField({
 }: TextFieldProps) {
   return (
     <View className="mb-4">
-      <Text className="mb-1 text-sm font-medium text-text-medium">{label}</Text>
+      <Text className="mb-1 font-sans text-sm font-medium text-text-medium">{label}</Text>
       <TextInput
         accessibilityLabel={label}
-        className="rounded-xl border border-surface-2 bg-surface-1 px-4 py-3 text-base text-text-high"
+        autoCapitalize={autoCapitalize}
+        className={
+          multiline
+            ? `min-h-32 rounded-lg border bg-surface-1 px-4 py-3 font-sans text-base text-text-high focus:border-action-primary ${error ? 'border-feedback-error' : 'border-surface-2'}`
+            : `h-12 rounded-lg border bg-surface-1 px-4 font-sans text-base text-text-high focus:border-action-primary ${error ? 'border-feedback-error' : 'border-surface-2'}`
+        }
         keyboardType={keyboardType}
         multiline={multiline}
         numberOfLines={numberOfLines}
@@ -40,7 +47,7 @@ export function TextField({
         value={value}
       />
       {error ? (
-        <Text className="mt-1 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-1 text-sm text-feedback-error">{error}</Text>
       ) : null}
     </View>
   );

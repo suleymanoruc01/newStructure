@@ -1,12 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { ApiClientError } from '../../../api/client';
 import { listEmployerOpenDisputes } from '../../../api/shifts-api';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<
@@ -48,18 +49,16 @@ export function EmployerOpenDisputesScreen({ navigation }: Props) {
   }, [load]);
 
   return (
-    <Screen scroll testID="m.employer.disputes.list">
-      <Text className="text-2xl font-bold text-text-high">
-        {t('employer:disputes.title')}
-      </Text>
-      <Text className="mt-2 text-sm text-text-medium">
+    <ModulePage title={t('employer:disputes.title')} testID="m.employer.disputes.list" scroll>
+      
+      <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('employer:disputes.lead')}
       </Text>
       {loading ? (
-        <Text className="mt-4 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
       ) : null}
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <View className="mt-4 gap-3">
         {items.map((item) => (
@@ -76,19 +75,19 @@ export function EmployerOpenDisputesScreen({ navigation }: Props) {
               })
             }
           >
-            <Text className="font-semibold text-text-high">
+            <Text className="font-sans font-semibold text-text-high">
               {item.jobTitle ?? t('employer:disputes.untitledShift')}
             </Text>
-            <Text className="mt-1 text-sm text-text-medium">
+            <Text className="font-sans mt-1 text-sm text-text-medium">
               {item.workerDisplayName ?? t('employer:disputes.unknownWorker')}
             </Text>
-            <Text className="mt-2 text-xs text-text-low">{item.note}</Text>
+            <Text className="font-sans mt-2 text-xs text-text-low">{item.note}</Text>
           </Pressable>
         ))}
         {!loading && items.length === 0 ? (
-          <Text className="text-text-medium">{t('employer:disputes.empty')}</Text>
+          <Text className="font-sans text-text-medium">{t('employer:disputes.empty')}</Text>
         ) : null}
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

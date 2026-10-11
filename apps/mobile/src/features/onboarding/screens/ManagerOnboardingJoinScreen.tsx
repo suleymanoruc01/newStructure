@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { managerJoin } from '../../../api/branches-api';
@@ -45,11 +45,9 @@ export function ManagerOnboardingJoinScreen(_props: Props) {
   };
 
   return (
-    <Screen scroll testID={ONBOARDING_SCREEN_IDS.managerJoin}>
-      <Text className="text-2xl font-bold text-text-high">
-        {t('onboarding:manager.title')}
-      </Text>
-      <Text className="mt-2 text-base text-text-medium">
+    <ModulePage title={t('onboarding:manager.title')} testID={ONBOARDING_SCREEN_IDS.managerJoin} scroll>
+      
+      <Text className="font-sans mt-2 text-base text-text-medium">
         {t('onboarding:manager.subtitle')}
       </Text>
       <View className="mt-6">
@@ -61,7 +59,7 @@ export function ManagerOnboardingJoinScreen(_props: Props) {
         />
       </View>
       {error ? (
-        <Text className="mt-4 text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <View className="mt-6">
         <Button
@@ -70,6 +68,6 @@ export function ManagerOnboardingJoinScreen(_props: Props) {
           onPress={() => void onSubmit()}
         />
       </View>
-    </Screen>
+    </ModulePage>
   );
 }

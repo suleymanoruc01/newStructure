@@ -17,6 +17,8 @@ export class OutboxDrainService
   private readonly logger = new Logger(OutboxDrainService.name);
   private timer: ReturnType<typeof setInterval> | null = null;
   private draining = false;
+  private stopped = false;
+  private inflight: Promise<void> | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -31,11 +33,16 @@ export class OutboxDrainService
     }, interval);
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
+    this.stopped = true;
     this.stopDrain();
+    if (this.inflight) {
+      await this.inflight;
+    }
   }
 
   onApplicationShutdown(): void {
+    this.stopped = true;
     this.stopDrain();
   }
 
@@ -47,10 +54,23 @@ export class OutboxDrainService
   }
 
   async drainOnce(): Promise<void> {
-    if (this.draining) {
+    if (this.draining || this.stopped) {
       return;
     }
     this.draining = true;
+    const run = this.drainPending();
+    this.inflight = run;
+    try {
+      await run;
+    } finally {
+      this.draining = false;
+      if (this.inflight === run) {
+        this.inflight = null;
+      }
+    }
+  }
+
+  private async drainPending(): Promise<void> {
     try {
       const events = await this.prisma.outboxEvent.findMany({
         where: {
@@ -61,10 +81,15 @@ export class OutboxDrainService
         take: 20,
       });
       for (const event of events) {
+        if (this.stopped) {
+          return;
+        }
         await this.processEvent(event.id);
       }
-    } finally {
-      this.draining = false;
+    } catch (error) {
+      this.logger.warn(
+        `Outbox drain failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

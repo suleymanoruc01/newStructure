@@ -25,6 +25,10 @@
       "female": "Kadın",
       "male": "Erkek"
     },
+    "minAge": "Alt yaş (isteğe bağlı)",
+    "maxAge": "Üst yaş (isteğe bağlı)",
+    "ageInvalid": "Yaş 0 ile 120 arasında bir tam sayı olmalı.",
+    "ageRangeInvalid": "Alt yaş üst yaştan büyük olamaz.",
     "requiredDocuments": "Zorunlu belge türleri (virgülle)",
     "requiredDocumentsHint": "Örn: id_card, food_hygiene — iş arayanın yüklü belgeleriyle eşleşmeli.",
     "detail": {
@@ -32,9 +36,33 @@
       "status": "Durum: {{status}}",
       "headcountHint": "Personel sayısı değişince jeton provizyonu otomatik güncellenir.",
       "saveHeadcount": "Personel sayısını kaydet",
-      "closeJob": "İlanı kapat (jeton iadesi)",
+      "closeJob": "İlanı kapat",
+      "closeJobBody": "İlan yayından kalkar. Kullanılmayan jeton iade edilir.",
       "invalidHeadcount": "Geçerli bir personel sayısı girin."
     }
+  },
+  "home": {
+    "title": "Bugün",
+    "tokens": "Jetonlar",
+    "branches": "{{count}} şube",
+    "disputes": "{{count}} açık itiraz",
+    "sheet": "Özet",
+    "tokenTile": "Jeton",
+    "held": "Provizyon {{held}}",
+    "branchTile": "Şube",
+    "disputeTile": "İtiraz"
+  },
+  "branches": {
+    "title": "Şubeler",
+    "empty": "Kayıtlı şube yok.",
+    "status": {
+      "active": "Aktif",
+      "inactive": "Pasif",
+      "archived": "Arşiv"
+    }
+  },
+  "profile": {
+    "title": "Profil"
   },
   "verification": {
     "title": "Firma doğrulama",

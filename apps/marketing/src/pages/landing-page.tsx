@@ -20,7 +20,7 @@ export function LandingPage() {
               <StoreBadges />
               <a
                 href={employerLoginUrl()}
-                className="inline-flex h-11 w-fit items-center justify-center rounded-xl bg-[#E97A3D] px-6 text-sm font-semibold text-[#F3E8CF] hover:bg-[#D86A3A]"
+                className="inline-flex h-11 w-fit items-center justify-center rounded-xl bg-[#E97A3D] px-6 text-sm font-semibold text-[#F3E8CF] transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#344A32] [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[#D86A3A] active:scale-[0.97] motion-reduce:transform-none"
               >
                 {t("landing.ctaEmployer")}
               </a>

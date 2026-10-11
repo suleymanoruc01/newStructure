@@ -1,10 +1,10 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
-import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { collectFeedJobIds } from './feed-pages.js';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
@@ -146,11 +146,7 @@ describe('Matching favorites-only visibility (e2e) @T-075 @T-169', () => {
       role: 'worker',
     }).accessToken;
 
-    const feedRes = await request(app.getHttpServer())
-      .get('/api/v1/jobs/feed')
-      .set('Authorization', `Bearer ${access}`);
-    expect(feedRes.status).toBe(200);
-    const ids = (feedRes.body.data.items as { id: string }[]).map((j) => j.id);
+    const ids = await collectFeedJobIds(app, access);
     expect(ids).not.toContain(favoritesOnlyJobId);
     expect(ids).toContain(publicJobId);
   });

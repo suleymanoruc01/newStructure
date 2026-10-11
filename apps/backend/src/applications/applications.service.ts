@@ -7,11 +7,13 @@ import type {
 import { ErrorCode } from '@parton/api-contracts';
 
 import { ApiException } from '../common/api.exception.js';
+import { formatIstanbulDateTime } from '../common/istanbul-civil.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import { parseRequiredDocumentTypes } from '../common/parse-required-document-types.util.js';
 import { FavoritesService } from '../favorites/favorites.service.js';
 import { evaluateJobEligibility } from '../matching/matching.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { PlatformService } from '../platform/platform.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ShiftsService } from '../shifts/shifts.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
@@ -34,6 +36,7 @@ export class ApplicationsService {
     private readonly favorites: FavoritesService,
     private readonly workerDocuments: WorkerDocumentsService,
     private readonly config: AppConfigService,
+    private readonly platform: PlatformService,
   ) {}
 
   private mapApplication(row: {
@@ -159,6 +162,7 @@ export class ApplicationsService {
       ]);
     const uploadedDocumentTypes =
       await this.workerDocuments.uploadedTypesForUser(workerUserId);
+    const timeZone = await this.platform.timeZone();
 
     const eligibility = evaluateJobEligibility(
       {
@@ -172,6 +176,8 @@ export class ApplicationsService {
         remainingHeadcount: job.remainingHeadcount,
         favoritesOnly: job.favoritesOnly,
         genderFilter: job.genderFilter,
+        minAge: job.minAge,
+        maxAge: job.maxAge,
         requiredDocumentTypes: parseRequiredDocumentTypes(
           job.requiredDocumentTypes,
         ),
@@ -184,7 +190,7 @@ export class ApplicationsService {
         occupations: worker.occupations,
         windows: worker.availability,
       },
-      { favoredEmployerIds, uploadedDocumentTypes },
+      { favoredEmployerIds, uploadedDocumentTypes, timeZone },
     );
     if (!eligibility.eligible) {
       if (eligibility.reasons.includes('profile_incomplete')) {
@@ -469,9 +475,11 @@ export class ApplicationsService {
         endsAt: job.endsAt,
       });
 
-      const startLocal = application.job.startsAt.toLocaleString('tr-TR', {
-        timeZone: 'Europe/Istanbul',
-      });
+      const startLocal = formatIstanbulDateTime(
+        application.job.startsAt,
+        {},
+        await this.platform.timeZone(),
+      );
       await this.notifications.enqueueInTransaction(tx, {
         userId: application.workerUserId,
         type: 'application.accepted',

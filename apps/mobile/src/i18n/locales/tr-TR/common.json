@@ -11,5 +11,15 @@
   "maintenance": "PartOn bakım modunda. Lütfen biraz sonra tekrar deneyin.",
   "forceUpdate": "Uygulamanızı güncellemeniz gerekiyor. Mağazadan en son sürümü yükleyin.",
   "yes": "Evet",
-  "no": "Hayır"
+  "no": "Hayır",
+  "signOut": "Çıkış",
+  "signOutBody": "Oturum kapanır. İstediğiniz zaman yeniden giriş yapabilirsiniz.",
+  "dock": {
+    "home": "Ana sayfa",
+    "jobs": "İlanlar",
+    "calendar": "Takvim",
+    "profile": "Profil",
+    "branches": "Şubeler",
+    "alerts": "Uyarılar"
+  }
 }

@@ -35,11 +35,11 @@ flowchart TB
 
 | Key | Example | Cases |
 | --- | --- | --- |
-| `geofence.radius_m` | 50 / 100 | T-138, T-139 |
-| `geofence.max_accuracy_m` | 30–80 | T-127 |
+| `geofence.radius_m` | 50 / 100 | T-138, T-139. Check-in reads `remote_config.geofence_radius_m` / `geofence_soft_radius_m`. Env is the fallback only when that row is missing. |
+| `geofence.max_accuracy_m` | 30 | T-127. Check-in reads `remote_config.geofence_max_accuracy_m` (default 30). Accuracy worse than that is a soft pass inside `geofence_soft_radius_m`, otherwise `OUTSIDE_GEOFENCE`. |
 | `geofence.soft_radius_m` | 150 indoor assist | T-140–T-142 |
-| `checkin.early_minutes` | 15 | T-129 |
-| `checkin.late_minutes` | 30 | T-130 |
+| `checkin.early_minutes` | 15 | T-129. Check-in reads `remote_config.checkin_early_minutes` (default 15). |
+| `checkin.late_minutes` | 30 | T-130. Check-in reads `remote_config.checkin_late_minutes` (default 30). |
 | `location.require_background` | false v1 | T-146 |
 
 ## Platform notes

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
-import { Screen } from '../../../components/ui/Screen';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -56,9 +56,9 @@ export function AuthOtpScreen({ navigation, route }: Props) {
   };
 
   return (
-    <Screen scroll testID={SCREEN_IDS.otp}>
-      <Text className="text-2xl font-bold text-text-high">{t('auth:otp.title')}</Text>
-      <Text className="mt-2 text-base text-text-medium">
+    <ModulePage title={t('auth:otp.title')} testID={SCREEN_IDS.otp} scroll>
+      
+      <Text className="font-sans mt-2 text-base text-text-medium">
         {t('auth:otp.subtitle', { phone })}
       </Text>
       <TextField
@@ -74,12 +74,12 @@ export function AuthOtpScreen({ navigation, route }: Props) {
         label={t('common:continue')}
         onPress={() => void onVerify()}
       />
-      <Button label={t('auth:otp.resend')} onPress={() => void onResend()} variant="ghost" />
+      <Button label={t('auth:otp.resend')} onPress={() => void onResend()} variant="secondary" />
       <Button
         label={t('auth:otp.changeNumber')}
         onPress={() => navigation.goBack()}
-        variant="ghost"
+        variant="secondary"
       />
-    </Screen>
+    </ModulePage>
   );
 }

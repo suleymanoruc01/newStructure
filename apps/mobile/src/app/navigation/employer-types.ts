@@ -1,4 +1,7 @@
 export type EmployerStackParamList = {
+  EmployerHome: { screenId?: string } | undefined;
+  EmployerBranches: { screenId?: string } | undefined;
+  EmployerProfileRoot: { screenId?: string } | undefined;
   EmployerJobsList: undefined;
   EmployerJobDetail: { jobId: string };
   EmployerCreateJob: undefined;
@@ -14,6 +17,10 @@ export type EmployerStackParamList = {
     workerDisplayName?: string | null;
     disputeNote?: string;
   };
+  SharedAbuseReport: { targetUserId?: string } | undefined;
+  SharedNotificationsList: undefined;
+  SharedNotificationDetail: { notificationId: string };
+  SharedNotificationPrefs: undefined;
   SharedRatingsPending: undefined;
   SharedRatingsCompose: {
     shiftId: string;

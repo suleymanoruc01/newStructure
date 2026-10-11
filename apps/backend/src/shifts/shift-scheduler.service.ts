@@ -6,8 +6,10 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 
+import { formatIstanbulDateTime } from '../common/istanbul-civil.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { PlatformService } from '../platform/platform.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ShiftsService } from './shifts.service.js';
 
@@ -18,12 +20,15 @@ export class ShiftSchedulerService
   private readonly logger = new Logger(ShiftSchedulerService.name);
   private timer: ReturnType<typeof setInterval> | null = null;
   private running = false;
+  private stopped = false;
+  private inflight: Promise<void> | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: AppConfigService,
     private readonly notifications: NotificationsService,
     private readonly shifts: ShiftsService,
+    private readonly platform: PlatformService,
   ) {}
 
   onModuleInit(): void {
@@ -33,11 +38,16 @@ export class ShiftSchedulerService
     }, interval);
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
+    this.stopped = true;
     this.stop();
+    if (this.inflight) {
+      await this.inflight;
+    }
   }
 
   onApplicationShutdown(): void {
+    this.stopped = true;
     this.stop();
   }
 
@@ -49,10 +59,23 @@ export class ShiftSchedulerService
   }
 
   async tick(): Promise<void> {
-    if (this.running) {
+    if (this.running || this.stopped) {
       return;
     }
     this.running = true;
+    const run = this.runTick();
+    this.inflight = run;
+    try {
+      await run;
+    } finally {
+      this.running = false;
+      if (this.inflight === run) {
+        this.inflight = null;
+      }
+    }
+  }
+
+  private async runTick(): Promise<void> {
     try {
       await this.sendConfirm3hNotifications();
       await this.processConfirmTimeouts();
@@ -61,13 +84,12 @@ export class ShiftSchedulerService
       this.logger.warn(
         `Shift scheduler tick failed: ${error instanceof Error ? error.message : String(error)}`,
       );
-    } finally {
-      this.running = false;
     }
   }
 
   async sendConfirm3hNotifications(): Promise<void> {
     const now = new Date();
+    const timeZone = await this.platform.timeZone();
     const rows = await this.prisma.shift.findMany({
       where: {
         confirm3hNotifiedAt: null,
@@ -90,9 +112,7 @@ export class ShiftSchedulerService
             status: 'awaiting_confirm',
           },
         });
-        const startLocal = shift.startsAt.toLocaleString('tr-TR', {
-          timeZone: 'Europe/Istanbul',
-        });
+        const startLocal = formatIstanbulDateTime(shift.startsAt, {}, timeZone);
         await this.notifications.enqueueInTransaction(tx, {
           userId: shift.workerUserId,
           type: 'shift.confirm_3h',

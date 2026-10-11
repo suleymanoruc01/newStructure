@@ -1,3 +1,4 @@
+const { Platform } = require('react-native');
 const partonPreset = require('@parton/design-tokens');
 
 /** @type {import('tailwindcss').Config} */
@@ -7,6 +8,15 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: [Platform.OS === 'android' ? 'sourcesans3' : 'Source Sans 3'],
+        display: [Platform.OS === 'android' ? 'dmsans' : 'DM Sans'],
+      },
+      borderRadius: {
+        DEFAULT: '0.5rem',
+        lg: '1rem',
+        xl: '1.5rem',
+      },
       colors: {
         'surface-base': '#F3E8CF',
         'surface-1': '#EADCC5',
@@ -16,8 +26,10 @@ module.exports = {
         'text-low': '#83947A',
         'text-on': '#F3E8CF',
         'action-primary': '#E97A3D',
-        'action-primary-pressed': '#D4692F',
-        'feedback-error': '#B84A3A',
+        'action-primary-pressed': '#B94E32',
+        'action-secondary': '#344A32',
+        'accent-mustard': '#E2B83F',
+        'feedback-error': '#B94E32',
         'feedback-success': '#3D6B4F',
       },
     },

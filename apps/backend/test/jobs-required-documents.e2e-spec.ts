@@ -5,6 +5,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { collectFeedJobIds } from './feed-pages.js';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
@@ -155,13 +156,8 @@ describe('Job required documents (e2e) T-045 T-066 T-067', () => {
     const stored = await prisma.job.findUnique({ where: { id: jobId } });
     expect(stored?.requiredDocumentTypes).toEqual(['health_report']);
 
-    const hiddenFeed = await request(app.getHttpServer())
-      .get('/api/v1/jobs/feed?limit=50')
-      .set('Authorization', `Bearer ${workerBearer()}`);
-    expect(hiddenFeed.status).toBe(200);
-    expect(
-      (hiddenFeed.body.data.items as { id: string }[]).some((row) => row.id === jobId),
-    ).toBe(false);
+    const hiddenIds = await collectFeedJobIds(app, workerBearer());
+    expect(hiddenIds).not.toContain(jobId);
 
     const applyRes = await request(app.getHttpServer())
       .post(`/api/v1/jobs/${jobId}/applications`)
@@ -190,12 +186,7 @@ describe('Job required documents (e2e) T-045 T-066 T-067', () => {
       },
     });
 
-    const visibleFeed = await request(app.getHttpServer())
-      .get('/api/v1/jobs/feed?limit=50')
-      .set('Authorization', `Bearer ${workerBearer()}`);
-    expect(visibleFeed.status).toBe(200);
-    expect(
-      (visibleFeed.body.data.items as { id: string }[]).some((row) => row.id === jobId),
-    ).toBe(true);
+    const visibleIds = await collectFeedJobIds(app, workerBearer());
+    expect(visibleIds).toContain(jobId);
   });
 });

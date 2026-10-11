@@ -1,6 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AdminLayout } from "@/components/admin-layout";
 import { useAuth } from "@/features/auth/auth-context";
+import {
+  AbuseResolveControl,
+  EmployerControls,
+  JobForceCloseControl,
+  RatingModerationControl,
+  UserStatusControl,
+} from "@/routes/admin-controls";
 import { AdminDetailRoute } from "@/routes/admin-detail-route";
 import { AdminListRoute } from "@/routes/admin-list-route";
 import { DashboardPage } from "@/routes/dashboard-page";
@@ -51,6 +58,7 @@ export function AppRouter() {
                 screenId="w.admin.users.list"
                 apiPath="/admin/users"
                 linkBase="/users"
+                searchable
               />
             }
           />
@@ -61,6 +69,15 @@ export function AppRouter() {
                 title="Kullanıcı detayı"
                 screenId="w.admin.users.detail"
                 buildPath={(id) => `/admin/users/${id}`}
+                controls={(data, reload) =>
+                  typeof data.id === "string" ? (
+                    <UserStatusControl
+                      userId={data.id}
+                      status={typeof data.status === "string" ? data.status : "active"}
+                      onDone={reload}
+                    />
+                  ) : null
+                }
               />
             }
           />
@@ -103,6 +120,27 @@ export function AppRouter() {
                 title="İşveren detayı"
                 screenId="w.admin.employers.detail"
                 buildPath={(id) => `/admin/employers/${id}`}
+                controls={(data, reload) => {
+                  const employer = data.employer;
+                  if (!employer || typeof employer !== "object") {
+                    return null;
+                  }
+                  const record = employer as Record<string, unknown>;
+                  if (typeof record.id !== "string") {
+                    return null;
+                  }
+                  return (
+                    <EmployerControls
+                      employerId={record.id}
+                      verificationStatus={
+                        typeof record.verificationStatus === "string"
+                          ? record.verificationStatus
+                          : "pending"
+                      }
+                      onDone={reload}
+                    />
+                  );
+                }}
               />
             }
           />
@@ -145,6 +183,11 @@ export function AppRouter() {
                 title="İlan detayı"
                 screenId="w.admin.jobs.detail"
                 buildPath={(id) => `/admin/jobs/${id}`}
+                controls={(data, reload) =>
+                  typeof data.id === "string" ? (
+                    <JobForceCloseControl jobId={data.id} onDone={reload} />
+                  ) : null
+                }
               />
             }
           />
@@ -239,6 +282,19 @@ export function AppRouter() {
                 title="Puan detayı"
                 screenId="w.admin.ratings.detail"
                 buildPath={(id) => `/admin/ratings/${id}`}
+                controls={(data, reload) =>
+                  typeof data.id === "string" ? (
+                    <RatingModerationControl
+                      ratingId={data.id}
+                      moderationStatus={
+                        typeof data.moderationStatus === "string"
+                          ? data.moderationStatus
+                          : "visible"
+                      }
+                      onDone={reload}
+                    />
+                  ) : null
+                }
               />
             }
           />
@@ -281,6 +337,15 @@ export function AppRouter() {
                 title="Kötüye kullanım detayı"
                 screenId="w.admin.abuse.detail"
                 buildPath={(id) => `/admin/abuse-reports/${id}`}
+                controls={(data, reload) =>
+                  typeof data.id === "string" ? (
+                    <AbuseResolveControl
+                      reportId={data.id}
+                      status={typeof data.status === "string" ? data.status : "open"}
+                      onDone={reload}
+                    />
+                  ) : null
+                }
               />
             }
           />
