@@ -6,6 +6,7 @@
   "UNAUTHORIZED": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
   "SESSION_EXPIRED": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
   "FORBIDDEN": "Bu işlem için yetkiniz yok.",
+  "NOT_FOUND": "Kayıt bulunamadı.",
   "INTERNAL_ERROR": "Beklenmeyen bir hata oluştu.",
   "TOKEN_INSUFFICIENT": "Yetersiz jeton bakiyesi.",
   "EMPLOYER_UNVERIFIED": "İşveren doğrulaması tamamlanmadı.",

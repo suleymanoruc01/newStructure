@@ -55,29 +55,27 @@ export function AuthRoleSelectScreen({ navigation }: Props) {
   };
 
   return (
-    <ModulePage title={t('auth:role.title')} testID={SCREEN_IDS.roleSelect} scroll>
-      
-      <View className="mt-6 gap-3">
-        {ROLES.map((item) => (
-          <Pressable
-            key={item.role}
-            accessibilityRole="button"
-            disabled={submitting}
-            onPress={() => void onSelect(item.role)}
-            className="rounded-2xl bg-surface-1 p-4 active:bg-surface-2"
-          >
-            <Text className="font-sans text-lg font-semibold text-forest">
+    <ModulePage scroll testID={SCREEN_IDS.roleSelect} title={t('auth:role.title')}>
+      {ROLES.map((item) => (
+        <Pressable
+          key={item.role}
+          accessibilityRole="button"
+          disabled={submitting}
+          onPress={() => void onSelect(item.role)}
+          className="flex-row items-center rounded-[22px] bg-surface-1 px-4 py-4"
+        >
+          <View className="flex-1">
+            <Text className="font-display text-lg font-semibold text-text-high">
               {t(`auth:${item.titleKey}`)}
             </Text>
-            <Text className="font-sans mt-1 text-base text-text-medium">
+            <Text className="font-sans mt-1 text-base leading-5 text-text-medium">
               {t(`auth:${item.bodyKey}`)}
             </Text>
-          </Pressable>
-        ))}
-      </View>
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
+          </View>
+          <Text className="ml-3 font-sans text-xl text-text-low">›</Text>
+        </Pressable>
+      ))}
+      {error ? <Text className="font-sans text-sm text-feedback-error">{error}</Text> : null}
     </ModulePage>
   );
 }

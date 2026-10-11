@@ -64,22 +64,26 @@ export function AuthPoliciesScreen({ navigation }: Props) {
   };
 
   return (
-    <ModulePage title={t('auth:policies.title')} testID={SCREEN_IDS.policies} scroll>
-      
-      <Text className="font-sans mt-2 text-base text-text-medium">
-        {t('auth:policies.subtitle')}
-      </Text>
+    <ModulePage
+      eyebrow="PartOn"
+      hero={
+        <Text className="mt-3 font-sans text-base leading-6 text-text-on">
+          {t('auth:policies.subtitle')}
+        </Text>
+      }
+      scroll
+      testID={SCREEN_IDS.policies}
+      title={t('auth:policies.title')}
+    >
       {loading ? (
-        <Text className="font-sans mt-6 text-text-medium">{t('common:loading')}</Text>
+        <Text className="font-sans text-text-medium">{t('common:loading')}</Text>
       ) : policies.length === 0 ? (
-        <Text className="font-sans mt-6 text-text-medium">{t('auth:policies.empty')}</Text>
+        <Text className="font-sans text-text-medium">{t('auth:policies.empty')}</Text>
       ) : (
-        <View className="mt-6 gap-2">
+        <View className="gap-2">
           {policies.map((p) => (
-            <View key={p.id} className="rounded-xl bg-surface-1 p-4">
-              <Text className="font-sans text-base font-medium text-text-high">
-                {p.title}
-              </Text>
+            <View key={p.id} className="rounded-[22px] bg-surface-1 p-4">
+              <Text className="font-sans text-base font-medium text-text-high">{p.title}</Text>
               {p.required ? (
                 <Text className="font-sans mt-1 text-sm text-text-low">Zorunlu</Text>
               ) : null}
@@ -87,23 +91,20 @@ export function AuthPoliciesScreen({ navigation }: Props) {
           ))}
         </View>
       )}
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <View className="mt-6 gap-3">
+      {error ? <Text className="font-sans text-sm text-feedback-error">{error}</Text> : null}
+      <Button
+        disabled={submitting || loading}
+        label={t('auth:policies.acceptAll')}
+        onPress={() => void onAccept()}
+        shape="capsule"
+      />
+      {phase === 'unauthenticated' ? (
         <Button
-          disabled={submitting || loading}
-          label={t('auth:policies.acceptAll')}
-          onPress={() => void onAccept()}
+          label={t('common:back')}
+          onPress={() => navigation.goBack()}
+          variant="ghost"
         />
-        {phase === 'unauthenticated' ? (
-          <Button
-            label={t('common:back')}
-            onPress={() => navigation.goBack()}
-            variant="secondary"
-          />
-        ) : null}
-      </View>
+      ) : null}
     </ModulePage>
   );
 }

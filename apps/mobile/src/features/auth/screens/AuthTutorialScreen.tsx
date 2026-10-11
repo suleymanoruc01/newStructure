@@ -36,28 +36,45 @@ export function AuthTutorialScreen({ navigation }: Props) {
     { title: t('tutorial.slide2Title'), body: t('tutorial.slide2Body') },
   ];
 
-  const current = slides[slide];
+  const current = slides[slide] ?? slides[0];
 
   return (
-    <ModulePage title={t('tutorial.title')} testID={SCREEN_IDS.tutorial} scroll={false}>
+    <ModulePage
+      eyebrow="PartOn"
+      scroll={false}
+      testID={SCREEN_IDS.tutorial}
+      title={t('tutorial.title')}
+    >
       <View className="flex-1 justify-between">
-        <View className="mt-8">
-          
-          <View className="mt-8 rounded-2xl bg-surface-1 p-6">
-            <Text className="font-display text-xl font-semibold text-forest">
-              {current.title}
-            </Text>
-            <Text className="font-sans mt-3 text-base text-text-medium">{current.body}</Text>
+        <View>
+          <View className="mb-6 flex-row gap-2">
+            {slides.map((item, index) => (
+              <View
+                key={item.title}
+                className={`h-1 flex-1 rounded-full ${index === slide ? 'bg-action-primary' : 'bg-surface-2'}`}
+              />
+            ))}
           </View>
+          <Text className="font-display text-xl font-semibold text-text-high">{current.title}</Text>
+          <Text className="mt-3 font-sans text-base leading-6 text-text-medium">{current.body}</Text>
         </View>
         <View className="gap-3 pb-4">
           {slide < slides.length - 1 ? (
             <>
-              <Button label={t('common:continue')} onPress={() => setSlide(slide + 1)} />
-              <Button label={t('common:skip')} onPress={goPhone} variant="secondary" />
+              <Button
+                label={t('common:continue')}
+                onPress={() => setSlide(slide + 1)}
+                shape="capsule"
+              />
+              <Button
+                label={t('common:skip')}
+                onPress={goPhone}
+                shape="capsule"
+                variant="secondary"
+              />
             </>
           ) : (
-            <Button label={t('tutorial.done')} onPress={goPhone} />
+            <Button label={t('tutorial.done')} onPress={goPhone} shape="capsule" />
           )}
         </View>
       </View>

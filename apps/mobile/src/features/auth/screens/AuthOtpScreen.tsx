@@ -96,43 +96,46 @@ export function AuthOtpScreen({ navigation, route }: Props) {
   return (
     <ModulePage
       eyebrow={maskTrPhone(phone)}
-      title={
-        purpose === 'password_reset'
-          ? t('auth:otp.resetTitle')
-          : t('auth:otp.signupTitle')
+      hero={
+        <Text className="mt-3 font-sans text-base leading-6 text-text-on">
+          {t('auth:otp.subtitle', { phone: maskTrPhone(phone) })}
+        </Text>
       }
-      testID={SCREEN_IDS.otp}
       scroll
+      testID={SCREEN_IDS.otp}
+      title={
+        purpose === 'password_reset' ? t('auth:otp.resetTitle') : t('auth:otp.signupTitle')
+      }
     >
-      <Text className="font-sans text-base leading-6 text-text-medium">
-        {t('auth:otp.subtitle', { phone: maskTrPhone(phone) })}
-      </Text>
       {purpose === 'password_reset' ? (
-        <Text className="font-sans mt-2 text-sm leading-5 text-text-low">
+        <Text className="font-sans text-sm leading-5 text-text-low">
           {t('auth:otp.resetHint')}
         </Text>
       ) : null}
       <Pressable
         accessibilityLabel={t('auth:otp.codeLabel')}
         onPress={() => inputRef.current?.focus()}
-        style={{ marginTop: 24 }}
       >
-        <View className="flex-row justify-between">
+        <View
+          className={`h-16 flex-row items-center overflow-hidden rounded-[22px] bg-surface-1 ${
+            error ? 'border border-feedback-error' : ''
+          }`}
+        >
           {Array.from({ length: CODE_LENGTH }, (_, index) => {
             const digit = code[index] ?? '';
-            const active = index === code.length || (code.length === CODE_LENGTH && index === CODE_LENGTH - 1);
+            const active =
+              index === code.length || (code.length === CODE_LENGTH && index === CODE_LENGTH - 1);
             return (
               <View
                 key={index}
-                className={`h-14 w-12 items-center justify-center rounded-lg border bg-surface-1 ${
-                  error
-                    ? 'border-feedback-error'
-                    : active
-                      ? 'border-action-primary'
-                      : 'border-surface-2'
-                }`}
+                className={`h-16 flex-1 items-center justify-center ${
+                  index > 0 ? 'border-l border-surface-2' : ''
+                } ${active && !error ? 'bg-surface-base' : ''}`}
               >
                 <Text className="font-display text-2xl font-semibold text-text-high">{digit}</Text>
+                {active && !digit ? (
+                  <View className="absolute bottom-3 h-0.5 w-4 rounded-full bg-action-primary" />
+                ) : null}
               </View>
             );
           })}
@@ -151,32 +154,33 @@ export function AuthOtpScreen({ navigation, route }: Props) {
         style={{ position: 'absolute', opacity: 0, height: 1, width: 1 }}
       />
       {error ? (
-        <Text className="mt-3 font-sans text-sm text-feedback-error">{error}</Text>
+        <Text className="font-sans text-sm text-feedback-error">{error}</Text>
       ) : (
-        <Text className="mt-3 font-sans text-sm text-text-low">{t('auth:otp.codeLabel')}</Text>
+        <Text className="font-sans text-sm text-text-low">{t('auth:otp.codeLabel')}</Text>
       )}
-      <View className="mt-6 gap-2">
-        <Button
-          disabled={submitting || code.length !== CODE_LENGTH}
-          label={submitting ? t('common:loading') : t('common:continue')}
-          onPress={() => void onVerify()}
-        />
-        <Button
-          disabled={secondsLeft > 0}
-          label={
-            secondsLeft > 0
-              ? t('auth:otp.resendWait', { seconds: secondsLeft })
-              : t('auth:otp.resend')
-          }
-          onPress={() => void onResend()}
-          variant="ghost"
-        />
-        <Button
-          label={t('auth:otp.changeNumber')}
-          onPress={() => navigation.goBack()}
-          variant="ghost"
-        />
-      </View>
+      <Button
+        disabled={submitting || code.length !== CODE_LENGTH}
+        label={submitting ? t('common:loading') : t('common:continue')}
+        onPress={() => void onVerify()}
+        shape="capsule"
+      />
+      <Button
+        disabled={secondsLeft > 0}
+        label={
+          secondsLeft > 0
+            ? t('auth:otp.resendWait', { seconds: secondsLeft })
+            : t('auth:otp.resend')
+        }
+        onPress={() => void onResend()}
+        shape="capsule"
+        variant="ghost"
+      />
+      <Button
+        label={t('auth:otp.changeNumber')}
+        onPress={() => navigation.goBack()}
+        shape="capsule"
+        variant="ghost"
+      />
     </ModulePage>
   );
 }

@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
-import { Text, View } from 'react-native';
+import { BlurView } from '@sbaiahmed1/react-native-blur';
+import React, { useEffect, useState } from 'react';
+import { AccessibilityInfo, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +13,55 @@ const CREAM = '#F3E8CF';
 const SHEET = '#FBF6EC';
 const CHARCOAL = '#252823';
 const MUSTARD = '#E2B83F';
+const ORANGE = '#E97A3D';
+const LEAF = '#79A94B';
+
+function useSolidWash(): boolean {
+  const [solid, setSolid] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceTransparencyEnabled().then((value) => {
+      if (mounted) {
+        setSolid(value);
+      }
+    });
+    const subscription = AccessibilityInfo.addEventListener(
+      'reduceTransparencyChanged',
+      setSolid,
+    );
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
+  }, []);
+  return solid;
+}
+
+function Glow({
+  color,
+  size,
+  style,
+}: {
+  color: string;
+  size: number;
+  style: ViewStyle;
+}) {
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        {
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: color,
+        },
+        style,
+      ]}
+    />
+  );
+}
 
 type HeroProps = {
   eyebrow: string;
@@ -29,17 +79,34 @@ export function HeroModule({
   children,
 }: HeroProps) {
   const top = useSafeAreaInsets().top;
+  const solid = useSolidWash();
   return (
     <View
       style={{
         backgroundColor: FOREST,
-        borderBottomLeftRadius: 36,
-        borderBottomRightRadius: 36,
+        borderBottomLeftRadius: 40,
+        borderBottomRightRadius: 40,
         paddingTop: top + 16,
         paddingHorizontal: 20,
-        paddingBottom: 48,
+        paddingBottom: 52,
+        overflow: 'hidden',
       }}
     >
+      {solid ? null : (
+        <>
+          <Glow color={ORANGE} size={220} style={{ top: -70, right: -50, opacity: 0.55 }} />
+          <Glow color={MUSTARD} size={160} style={{ top: 36, right: 28, opacity: 0.28 }} />
+          <Glow color={LEAF} size={200} style={{ bottom: -80, left: -40, opacity: 0.4 }} />
+          <Glow color={CREAM} size={120} style={{ bottom: 8, right: -20, opacity: 0.16 }} />
+          <BlurView
+            blurAmount={48}
+            blurType="dark"
+            pointerEvents="none"
+            reducedTransparencyFallbackColor={FOREST}
+            style={StyleSheet.absoluteFill}
+          />
+        </>
+      )}
       {onBack ? (
         <Pressable
           accessibilityLabel={backLabel}
@@ -140,17 +207,24 @@ type SheetProps = {
 };
 
 export function SheetModule({ title, fill = false, children }: SheetProps) {
+  const bottom = useSafeAreaInsets().bottom;
   return (
     <View
       style={{
-        marginTop: -36,
+        marginTop: -40,
+        flexGrow: 1,
         flex: fill ? 1 : undefined,
         backgroundColor: SHEET,
-        borderTopLeftRadius: 36,
-        borderTopRightRadius: 36,
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
+        shadowColor: CHARCOAL,
+        shadowOffset: { width: 0, height: -8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 8,
         paddingHorizontal: 20,
         paddingTop: title ? 28 : 36,
-        paddingBottom: 12,
+        paddingBottom: Math.max(bottom, 16),
         zIndex: 1,
       }}
     >
@@ -206,7 +280,7 @@ export function ModulePage({
       >
         {hero}
       </HeroModule>
-      <SheetModule fill={!scroll} title={sheetTitle}>
+      <SheetModule fill title={sheetTitle}>
         {children}
       </SheetModule>
     </Screen>

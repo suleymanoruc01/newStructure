@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View, type ViewStyle } from 'react-native';
 
 type TextFieldProps = {
   label: string;
@@ -16,6 +16,9 @@ type TextFieldProps = {
   prefix?: string;
   autoFocus?: boolean;
   maxLength?: number;
+  /** Soft field on the canvas. Auth password uses this. */
+  inset?: boolean;
+  shape?: 'rect' | 'capsule';
 };
 
 export function TextField({
@@ -33,19 +36,48 @@ export function TextField({
   prefix,
   autoFocus,
   maxLength,
+  inset = false,
+  shape = 'rect',
 }: TextFieldProps) {
-  const border = error ? 'border-feedback-error' : 'border-surface-2';
+  const capsule = shape === 'capsule';
+  const soft = inset || capsule;
+  const radius = capsule ? 'rounded-full' : inset ? 'rounded-[22px]' : 'rounded-lg';
+  const border = error
+    ? 'border border-feedback-error'
+    : soft
+      ? 'border border-transparent'
+      : 'border border-surface-2';
+  const clay: ViewStyle | undefined = capsule
+    ? {
+        shadowColor: '#252823',
+        shadowOffset: { width: 2, height: 6 },
+        shadowOpacity: 0.16,
+        shadowRadius: 8,
+        elevation: 3,
+        borderTopWidth: 2,
+        borderTopColor: 'rgba(251, 246, 236, 0.9)',
+        borderBottomWidth: 4,
+        borderBottomColor: '#DDD4C7',
+      }
+    : undefined;
   return (
-    <View className="mb-4">
-      <Text className="mb-1 font-sans text-sm font-medium text-text-medium">{label}</Text>
+    <View className="mb-1">
+      <Text className="mb-2 font-sans text-sm font-medium text-text-medium">{label}</Text>
       <View
+        style={clay}
         className={
           multiline
-            ? `min-h-32 rounded-lg border bg-surface-1 px-4 py-3 ${border}`
-            : `h-12 flex-row items-center rounded-lg border bg-surface-1 ${border}`
+            ? `min-h-32 bg-surface-1 px-4 py-3 ${radius} ${border}`
+            : `${soft ? 'h-14' : 'h-12'} flex-row items-center bg-surface-1 ${
+                capsule ? 'px-2' : ''
+              } ${radius} ${border}`
         }
       >
-        {prefix ? (
+        {prefix && capsule ? (
+          <View className="h-10 items-center justify-center rounded-full bg-action-secondary px-3">
+            <Text className="font-sans text-base font-semibold text-text-on">{prefix}</Text>
+          </View>
+        ) : prefix ? (
           <Text className="pl-4 font-sans text-base font-semibold text-text-high">{prefix}</Text>
         ) : null}
         <TextInput
@@ -55,7 +87,9 @@ export function TextField({
           className={
             multiline
               ? 'min-h-28 flex-1 font-sans text-base text-text-high'
-              : `h-12 flex-1 font-sans text-base text-text-high ${prefix ? 'px-3' : 'px-4'}`
+              : `${soft ? 'h-14 font-display text-lg' : 'h-12 font-sans text-base'} flex-1 text-text-high ${
+                  prefix ? 'px-3' : 'px-4'
+                }`
           }
           keyboardType={keyboardType}
           maxLength={maxLength}

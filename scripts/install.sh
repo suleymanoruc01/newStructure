@@ -56,6 +56,7 @@ bun run --filter '@parton/api-contracts' build
 
 echo "install: npm ci in apps/mobile"
 (cd apps/mobile && npm ci)
+node scripts/patch-css-interop-image-background.js
 (cd apps/mobile && node -e "require.resolve('react-native-worklets/package.json')") \
   || fail "react-native-worklets must stay a direct dependency of @parton/mobile (Reanimated 4 / RNWorklets)"
 

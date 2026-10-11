@@ -89,7 +89,9 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
 
   return (
     <ModulePage
-      title={title}
+      eyebrow="PartOn"
+      hero={<Text className="mt-3 font-sans text-base leading-6 text-text-on">{subtitle}</Text>}
+      scroll
       testID={
         recovering
           ? SCREEN_IDS.passwordReset
@@ -97,35 +99,37 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
             ? SCREEN_IDS.passwordSet
             : 'auth-password-login'
       }
-      scroll
+      title={title}
     >
-      <Text className="font-sans mt-2 text-base text-text-medium">{subtitle}</Text>
       <TextField
         autoCapitalize="none"
-        label={t('auth:password.label')}
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
         error={error}
+        inset
+        label={t('auth:password.label')}
+        onChangeText={setPassword}
+        secureTextEntry
         testID="auth-password-input"
+        value={password}
       />
       <Button
         disabled={submitting || password.length < 8}
         label={t('common:continue')}
         onPress={() => void onSubmit()}
+        shape="capsule"
       />
       {mode === 'login' ? (
         <Button
+          disabled={submitting}
           label={t('auth:password.forgot')}
           onPress={() => void onForgot()}
           testID="auth-password-forgot"
-          variant="secondary"
+          variant="ghost"
         />
       ) : null}
       <Button
         label={t('auth:password.changeNumber')}
         onPress={() => navigation.navigate('AuthPhone')}
-        variant="secondary"
+        variant="ghost"
       />
     </ModulePage>
   );

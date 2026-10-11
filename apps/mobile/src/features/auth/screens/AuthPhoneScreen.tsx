@@ -9,6 +9,7 @@ import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
+import { IdentitySignInButton } from '../components/IdentitySignInButton';
 import { platformIdentityProvider } from '../linked-sign-in';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { SCREEN_IDS } from '../screen-ids';
@@ -110,75 +111,85 @@ export function AuthPhoneScreen({ navigation }: Props) {
   return (
     <ModulePage
       eyebrow="PartOn"
-      title={t('auth:phone.title')}
-      testID={SCREEN_IDS.phone}
+      hero={
+        <Text className="mt-3 font-sans text-base leading-6 text-text-on">
+          {t('auth:phone.subtitle')}
+        </Text>
+      }
       scroll
+      testID={SCREEN_IDS.phone}
+      title={t('auth:phone.title')}
     >
-      <Text className="font-sans text-base leading-6 text-text-medium">
-        {t('auth:phone.subtitle')}
-      </Text>
-      <View className="mt-5">
-        <TextField
-          autoFocus
-          error={error}
-          keyboardType="phone-pad"
-          label={t('auth:phone.phoneLabel')}
-          maxLength={13}
-          onChangeText={(value) => {
-            setError(null);
-            setPhone(formatNational(nationalDigits(value)));
-          }}
-          placeholder={t('auth:phone.phonePlaceholder')}
-          prefix="+90"
-          testID="auth-phone-input"
-          value={phone}
-        />
-      </View>
-      <View className="gap-3">
+      <View className="flex-1">
+      <View>
+      <TextField
+        autoFocus
+        error={error}
+        keyboardType="phone-pad"
+        label={t('auth:phone.phoneLabel')}
+        maxLength={13}
+        onChangeText={(value) => {
+          setError(null);
+          setPhone(formatNational(nationalDigits(value)));
+        }}
+        placeholder={t('auth:phone.phonePlaceholder')}
+        prefix="+90"
+        shape="capsule"
+        testID="auth-phone-input"
+        value={phone}
+      />
+      <View className="mt-4 gap-3">
         <Button
           disabled={submitting}
           label={t('auth:phone.signUp')}
           onPress={() => void onSignUp()}
+          shape="capsule"
           testID="auth-phone-continue"
         />
-        <View className="flex-row items-center gap-3">
-          <View className="h-px flex-1 bg-surface-2" />
-          <Text className="font-sans text-sm text-text-low">{t('auth:phone.or')}</Text>
-          <View className="h-px flex-1 bg-surface-2" />
-        </View>
         <Button
           disabled={submitting}
           label={t('auth:phone.signIn')}
           onPress={onSignIn}
+          shape="capsule"
           testID="auth-phone-signin"
           variant="secondary"
         />
         {identityProvider ? (
-          <Button
+          <IdentitySignInButton
             disabled={submitting}
-            label={
-              identityProvider === 'apple'
-                ? t('auth:identity.appleLogin')
-                : t('auth:identity.googleLogin')
-            }
             onPress={() => void onIdentity()}
+            provider={identityProvider}
             testID="auth-identity-login"
-            variant="secondary"
           />
         ) : null}
       </View>
-      <View className="mt-6">
-        <Pressable
-          accessibilityRole="link"
-          onPress={() => navigation.navigate('AuthPolicies')}
-        >
-          <Text className="text-center font-sans text-sm leading-5 text-text-medium underline">
+      </View>
+      <View className="min-h-8 flex-1" />
+      <Pressable
+        accessibilityRole="link"
+        onPress={() => navigation.navigate('AuthPolicies')}
+        className="rounded-[22px] bg-surface-1 px-4 py-4"
+        style={{
+          borderTopWidth: 2,
+          borderTopColor: 'rgba(251, 246, 236, 0.9)',
+          borderBottomWidth: 4,
+          borderBottomColor: '#DDD4C7',
+          shadowColor: '#252823',
+          shadowOffset: { width: 2, height: 6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 8,
+        }}
+      >
+        <Text className="font-sans text-sm leading-5 text-text-medium">
+          {t('auth:phone.legalHint')}
+        </Text>
+        <View className="mt-3 flex-row items-center justify-between">
+          <Text className="font-sans text-base font-semibold text-text-high">
             {t('auth:phone.openPolicies')}
           </Text>
-          <Text className="mt-1 text-center font-sans text-xs leading-5 text-text-low">
-            {t('auth:phone.legalHint')}
-          </Text>
-        </Pressable>
+          <Text className="font-sans text-xl text-text-low">›</Text>
+        </View>
+      </Pressable>
       </View>
     </ModulePage>
   );

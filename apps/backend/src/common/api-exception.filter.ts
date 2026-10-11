@@ -84,10 +84,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
       }
       if (typeof res === 'object' && res !== null && 'message' in res) {
         const msg = (res as { message?: string | string[] }).message;
-        if (typeof msg === 'string') {
-          message = msg;
-        } else if (Array.isArray(msg) && msg[0]) {
-          message = String(msg[0]);
+        const text = typeof msg === 'string' ? msg : Array.isArray(msg) ? msg[0] : undefined;
+        // Nest's unmatched-route text is "Cannot POST /path". Keep the Turkish line.
+        if (typeof text === 'string' && text.length > 0 && !text.startsWith('Cannot ')) {
+          message = text;
         }
       }
       response.status(status).json({

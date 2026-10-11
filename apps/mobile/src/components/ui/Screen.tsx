@@ -25,7 +25,7 @@ export function Screen({
   const pad = bleed
     ? dock
       ? 'pb-32'
-      : 'pb-6'
+      : ''
     : dock
       ? 'px-4 pb-32 pt-6'
       : 'px-4 py-6';
