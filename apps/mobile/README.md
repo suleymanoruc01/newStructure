@@ -5,12 +5,16 @@ Bare React Native client (no Expo). S2 shell: NativeWind, i18n `tr-TR`, React Na
 ## Development
 
 ```bash
-# from repo root
-pnpm install
-pnpm --filter @parton/mobile start
-pnpm --filter @parton/mobile android
-pnpm --filter @parton/mobile ios
+# from repo root — Bun 1.4.3+, builds @parton/api-contracts, npm ci here, pod install on macOS
+bun run setup
+
+cd apps/mobile
+npm start
+npm run ios       # macOS + Xcode simulator
+npm run android   # SDK + emulator or device
 ```
+
+`react-native-worklets` is a direct dependency (Reanimated 4 peer). CocoaPods only links `RNWorklets` when it is installed that way; do not drop it back to a transitive peer.
 
 API base: `https://api.parton.app/api/v1` (`src/api/config.ts`). Release Android blocks cleartext; a debug build still allows `http://10.0.2.2:3000/api/v1`.
 

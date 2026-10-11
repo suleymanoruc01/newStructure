@@ -4,6 +4,7 @@ const { withNativeWind } = require('nativewind/metro');
 
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, '../..');
+const zodCjs = path.resolve(projectRoot, 'node_modules/zod/index.cjs');
 
 const config = mergeConfig(getDefaultConfig(projectRoot), {
   watchFolders: [monorepoRoot],
@@ -14,6 +15,12 @@ const config = mergeConfig(getDefaultConfig(projectRoot), {
       path.resolve(projectRoot, 'node_modules'),
       path.resolve(monorepoRoot, 'node_modules'),
     ],
+    resolveRequest: (context, moduleName, platform) => {
+      if (moduleName === 'zod') {
+        return { type: 'sourceFile', filePath: zodCjs };
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
   },
 });
 

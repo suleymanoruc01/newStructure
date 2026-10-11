@@ -8,15 +8,18 @@ Architecture and acceptance specs: [`PartonNewArch/`](PartonNewArch/).
 
 ```bash
 cp .env.example .env
-bun install
+bun run setup
 bun run db:migrate
 bun run --filter '@parton/backend' start:dev
 ```
 
+`bun run setup` (`scripts/install.sh`) checks Bun against `packageManager` (`bun@1.4.3`, required for `bun.lock` lockfileVersion 2), installs the Bun workspace, builds `@parton/api-contracts`, then `npm ci` in `apps/mobile`. On macOS it runs `pod install` when CocoaPods is installed.
+
 Mobile:
 
 ```bash
-cd apps/mobile && npm install && npm start
+cd apps/mobile && npm start
+npm run ios    # simulator; requires the setup script's pod install
 ```
 
 ## AI agents (Ponytail)

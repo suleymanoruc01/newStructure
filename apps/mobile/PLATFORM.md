@@ -25,10 +25,11 @@ Generated from the React Native **0.87.1** template in `apps/mobile` (bare RN, n
 ## Local run
 
 ```bash
-pnpm install
-pnpm --filter @parton/mobile start
-pnpm --filter @parton/mobile android   # requires SDK + emulator/device
-pnpm --filter @parton/mobile ios       # requires macOS + Xcode
+# from repo root
+bun run setup
+cd apps/mobile && npm start
+cd apps/mobile && npm run android   # requires SDK + emulator/device
+cd apps/mobile && npm run ios       # requires macOS + Xcode; setup runs pod install
 ```
 
 ## Release

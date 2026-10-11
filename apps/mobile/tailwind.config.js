@@ -1,16 +1,22 @@
-const { Platform } = require('react-native');
+const { platformSelect } = require('nativewind/theme');
 const partonPreset = require('@parton/design-tokens');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}', './index.js'],
-  presets: [partonPreset],
+  presets: [require('nativewind/preset'), partonPreset],
   darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
-        sans: [Platform.OS === 'android' ? 'sourcesans3' : 'Source Sans 3'],
-        display: [Platform.OS === 'android' ? 'dmsans' : 'DM Sans'],
+        sans: platformSelect({
+          android: 'sourcesans3',
+          ios: "'Source Sans 3'",
+        }),
+        display: platformSelect({
+          android: 'dmsans',
+          ios: "'DM Sans'",
+        }),
       },
       borderRadius: {
         DEFAULT: '0.5rem',

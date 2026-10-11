@@ -77,7 +77,7 @@ Report: files touched, commands run, exit gate evidence.
 1. Update `.parton/orchestration-state.json` → `in_progress`  
 2. `explore` agent: confirm routes/screens exist in docs for this slice  
 3. Dispatch `generalPurpose` child with template §3  
-4. Run: `bun install`, `bun run typecheck`, `bun run test` (slice scope); mobile slice: `cd apps/mobile && npm install && npm test`  
+4. Run: `bun run setup` (`scripts/install.sh`), `bun run typecheck`, `bun run test` (slice scope); mobile slice: `cd apps/mobile && npm test`  
 5. Data: ensure `DATABASE_URL` reaches host/managed Postgres; `bun run db:migrate` if backend touched  
 6. Mark slice `done` + commit message conventional + case IDs  
 7. Re-index: `codebase-memory-mcp cli index_repository --repo-path /root/PartOnUpdated --name PartOnUpdated`

@@ -2,6 +2,9 @@
   "name": "parton",
   "private": true,
   "packageManager": "bun@1.4.3",
+  "engines": {
+    "bun": ">=1.4.3"
+  },
   "workspaces": [
     "apps/backend",
     "apps/admin",
@@ -22,7 +25,8 @@
     "ponytail:hooks:install": "node vendor/ponytail/scripts/cursor-hooks.js install --project",
     "ponytail:hooks:uninstall": "node vendor/ponytail/scripts/cursor-hooks.js uninstall --project",
     "ponytail:sync": "bash scripts/sync-ponytail-agents.sh",
-    "ponytail:verify": "bash scripts/verify-ponytail-integration.sh"
+    "ponytail:verify": "bash scripts/verify-ponytail-integration.sh",
+    "setup": "bash scripts/install.sh"
   },
   "devDependencies": {
     "turbo": "^2.8.1",

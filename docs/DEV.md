@@ -8,7 +8,7 @@ Runtime follows [PartonNewArch/web/05-pm2.md](../PartonNewArch/web/05-pm2.md): *
 
 | Dependency | Purpose |
 | --- | --- |
-| [Bun](https://bun.sh) | Root workspace installs and scripts |
+| [Bun](https://bun.sh) **1.4.3+** | Root workspace installs and scripts. `package.json` `packageManager` is `bun@1.4.3` because `bun.lock` is lockfileVersion 2 |
 | Node.js | Nest/PM2 production runtime; Metro when working on mobile |
 | npm | `apps/mobile` only |
 | PostgreSQL 18+ | System of record — **host install or managed instance** |
@@ -32,7 +32,7 @@ cp .env.example .env
 ## Commands (Bun workspace)
 
 ```bash
-bun install
+bun run setup                  # scripts/install.sh — Bun workspace, api-contracts build, mobile npm ci, iOS pods on macOS
 bun run db:migrate
 bun run dev                    # turbo: backend watch + frontends (when wired)
 ```
@@ -60,6 +60,6 @@ Deploy path: build admin → build Nest → migrate → `bun run pm2:reload` ([w
 | --- | --- |
 | Admin | `bun run --filter '@parton/admin' dev` (proxies API — `VITE_API_PROXY_TARGET`) |
 | Marketing | `bun run --filter '@parton/marketing' dev` |
-| Mobile | `cd apps/mobile && npm install && npm start` (native toolchains; **no Bun**) |
+| Mobile | After `bun run setup`: `cd apps/mobile && npm start`, then `npm run ios` or `npm run android` (npm + Fastlane; **no Bun**) |
 
 Store builds: Fastlane lanes under `apps/mobile/fastlane/`.

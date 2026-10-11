@@ -141,7 +141,7 @@ If a version conflicts at install time: pick **newest** compatible set **without
 }
 ```
 
-Mobile: `cd apps/mobile && npm install` — shared packages via `file:../../packages/...`.
+Mobile: not a Bun workspace. From the repo root run `bun run setup` (`scripts/install.sh`): Bun must be the `packageManager` version or newer (`bun.lock` lockfileVersion 2), then it builds `@parton/api-contracts` and runs `npm ci` in `apps/mobile` (`file:../../packages/...`, including direct `react-native-worklets` for Reanimated 4). On macOS the script runs `pod install` when `pod` is on PATH.
 
 ### `turbo.json`
 
