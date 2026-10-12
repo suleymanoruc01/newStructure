@@ -8,8 +8,9 @@ import { Button } from '../../../components/ui/Button';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
-import { createEmployer } from '../../../api/employers-api';
+import { createEmployer, patchEmployerMe } from '../../../api/employers-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
+import { postLoginRoute } from '../../../shared/auth/auth-gate';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { ONBOARDING_SCREEN_IDS } from '../screen-ids';
 
@@ -20,7 +21,8 @@ type Props = NativeStackScreenProps<
 
 export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
   const { t } = useTranslation(['onboarding', 'common', 'errors']);
-  const { applyEmployerCreate } = useAuth();
+  const { applyEmployerCreate, completeOnboarding, contexts } = useAuth();
+  const employerId = contexts.find((item) => item.role === 'employer')?.employerId;
   const [legalName, setLegalName] = useState('');
   const [tradingName, setTradingName] = useState('');
   const [taxId, setTaxId] = useState('');
@@ -39,6 +41,20 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
       const token = getAccessToken();
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
+      }
+      if (employerId) {
+        await patchEmployerMe({ industryCodes: industries }, token);
+        const gate = await completeOnboarding();
+        const next = postLoginRoute(gate);
+        if (!next) {
+          return;
+        }
+        navigation.replace(
+          next === 'EmployerOnboardingBusiness'
+            ? 'EmployerOnboardingBranch'
+            : next,
+        );
+        return;
       }
       const result = await createEmployer(
         {
@@ -65,26 +81,32 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
   return (
     <ModulePage title={t('onboarding:employer.businessTitle')} testID={ONBOARDING_SCREEN_IDS.employerBusiness} scroll>
       
-      <Text className="font-sans mt-2 text-base text-text-medium">
-        {t('onboarding:employer.businessSubtitle')}
-      </Text>
+      {employerId ? null : (
+        <Text className="font-sans mt-2 text-base text-text-medium">
+          {t('onboarding:employer.businessSubtitle')}
+        </Text>
+      )}
       <View className="mt-6 gap-3">
-        <TextField
-          label={t('onboarding:employer.legalName')}
-          value={legalName}
-          onChangeText={setLegalName}
-        />
-        <TextField
-          label={t('onboarding:employer.tradingName')}
-          value={tradingName}
-          onChangeText={setTradingName}
-        />
-        <TextField
-          label={t('onboarding:employer.taxId')}
-          value={taxId}
-          onChangeText={setTaxId}
-          keyboardType="number-pad"
-        />
+        {employerId ? null : (
+          <>
+            <TextField
+              label={t('onboarding:employer.legalName')}
+              value={legalName}
+              onChangeText={setLegalName}
+            />
+            <TextField
+              label={t('onboarding:employer.tradingName')}
+              value={tradingName}
+              onChangeText={setTradingName}
+            />
+            <TextField
+              label={t('onboarding:employer.taxId')}
+              value={taxId}
+              onChangeText={setTaxId}
+              keyboardType="number-pad"
+            />
+          </>
+        )}
         <TextField
           label={t('onboarding:employer.industries')}
           value={industryCodes}

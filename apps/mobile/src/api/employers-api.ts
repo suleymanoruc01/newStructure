@@ -1,9 +1,11 @@
 import {
   employerCreateBodySchema,
   employerCreateResponseSchema,
+  employerPatchBodySchema,
   employerResponseSchema,
   employerSetupStatusResponseSchema,
   type EmployerCreateBody,
+  type EmployerPatchBody,
 } from '@parton/api-contracts';
 
 import { apiRequest } from './client';
@@ -16,6 +18,18 @@ export async function createEmployer(
   employerCreateBodySchema.parse(body);
   return apiRequest('/employers', employerCreateResponseSchema, {
     method: 'POST',
+    body,
+    accessToken,
+  });
+}
+
+export async function patchEmployerMe(
+  body: EmployerPatchBody,
+  accessToken: string,
+) {
+  employerPatchBodySchema.parse(body);
+  return apiRequest('/employers/me', employerResponseSchema, {
+    method: 'PATCH',
     body,
     accessToken,
   });

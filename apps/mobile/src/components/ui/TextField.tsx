@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TextInput, View, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 
 type TextFieldProps = {
   label: string;
@@ -83,14 +83,18 @@ export function TextField({
         <TextInput
           accessibilityLabel={label}
           autoCapitalize={autoCapitalize}
+          autoCorrect={secureTextEntry ? false : undefined}
           autoFocus={autoFocus}
           className={
-            multiline
+            secureTextEntry
+              ? undefined
+              : multiline
               ? 'min-h-28 flex-1 font-sans text-base text-text-high'
               : `${soft ? 'h-14 font-display text-lg' : 'h-12 font-sans text-base'} flex-1 text-text-high ${
                   prefix ? 'px-3' : 'px-4'
                 }`
           }
+          clearTextOnFocus={false}
           keyboardType={keyboardType}
           maxLength={maxLength}
           multiline={multiline}
@@ -99,7 +103,10 @@ export function TextField({
           placeholder={placeholder}
           placeholderTextColor="#83947A"
           secureTextEntry={secureTextEntry}
+          spellCheck={secureTextEntry ? false : undefined}
+          style={secureTextEntry ? styles.secure : undefined}
           testID={testID}
+          textContentType={secureTextEntry ? 'password' : undefined}
           value={value}
         />
       </View>
@@ -109,3 +116,13 @@ export function TextField({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  secure: {
+    flex: 1,
+    height: 56,
+    paddingHorizontal: 16,
+    fontSize: 18,
+    color: '#252823',
+  },
+});

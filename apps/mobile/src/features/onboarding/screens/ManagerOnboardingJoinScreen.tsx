@@ -10,12 +10,13 @@ import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { managerJoin } from '../../../api/branches-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
+import { continueAfterGate } from '../../../shared/auth/auth-gate';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { ONBOARDING_SCREEN_IDS } from '../screen-ids';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ManagerOnboardingJoin'>;
 
-export function ManagerOnboardingJoinScreen(_props: Props) {
+export function ManagerOnboardingJoinScreen({ navigation }: Props) {
   const { t } = useTranslation(['onboarding', 'common', 'errors']);
   const { applyManagerJoin, completeOnboarding } = useAuth();
   const [code, setCode] = useState('');
@@ -32,7 +33,7 @@ export function ManagerOnboardingJoinScreen(_props: Props) {
       }
       const result = await managerJoin({ code: code.trim() }, token);
       applyManagerJoin(result);
-      await completeOnboarding();
+      continueAfterGate(navigation, await completeOnboarding());
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));

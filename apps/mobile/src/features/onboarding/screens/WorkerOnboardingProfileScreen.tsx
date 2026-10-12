@@ -14,6 +14,7 @@ import {
   putWorkerAvailability,
 } from '../../../api/workers-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
+import { continueAfterGate } from '../../../shared/auth/auth-gate';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { ONBOARDING_SCREEN_IDS } from '../screen-ids';
 
@@ -30,7 +31,7 @@ const DEFAULT_WINDOWS = [
   { dayOfWeek: 5, startMinute: 540, endMinute: 1020 },
 ];
 
-export function WorkerOnboardingProfileScreen(_props: Props) {
+export function WorkerOnboardingProfileScreen({ navigation }: Props) {
   const { t } = useTranslation(['onboarding', 'common', 'errors']);
   const { completeOnboarding } = useAuth();
   const [step, setStep] = useState(0);
@@ -86,7 +87,7 @@ export function WorkerOnboardingProfileScreen(_props: Props) {
         token,
       );
       await putWorkerAvailability({ windows: DEFAULT_WINDOWS }, token);
-      await completeOnboarding();
+      continueAfterGate(navigation, await completeOnboarding());
     } catch (err) {
       setError(formErrorMessage(err, t));
     } finally {

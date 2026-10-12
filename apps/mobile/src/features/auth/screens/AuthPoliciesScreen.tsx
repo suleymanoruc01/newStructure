@@ -5,11 +5,13 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
+import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { listPublishedPolicies } from '../../../api/auth-api';
 import { ApiClientError } from '../../../api/client';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { SCREEN_IDS } from '../screen-ids';
+import { markIfFits, measured, type TextMeasure } from './policy-text';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'AuthPolicies'>;
 
@@ -21,8 +23,6 @@ type PolicyRow = {
   required: boolean;
 };
 
-const TEXT_VIEW_HEIGHT = 420;
-
 function readingBlocks(body: string): string[] {
   const paragraphs = body
     .split(/\n\s*\n/)
@@ -33,10 +33,6 @@ function readingBlocks(body: string): string[] {
   }
   const text = paragraphs[0] ?? '';
   return text.split(/(?<=\.)\s+(?=\p{Lu})/u).filter((part) => part.length > 0);
-}
-
-function requiredReadMs(body: string): number {
-  return Math.min(20_000, Math.max(4_000, body.length * 25));
 }
 
 export function AuthPoliciesScreen({ navigation }: Props) {
@@ -55,12 +51,9 @@ export function AuthPoliciesScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [waited, setWaited] = useState(false);
-  const [readConfirmed, setReadConfirmed] = useState(false);
+  const [tick, setTick] = useState({ key: '', on: false });
   const [readRatio, setReadRatio] = useState(0);
-  const viewHeight = useRef(0);
-  const contentHeight = useRef(0);
+  const [textMeasure, setTextMeasure] = useState<TextMeasure | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,6 +80,57 @@ export function AuthPoliciesScreen({ navigation }: Props) {
     void load();
   }, [load]);
 
+  const reportError = useCallback(
+    (err: unknown) => {
+      if (err instanceof ApiClientError) {
+        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
+      } else {
+        setError(t('common:networkError'));
+      }
+    },
+    [t],
+  );
+
+  const leaveWhenClear = useCallback(async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const next = await continueAfterPolicies(true);
+      if (next !== 'needs_policies') {
+        return;
+      }
+      const again = await loadPendingPolicies();
+      if (again.length > 0) {
+        setPolicies(again);
+        setTotal((count) => Math.max(count, again.length));
+        return;
+      }
+      setError(t('common:networkError'));
+    } catch (err) {
+      reportError(err);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [continueAfterPolicies, loadPendingPolicies, reportError, t]);
+
+  const startedLeave = useRef(false);
+  useEffect(() => {
+    if (loading || policies.length > 0) {
+      return;
+    }
+    if (browsing) {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      }
+      return;
+    }
+    if (startedLeave.current) {
+      return;
+    }
+    startedLeave.current = true;
+    void leaveWhenClear();
+  }, [browsing, leaveWhenClear, loading, navigation, policies.length]);
+
   const current = browsing ? policies[browseIndex] : policies[0];
   const policyKey = current ? `${current.id}:${current.version}` : '';
   const position = browsing
@@ -94,72 +138,39 @@ export function AuthPoliciesScreen({ navigation }: Props) {
     : current
       ? Math.max(total - policies.length + 1, 1)
       : 0;
-  const readyToAct = scrolled && waited && (browsing || readConfirmed);
+  const measure = measured(policyKey, textMeasure);
+  const fits =
+    measure.view > 0 && measure.content > 0 && measure.content <= measure.view + 8;
+  const overflows = measure.content > measure.view + 8;
+  const scrolled = measure.end || fits;
+  const checked = tick.key === policyKey && tick.on;
+  const readyToAct = checked;
 
-  const noteReachedEnd = useCallback(() => {
-    setScrolled(true);
-  }, []);
-
-  const considerFit = useCallback(() => {
-    if (
-      viewHeight.current > 0 &&
-      contentHeight.current > 0 &&
-      contentHeight.current <= viewHeight.current + 8
-    ) {
-      noteReachedEnd();
-      setReadRatio(1);
-    }
-  }, [noteReachedEnd]);
+  const rememberMeasure = useCallback(
+    (patch: Partial<Pick<TextMeasure, 'view' | 'content' | 'end'>>) => {
+      setTextMeasure((prev) =>
+        markIfFits({ ...measured(policyKey, prev), ...patch }),
+      );
+    },
+    [policyKey],
+  );
 
   useEffect(() => {
-    setScrolled(false);
-    setWaited(false);
-    setReadConfirmed(false);
     setReadRatio(0);
-    viewHeight.current = 0;
-    contentHeight.current = 0;
-    if (!current) {
-      return;
-    }
-    const timer = setTimeout(() => setWaited(true), requiredReadMs(current.body));
-    return () => clearTimeout(timer);
-  }, [policyKey, current]);
-
-  useEffect(() => {
-    if (!current || browsing || !scrolled || !waited || readConfirmed) {
-      return;
-    }
-    let cancelled = false;
-    void recordPolicyRead(current.id, current.version)
-      .then(() => {
-        if (!cancelled) {
-          setReadConfirmed(true);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) {
-          return;
-        }
-        if (err instanceof ApiClientError) {
-          setError(t(`errors:${err.code}`, { defaultValue: err.message }));
-        } else {
-          setError(t('common:networkError'));
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [browsing, current, readConfirmed, recordPolicyRead, scrolled, t, waited]);
+  }, [policyKey]);
 
   const onAccept = async () => {
-    if (!current || !readyToAct) {
+    if (!current || !checked) {
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
+      await recordPolicyRead(current.id, current.version);
       const rest = await acknowledgePolicy(current.id, current.version);
-      setPolicies(rest);
+      if (rest.length > 0) {
+        setPolicies(rest);
+      }
     } catch (err) {
       if (err instanceof ApiClientError && err.code === 'POLICY_VERSION_STALE') {
         await load();
@@ -174,6 +185,10 @@ export function AuthPoliciesScreen({ navigation }: Props) {
     }
   };
 
+  if (!browsing && !loading && !current && !error) {
+    return null;
+  }
+
   return (
     <ModulePage
       eyebrow="PartOn"
@@ -182,14 +197,15 @@ export function AuthPoliciesScreen({ navigation }: Props) {
           {t('auth:policies.subtitle')}
         </Text>
       }
-      scroll
+      scroll={false}
       testID={SCREEN_IDS.policies}
       title={t('auth:policies.title')}
     >
+      <View className="min-h-0 flex-1">
       {loading ? (
         <Text className="font-sans text-text-medium">{t('common:loading')}</Text>
       ) : current ? (
-        <View className="rounded-[28px] bg-surface-1 p-5">
+        <View className="min-h-0 flex-1 rounded-[28px] bg-surface-1 p-5">
           <View className="mb-4 flex-row gap-1.5">
             {Array.from({ length: Math.max(total, policies.length, 1) }, (_, index) => (
               <View
@@ -221,19 +237,20 @@ export function AuthPoliciesScreen({ navigation }: Props) {
           <View className="mt-4 h-1 overflow-hidden rounded-full bg-surface-2">
             <View
               className="h-1 rounded-full bg-action-primary"
-              style={{ width: `${Math.round(readRatio * 100)}%` }}
+              style={{ width: `${Math.round((fits ? 1 : readRatio) * 100)}%` }}
             />
           </View>
           <ScrollView
+            key={policyKey}
             nestedScrollEnabled
-            style={{ height: TEXT_VIEW_HEIGHT, marginTop: 16 }}
+            scrollEnabled={measure.content === 0 || overflows}
+            showsVerticalScrollIndicator
+            style={{ flex: 1, marginTop: 16, minHeight: 0 }}
             onLayout={(event) => {
-              viewHeight.current = event.nativeEvent.layout.height;
-              considerFit();
+              rememberMeasure({ view: event.nativeEvent.layout.height });
             }}
             onContentSizeChange={(_width, height) => {
-              contentHeight.current = height;
-              considerFit();
+              rememberMeasure({ content: height });
             }}
             onScroll={(event) => {
               const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
@@ -242,11 +259,12 @@ export function AuthPoliciesScreen({ navigation }: Props) {
                   ? 1
                   : (contentOffset.y + layoutMeasurement.height) / contentSize.height;
               setReadRatio(Math.min(1, Math.max(0, ratio)));
-              if (
-                layoutMeasurement.height + contentOffset.y >=
-                contentSize.height - 24
-              ) {
-                noteReachedEnd();
+              if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 24) {
+                rememberMeasure({
+                  view: layoutMeasurement.height,
+                  content: contentSize.height,
+                  end: true,
+                });
               }
             }}
             scrollEventThrottle={16}
@@ -265,27 +283,50 @@ export function AuthPoliciesScreen({ navigation }: Props) {
                 </Text>
               ))}
             </View>
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked, disabled: !scrolled || submitting }}
+              className="mt-4 flex-row items-center gap-3 rounded-[22px] bg-surface-base px-4 py-3"
+              disabled={!scrolled || submitting}
+              onPress={() => {
+                if (!scrolled) {
+                  return;
+                }
+                setTick({ key: policyKey, on: !checked });
+              }}
+            >
+              <View
+                className={`h-6 w-6 items-center justify-center rounded-md border-2 border-action-secondary ${
+                  checked ? 'bg-action-secondary' : 'bg-surface-1'
+                }`}
+              >
+                {checked ? (
+                  <Text className="font-sans text-sm font-bold text-text-on">✓</Text>
+                ) : null}
+              </View>
+              <Text className="flex-1 font-sans text-base leading-6 text-text-high">
+                {t('auth:policies.confirm')}
+              </Text>
+            </Pressable>
           </ScrollView>
         </View>
-      ) : (
-        <Text className="font-sans text-text-medium">{t('auth:policies.empty')}</Text>
-      )}
-      {current && !readyToAct ? (
-        <Text className="font-sans text-sm text-text-low">
-          {scrolled ? t('auth:policies.keepReading') : t('auth:policies.scrollToEnd')}
+      ) : null}
+      {current && overflows && !scrolled ? (
+        <Text className="mt-3 font-sans text-sm text-text-low">
+          {t('auth:policies.scrollToEnd')}
         </Text>
       ) : null}
-      {error ? <Text className="font-sans text-sm text-feedback-error">{error}</Text> : null}
-      {browsing ? (
+      {error ? <Text className="mt-3 font-sans text-sm text-feedback-error">{error}</Text> : null}
+      {current && browsing ? (
         <Button
-          disabled={loading || !current || !readyToAct}
+          disabled={loading || !readyToAct}
           label={
             current && browseIndex < policies.length - 1
               ? t('auth:policies.next')
               : t('common:back')
           }
           onPress={() => {
-            if (!readyToAct) {
+            if (!checked) {
               return;
             }
             if (browseIndex < policies.length - 1) {
@@ -294,16 +335,19 @@ export function AuthPoliciesScreen({ navigation }: Props) {
             }
             navigation.goBack();
           }}
+          className="mt-4"
           shape="capsule"
         />
-      ) : (
+      ) : current ? (
         <Button
-          disabled={submitting || loading || !current || !readyToAct}
-          label={current ? t('auth:policies.acceptOne') : t('common:continue')}
+          disabled={submitting || loading || !readyToAct}
+          label={t('auth:policies.acceptOne')}
           onPress={() => void onAccept()}
+          className="mt-4"
           shape="capsule"
         />
-      )}
+      ) : null}
+      </View>
     </ModulePage>
   );
 }

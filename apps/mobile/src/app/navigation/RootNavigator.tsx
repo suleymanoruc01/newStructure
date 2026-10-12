@@ -119,7 +119,10 @@ export function RootNavigator() {
   return (
     <NavigationContainer linking={linking}>
       <View className="flex-1">
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator
+          key={showApp ? 'app' : 'auth'}
+          screenOptions={{ headerShown: false }}
+        >
           {showApp ? (
             <Stack.Screen name="AppShell" component={AppShellPlaceholder} />
           ) : (

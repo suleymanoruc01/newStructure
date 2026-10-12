@@ -62,6 +62,7 @@ export async function apiRequest<T>(
   const timeout = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
 
   let response: Response;
+  let json: unknown;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
@@ -69,11 +70,10 @@ export async function apiRequest<T>(
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
+    json = await response.json();
   } finally {
     clearTimeout(timeout);
   }
-
-  const json = (await response.json()) as unknown;
 
   if (!response.ok) {
     const parsed = errorEnvelopeSchema.safeParse(json);

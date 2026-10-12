@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -15,27 +15,65 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'AuthPassword'>;
 
 export function AuthPasswordScreen({ navigation, route }: Props) {
   const { t } = useTranslation(['auth', 'common', 'errors']);
-  const { loginWithPassword, requestPhoneOtp, saveSignupPassword } = useAuth();
+  const {
+    employerOnboardingStep,
+    loginWithPassword,
+    onboardingKind,
+    phase,
+    requestPhoneOtp,
+    saveSignupPassword,
+  } = useAuth();
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const mode = route.params.mode;
+
+  useEffect(() => {
+    if (phase === 'booting' || phase === 'unauthenticated' || phase === 'authenticated') {
+      return;
+    }
+    if (phase === 'needs_role') {
+      navigation.replace('AuthRoleSelect');
+      return;
+    }
+    if (phase === 'needs_policies') {
+      navigation.replace('AuthPolicies');
+      return;
+    }
+    if (phase === 'needs_onboarding') {
+      if (onboardingKind === 'worker') {
+        navigation.replace('WorkerOnboardingProfile');
+        return;
+      }
+      if (onboardingKind === 'manager') {
+        navigation.replace('ManagerOnboardingJoin');
+        return;
+      }
+      if (onboardingKind === 'employer') {
+        navigation.replace(
+          employerOnboardingStep === 'branch'
+            ? 'EmployerOnboardingBranch'
+            : 'EmployerOnboardingBusiness',
+        );
+      }
+      return;
+    }
+    const unreachable: never = phase;
+    return unreachable;
+  }, [employerOnboardingStep, navigation, onboardingKind, phase]);
 
   const onSubmit = async () => {
     setError(null);
     setSubmitting(true);
     try {
       if (mode === 'set') {
-        const saved = await saveSignupPassword(password);
-        navigation.replace(
-          saved && saved.roles.length > 0 ? 'AuthPolicies' : 'AuthRoleSelect',
-        );
+        await saveSignupPassword(password);
         return;
       }
-      const user = await loginWithPassword(route.params.phone, password);
-      navigation.replace(
-        user.roles.length === 0 ? 'AuthRoleSelect' : 'AuthPolicies',
-      );
+      const signedIn = await loginWithPassword(route.params.phone, password);
+      if (signedIn.nextRoute) {
+        navigation.replace(signedIn.nextRoute);
+      }
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));

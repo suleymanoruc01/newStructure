@@ -48,8 +48,10 @@ import {
   requestIdentityToken,
 } from '../../features/auth/linked-sign-in';
 import {
+  postLoginRoute,
   resolveAuthPhase,
   type EmployerOnboardingStep,
+  type PostLoginRoute,
 } from './auth-gate';
 import type { AuthPhase, OnboardingKind } from './auth-types';
 
@@ -70,7 +72,10 @@ type AuthContextValue = {
     options?: { password?: string; holdPhase?: boolean },
   ) => Promise<MeUser>;
   saveSignupPassword: (password: string) => Promise<MeUser | null>;
-  loginWithPassword: (phone: string, password: string) => Promise<MeUser>;
+  loginWithPassword: (
+    phone: string,
+    password: string,
+  ) => Promise<{ user: MeUser; nextRoute: PostLoginRoute | null }>;
   signInWithLinkedIdentity: () => Promise<MeUser>;
   selectRole: (role: UserRole) => Promise<void>;
   recordPolicyRead: (policyId: string, version: string) => Promise<void>;
@@ -78,11 +83,15 @@ type AuthContextValue = {
     policyId: string,
     version: string,
   ) => Promise<PolicyRow[]>;
-  continueAfterPolicies: () => Promise<void>;
+  continueAfterPolicies: (policiesClear?: boolean) => Promise<AuthPhase>;
   loadPendingPolicies: () => Promise<PolicyRow[]>;
   applyEmployerCreate: (data: EmployerCreateData) => void;
   applyManagerJoin: (data: ManagerJoinData) => void;
-  completeOnboarding: () => Promise<void>;
+  completeOnboarding: () => Promise<{
+    phase: AuthPhase;
+    onboardingKind: OnboardingKind | null;
+    employerStep: EmployerOnboardingStep | null;
+  }>;
   switchActiveContext: (context: AuthContext) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -96,16 +105,6 @@ type PolicyRow = {
   version: string;
   required: boolean;
 };
-
-function deriveRolePhase(user: MeUser | null): AuthPhase {
-  if (!user) {
-    return 'unauthenticated';
-  }
-  if (user.roles.length === 0) {
-    return 'needs_role';
-  }
-  return 'needs_policies';
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<AuthPhase>('booting');
@@ -151,8 +150,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (accessToken: string, me: MeUser, ctx: AuthContext[]) => {
       const resolved = await resolveAuthPhase(accessToken, me, ctx);
       applyResolvedPhase(resolved);
+      return resolved;
     },
     [applyResolvedPhase],
+  );
+
+  const enterSession = useCallback(
+    async (accessToken: string, me: MeUser, ctx: AuthContext[]) => {
+      if (me.roles.length === 0) {
+        setPhase('needs_role');
+        return {
+          phase: 'needs_role' as const,
+          onboardingKind: null,
+          employerStep: null,
+        };
+      }
+      return syncGate(accessToken, me, ctx);
+    },
+    [syncGate],
   );
 
   useEffect(() => {
@@ -238,11 +253,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data.refreshToken,
       );
       if (!options?.holdPhase) {
-        setPhase(deriveRolePhase(data.user));
+        await enterSession(data.accessToken, data.user, data.contexts ?? []);
       }
       return data.user;
     },
-    [applySession],
+    [applySession, enterSession],
   );
 
   const saveSignupPassword = useCallback(
@@ -256,10 +271,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
       await setAccountPassword({ password }, access);
-      setPhase(deriveRolePhase(user));
+      if (!user) {
+        throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
+      }
+      await enterSession(access, user, contexts);
       return user;
     },
-    [user],
+    [contexts, enterSession, user],
   );
 
   const loginWithPassword = useCallback(
@@ -278,10 +296,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data.accessToken,
         data.refreshToken,
       );
-      setPhase(deriveRolePhase(data.user));
-      return data.user;
+      const gate = await enterSession(
+        data.accessToken,
+        data.user,
+        data.contexts ?? [],
+      );
+      return { user: data.user, nextRoute: postLoginRoute(gate) };
     },
-    [applySession],
+    [applySession, enterSession],
   );
 
   const signInWithLinkedIdentity = useCallback(async () => {
@@ -319,9 +341,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data.accessToken,
       data.refreshToken,
     );
-    setPhase(deriveRolePhase(data.user));
+    await enterSession(data.accessToken, data.user, data.contexts ?? []);
     return data.user;
-  }, [applySession]);
+  }, [applySession, enterSession]);
 
   const selectRole = useCallback(
     async (role: UserRole) => {
@@ -336,9 +358,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data.accessToken,
         data.refreshToken,
       );
-      setPhase('needs_policies');
+      await syncGate(data.accessToken, data.user, data.contexts);
     },
-    [applySession],
+    [applySession, syncGate],
   );
 
   const loadPendingPolicies = useCallback(async () => {
@@ -356,18 +378,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const refreshPolicyGate = useCallback(async () => {
-    const token = getAccessToken();
-    if (!token) {
-      throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
-    }
-    const me = user ?? (await fetchMe(token));
-    const ctx =
-      contexts.length > 0 ? contexts : (await fetchContexts(token)).items;
-    setUser(me);
-    setContexts(ctx);
-    await syncGate(token, me, ctx);
-  }, [contexts, syncGate, user]);
+  const refreshPolicyGate = useCallback(
+    async (policiesClear = false) => {
+      const token = getAccessToken();
+      if (!token) {
+        throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
+      }
+      const me = user ?? (await fetchMe(token));
+      const ctx =
+        contexts.length > 0 ? contexts : (await fetchContexts(token)).items;
+      setUser(me);
+      setContexts(ctx);
+      const resolved = await resolveAuthPhase(token, me, ctx, {
+        policiesClear,
+      });
+      applyResolvedPhase(resolved);
+      return resolved.phase;
+    },
+    [applyResolvedPhase, contexts, user],
+  );
 
   const recordPolicyRead = useCallback(async (policyId: string, version: string) => {
     const token = getAccessToken();
@@ -393,7 +422,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         required: p.required,
       }));
       if (rows.length === 0) {
-        await refreshPolicyGate();
+        await refreshPolicyGate(true);
       }
       return rows;
     },
@@ -445,7 +474,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setContexts(ctx);
     setSessionUser(me);
     setSessionContexts(ctx);
-    await syncGate(token, me, ctx);
+    return syncGate(token, me, ctx);
   }, [contexts, syncGate]);
 
   const switchActiveContextHandler = useCallback(

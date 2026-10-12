@@ -10,6 +10,7 @@ import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { createBranch } from '../../../api/branches-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
+import { continueAfterGate } from '../../../shared/auth/auth-gate';
 import { ONBOARDING_SCREEN_IDS } from '../screen-ids';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -18,7 +19,7 @@ type Props = NativeStackScreenProps<
   'EmployerOnboardingBranch'
 >;
 
-export function EmployerOnboardingBranchScreen(_props: Props) {
+export function EmployerOnboardingBranchScreen({ navigation }: Props) {
   const { t } = useTranslation(['onboarding', 'common', 'errors']);
   const { completeOnboarding } = useAuth();
   const [name, setName] = useState('');
@@ -49,7 +50,7 @@ export function EmployerOnboardingBranchScreen(_props: Props) {
         },
         token,
       );
-      await completeOnboarding();
+      continueAfterGate(navigation, await completeOnboarding());
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
