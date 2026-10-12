@@ -16,17 +16,11 @@ export class FavoritesService {
       take: 200,
     });
 
+    const labels = await this.targetLabels(rows);
     const items = await Promise.all(
       rows.map(async (row) => {
-        const type = row.targetKind === 'worker_user' ? 'worker' : 'employer';
         const mutual = await this.isMutual(row);
-        return {
-          id: row.id,
-          type,
-          targetId: row.targetId,
-          mutual,
-          createdAt: row.createdAt.toISOString(),
-        };
+        return this.mapFavorite(row, mutual, labels.get(row.targetId) ?? null);
       }),
     );
 
@@ -76,7 +70,12 @@ export class FavoritesService {
         where: { ownerUserId: userId, targetKind: this.targetKind(body.type), targetId: body.id },
       });
       if (prior) {
-        return this.mapFavorite(prior, await this.isMutual(prior));
+        const labels = await this.targetLabels([prior]);
+        return this.mapFavorite(
+          prior,
+          await this.isMutual(prior),
+          labels.get(prior.targetId) ?? null,
+        );
       }
     }
 
@@ -122,7 +121,13 @@ export class FavoritesService {
         },
         update: {},
       });
-      return this.mapFavorite(row, await this.isMutual(row));
+      return this.mapFavorite(
+        row,
+        await this.isMutual(row),
+        [worker.workerProfile.firstName, worker.workerProfile.lastName]
+          .filter(Boolean)
+          .join(' ') || null,
+      );
     }
 
     if (ctx.role !== 'worker') {
@@ -157,7 +162,11 @@ export class FavoritesService {
       },
       update: {},
     });
-    return this.mapFavorite(row, await this.isMutual(row));
+    return this.mapFavorite(
+      row,
+      await this.isMutual(row),
+      employer.tradingName ?? employer.legalName,
+    );
   }
 
   async remove(userId: string, favoriteId: string) {
@@ -222,13 +231,51 @@ export class FavoritesService {
       createdAt: Date;
     },
     mutual: boolean,
+    targetLabel: string | null,
   ) {
     return {
       id: row.id,
       type: row.targetKind === 'worker_user' ? 'worker' : 'employer',
       targetId: row.targetId,
+      targetLabel,
       mutual,
       createdAt: row.createdAt.toISOString(),
     };
+  }
+
+  private async targetLabels(
+    rows: { targetKind: string; targetId: string }[],
+  ): Promise<Map<string, string>> {
+    const labels = new Map<string, string>();
+    const workerIds = rows
+      .filter((row) => row.targetKind === 'worker_user')
+      .map((row) => row.targetId);
+    const employerIds = rows
+      .filter((row) => row.targetKind === 'employer')
+      .map((row) => row.targetId);
+    if (workerIds.length > 0) {
+      const workers = await this.prisma.workerProfile.findMany({
+        where: { userId: { in: workerIds } },
+        select: { userId: true, firstName: true, lastName: true },
+      });
+      for (const worker of workers) {
+        const name = [worker.firstName, worker.lastName]
+          .filter(Boolean)
+          .join(' ');
+        if (name) {
+          labels.set(worker.userId, name);
+        }
+      }
+    }
+    if (employerIds.length > 0) {
+      const employers = await this.prisma.employer.findMany({
+        where: { id: { in: employerIds } },
+        select: { id: true, legalName: true, tradingName: true },
+      });
+      for (const employer of employers) {
+        labels.set(employer.id, employer.tradingName ?? employer.legalName);
+      }
+    }
+    return labels;
   }
 }

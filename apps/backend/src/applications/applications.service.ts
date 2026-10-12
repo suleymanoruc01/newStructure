@@ -26,6 +26,12 @@ import { intervalsOverlap } from './overlap.util.js';
 
 const ACTIVE_OVERLAP_STATUSES: ApplicationStatus[] = ['pending', 'accepted'];
 
+function jsonStrings(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
 @Injectable()
 export class ApplicationsService {
   constructor(
@@ -160,6 +166,13 @@ export class ApplicationsService {
       await this.favorites.favoredEmployerIdsForWorker(workerUserId, [
         job.employerId,
       ]);
+    if (job.favoritesOnly && !favoredEmployerIds.has(job.employerId)) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İlan bulunamadı.',
+      );
+    }
     const uploadedDocumentTypes =
       await this.workerDocuments.uploadedTypesForUser(workerUserId);
     const timeZone = await this.platform.timeZone();
@@ -284,6 +297,31 @@ export class ApplicationsService {
       return created;
     });
 
+    if (job.instantAutoApprove) {
+      const owner = await this.prisma.employerMembership.findFirst({
+        where: {
+          employerId: job.employerId,
+          role: 'owner',
+          status: 'active',
+        },
+      });
+      if (owner) {
+        try {
+          const accepted = await this.accept(
+            owner.userId,
+            { role: 'employer', employerId: job.employerId },
+            application.id,
+          );
+          return {
+            application: accepted,
+            overlapWarnings: overlaps.length > 0 ? overlaps : undefined,
+          };
+        } catch {
+          // Instant approve is best-effort; leave pending if overlap/headcount blocks.
+        }
+      }
+    }
+
     return {
       application: this.mapApplication(application),
       overlapWarnings: overlaps.length > 0 ? overlaps : undefined,
@@ -298,7 +336,7 @@ export class ApplicationsService {
     const rows = await this.prisma.application.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { job: true },
+      include: { job: { include: { branch: true } } },
     });
     return {
       items: rows.map((row) => ({
@@ -306,6 +344,10 @@ export class ApplicationsService {
         jobTitle: row.job.title,
         jobStartsAt: row.job.startsAt.toISOString(),
         jobEndsAt: row.job.endsAt.toISOString(),
+        branchName: row.job.branch.name,
+        payAmountMinor: row.job.payAmountMinor,
+        payCurrency: row.job.payCurrency,
+        amenities: jsonStrings(row.job.amenities),
       })),
     };
   }
@@ -364,6 +406,9 @@ export class ApplicationsService {
       jobStartsAt: row.job.startsAt.toISOString(),
       jobEndsAt: row.job.endsAt.toISOString(),
       branchName: row.job.branch.name,
+      payAmountMinor: row.job.payAmountMinor,
+      payCurrency: row.job.payCurrency,
+      amenities: jsonStrings(row.job.amenities),
     };
   }
 
@@ -414,7 +459,10 @@ export class ApplicationsService {
       );
     }
     await this.assertJobAccess(ctx, application.jobId);
-    this.assertTransition(application.status as ApplicationStatus, ['pending']);
+    this.assertTransition(application.status as ApplicationStatus, [
+      'pending',
+      'substitute',
+    ]);
 
     const overlapAccepted = await this.findAcceptedOverlaps(
       application.workerUserId,
@@ -533,7 +581,10 @@ export class ApplicationsService {
       );
     }
     await this.assertJobAccess(ctx, application.jobId);
-    this.assertTransition(application.status as ApplicationStatus, ['pending']);
+    this.assertTransition(application.status as ApplicationStatus, [
+      'pending',
+      'substitute',
+    ]);
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const app = await tx.application.update({
@@ -555,6 +606,76 @@ export class ApplicationsService {
           jobTitle: application.job.title ?? application.job.sectorCode,
         },
         data: { applicationId, jobId: application.jobId },
+      });
+      return app;
+    });
+    return this.mapApplication(updated);
+  }
+
+  async moveToSubstitute(
+    actorUserId: string,
+    ctx: AuthContext,
+    applicationId: string,
+  ) {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+    if (!application) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Başvuru bulunamadı.',
+      );
+    }
+    await this.assertJobAccess(ctx, application.jobId);
+    this.assertTransition(application.status as ApplicationStatus, ['pending']);
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const app = await tx.application.update({
+        where: { id: applicationId },
+        data: { status: 'substitute' },
+      });
+      await tx.applicationEvent.create({
+        data: {
+          applicationId,
+          eventType: 'substitute',
+          actorUserId,
+        },
+      });
+      return app;
+    });
+    return this.mapApplication(updated);
+  }
+
+  async removeSubstitute(
+    actorUserId: string,
+    ctx: AuthContext,
+    applicationId: string,
+  ) {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+    if (!application) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Başvuru bulunamadı.',
+      );
+    }
+    await this.assertJobAccess(ctx, application.jobId);
+    this.assertTransition(application.status as ApplicationStatus, [
+      'substitute',
+    ]);
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const app = await tx.application.update({
+        where: { id: applicationId },
+        data: { status: 'pending' },
+      });
+      await tx.applicationEvent.create({
+        data: {
+          applicationId,
+          eventType: 'substitute_removed',
+          actorUserId,
+        },
       });
       return app;
     });
@@ -638,6 +759,74 @@ export class ApplicationsService {
     }
 
     return this.mapApplication(updated);
+  }
+
+  async adminOverrideStatus(
+    actorUserId: string,
+    applicationId: string,
+    targetStatus: 'rejected' | 'accepted' | 'accept_revoked' | 'withdrawn',
+    requestId: string,
+  ) {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { job: true },
+    });
+    if (!application) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Başvuru bulunamadı.',
+      );
+    }
+    const employerCtx: AuthContext = {
+      role: 'employer',
+      employerId: application.job.employerId,
+    };
+    const idempotencyKey = `admin-app:${applicationId}:${requestId}`;
+
+    switch (targetStatus) {
+      case 'rejected':
+        return this.reject(actorUserId, employerCtx, applicationId);
+      case 'accepted':
+        return this.accept(
+          actorUserId,
+          employerCtx,
+          applicationId,
+          idempotencyKey,
+        );
+      case 'accept_revoked':
+        return this.revokeAccept(
+          actorUserId,
+          employerCtx,
+          applicationId,
+          idempotencyKey,
+        );
+      case 'withdrawn': {
+        this.assertTransition(application.status as ApplicationStatus, [
+          'pending',
+        ]);
+        const updated = await this.prisma.$transaction(async (tx) => {
+          const app = await tx.application.update({
+            where: { id: applicationId },
+            data: { status: 'withdrawn' },
+          });
+          await tx.applicationEvent.create({
+            data: {
+              applicationId,
+              eventType: 'withdrawn',
+              actorUserId,
+              metadata: { via: 'admin' },
+            },
+          });
+          return app;
+        });
+        return this.mapApplication(updated);
+      }
+      default: {
+        const _exhaustive: never = targetStatus;
+        throw _exhaustive;
+      }
+    }
   }
 
   private async assertJobAccess(ctx: AuthContext, jobId: string) {

@@ -1,10 +1,13 @@
 import {
   branchCreateBodySchema,
+  branchDetailResponseSchema,
   branchListResponseSchema,
+  branchPatchBodySchema,
   branchResponseSchema,
   managerJoinBodySchema,
   managerJoinResponseSchema,
   type BranchCreateBody,
+  type BranchPatchBody,
   type ManagerJoinBody,
 } from '@parton/api-contracts';
 
@@ -13,6 +16,25 @@ import type { ManagerJoinData } from './manager-api-types';
 
 export async function listBranches(accessToken: string) {
   return apiRequest('/branches', branchListResponseSchema, {
+    accessToken,
+  });
+}
+
+export async function getBranch(id: string, accessToken: string) {
+  return apiRequest(`/branches/${id}`, branchDetailResponseSchema, {
+    accessToken,
+  });
+}
+
+export async function patchBranch(
+  id: string,
+  body: BranchPatchBody,
+  accessToken: string,
+) {
+  branchPatchBodySchema.parse(body);
+  return apiRequest(`/branches/${id}`, branchResponseSchema, {
+    method: 'PATCH',
+    body,
     accessToken,
   });
 }

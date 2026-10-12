@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { WizardSteps } from '../../../components/ui/WizardSteps';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
@@ -48,9 +50,20 @@ export function ManagerOnboardingJoinScreen({ navigation }: Props) {
   return (
     <ModulePage title={t('onboarding:manager.title')} testID={ONBOARDING_SCREEN_IDS.managerJoin} scroll>
       
+      <WizardSteps step={1} total={1} />
       <Text className="font-sans mt-2 text-base text-text-medium">
         {t('onboarding:manager.subtitle')}
       </Text>
+      <View className="mt-3">
+        <StatusBadge
+          label={
+            code.trim().length >= 6
+              ? t('onboarding:manager.submit')
+              : t('onboarding:manager.codeLabel')
+          }
+          tone={code.trim().length >= 6 ? 'strong' : 'warn'}
+        />
+      </View>
       <View className="mt-6">
         <TextField
           label={t('onboarding:manager.codeLabel')}

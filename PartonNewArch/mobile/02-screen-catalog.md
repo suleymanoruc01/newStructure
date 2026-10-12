@@ -1,7 +1,7 @@
 # 02 — Mobile screen catalog (index)
 
 **Status:** `accepted` (inventory must cover all catalog cases)  
-**Last updated:** 2026-10-09  
+**Last updated:** 2026-10-12  
 **Mandate:** [`../cases/03-ui-coverage-mandate.md`](../cases/03-ui-coverage-mandate.md) · **Components:** [`../shared/02-ui-components.md`](../shared/02-ui-components.md) · **UX layouts:** [`../shared/03-screen-ux-layout.md`](../shared/03-screen-ux-layout.md)
 
 Full inventory. Detail lives under [`screens/`](screens/). **Every** `CASE-*` feature needs a screen here and/or web/admin plus named components, a layout recipe (R1–R8), and one primary CTA.
@@ -82,6 +82,7 @@ Full inventory. Detail lives under [`screens/`](screens/). **Every** `CASE-*` fe
 | `m.employer.shift.manual-confirm` | Manual attendance confirm | P0 | T-134, T-213 |
 | `m.employer.ops.settings` | Ops settings | P2 | `CASE-EMPLOYER-BRANCH` |
 | `m.employer.favorites.workers` | Favorite workers | P1 | `CASE-FAVORITES` |
+| `m.employer.calendar.root` | Shift calendar | P1 | `CASE-CHECKIN`, `CASE-EMPLOYER-REVIEW` |
 | `m.employer.profile.root` | Employer profile tab | P0 | `CASE-EMPLOYER-BRANCH` |
 
 ## Manager
@@ -108,6 +109,7 @@ Full inventory. Detail lives under [`screens/`](screens/). **Every** `CASE-*` fe
 | `m.shared.profile.settings` | Account settings | P0 | `CASE-AUTH`, `CASE-SECURITY` |
 | `m.shared.auth.context-switch` | Switch role / membership | P0 | AS-3, multi-role |
 | `m.shared.abuse.report` | Report abuse | P1 | `CASE-ABUSE` |
+| `m.shared.support.request` | Contact support | P1 | Helpdesk intake |
 | `m.shared.system.maintenance` | Maintenance | P0 | `CASE-UX` |
 | `m.shared.system.restriction` | Restriction | P0 | `CASE-ABUSE`, `CASE-SECURITY` |
 | `m.shared.system.blocking` | Blocking status | P1 | `CASE-SECURITY` |

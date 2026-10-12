@@ -233,6 +233,28 @@ export class WorkerDocumentsService {
     return map.get(userId) ?? new Set();
   }
 
+  async adminDownloadUrl(documentId: string) {
+    const row = await this.prisma.workerDocument.findUnique({
+      where: { id: documentId },
+    });
+    if (!row || row.status !== 'uploaded') {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Belge bulunamadı.',
+      );
+    }
+    const expiresSeconds = 900;
+    const downloadUrl = await this.storage.presignedGetUrl(
+      row.storageKey,
+      expiresSeconds,
+    );
+    return {
+      downloadUrl,
+      expiresAt: new Date(Date.now() + expiresSeconds * 1000).toISOString(),
+    };
+  }
+
   private mapRow(row: {
     id: string;
     documentType: string;

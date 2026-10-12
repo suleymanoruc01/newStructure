@@ -58,7 +58,7 @@ Stack screens push above tabs: job detail, apply confirm, check-in, notification
 | Branches | `m.employer.branches.list` | Branch management |
 | Profile | `m.employer.profile.root` | Org profile, tokens, settings |
 
-Create-job wizard and applicants live as stacks from Jobs.
+Create-job wizard and applicants live as stacks from Jobs. Shift calendar (`m.employer.calendar.root`) is a stack from Home / Profile.
 
 ## Manager tabs
 

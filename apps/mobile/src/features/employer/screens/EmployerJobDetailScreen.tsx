@@ -1,17 +1,26 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import { statusLabelTr } from '@parton/api-contracts';
 import { useTranslation } from 'react-i18next';
 
-import { statusLabelTr } from '@parton/api-contracts';
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
+import { listJobApplications } from '../../../api/applications-api';
 import { fetchJobDetail, patchEmployerJob } from '../../../api/jobs-api';
+import { JobCard } from '../../../components/job/JobCard';
+import { JobFacts } from '../../../components/job/JobFacts';
+import { LocationMap } from '../../../components/map/LocationMap';
 import { Button } from '../../../components/ui/Button';
+import { Pressable } from '../../../components/ui/Pressable';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
-import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { formatPayTry } from '../../../shared/format/pay';
+import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
+import { type GeofenceRadii } from '../../../shared/location/geofence';
 import { confirmDestructive } from '../../../shared/ui/confirm-destructive';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerJobDetail'>;
@@ -22,8 +31,20 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState('');
   const [headcount, setHeadcount] = useState('');
+  const [job, setJob] = useState<Awaited<ReturnType<typeof fetchJobDetail>> | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [radii, setRadii] = useState<GeofenceRadii | null>(null);
+  const [applicantCounts, setApplicantCounts] = useState({
+    pending: 0,
+    accepted: 0,
+    substitute: 0,
+  });
+  const [pendingPreview, setPendingPreview] = useState<
+    Awaited<ReturnType<typeof listJobApplications>>['items']
+  >([]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -32,10 +53,30 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      const job = await fetchJobDetail(jobId, token);
-      setTitle(job.title ?? job.id);
-      setStatus(job.status);
-      setHeadcount(String(job.headcount));
+      const data = await fetchJobDetail(jobId, token);
+      setJob(data);
+      setTitle(data.title ?? data.id);
+      setStatus(data.status);
+      setHeadcount(String(data.headcount));
+      let apps: Awaited<ReturnType<typeof listJobApplications>>;
+      try {
+        apps = await listJobApplications(jobId, token);
+      } catch (err) {
+        if (err instanceof ApiClientError && err.status === 403) {
+          apps = { items: [] };
+        } else {
+          throw err;
+        }
+      }
+      setApplicantCounts({
+        pending: apps.items.filter((row) => row.status === 'pending').length,
+        accepted: apps.items.filter((row) => row.status === 'accepted').length,
+        substitute: apps.items.filter((row) => row.status === 'substitute')
+          .length,
+      });
+      setPendingPreview(
+        apps.items.filter((row) => row.status === 'pending'),
+      );
     } catch (err) {
       setError(formErrorMessage(err, t));
     }
@@ -44,6 +85,10 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void loadGeofenceRadii().then(setRadii);
+  }, []);
 
   const saveHeadcount = async () => {
     const parsed = Number.parseInt(headcount, 10);
@@ -103,18 +148,162 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
 
   return (
     <ModulePage title={title} testID="m.employer.jobs.detail" scroll>
-      
-      <Text className="font-sans mt-2 text-sm text-text-medium">
-        {statusLabelTr(status)}
-      </Text>
+      {!job && !error ? (
+        <View className="mt-4">
+          <SkeletonList rows={2} />
+        </View>
+      ) : null}
+      {job ? (
+        <View className="mt-3">
+          <StatStrip
+            items={[
+              {
+                label: t('employer:home.statSeats'),
+                value: String(job.remainingHeadcount),
+              },
+              {
+                label: t('employer:jobs.headcount'),
+                value: String(job.headcount),
+              },
+              ...(formatPayTry(job.payAmountMinor, job.payCurrency)
+                ? [
+                    {
+                      label: t('employer:jobs.pay'),
+                      value: formatPayTry(job.payAmountMinor, job.payCurrency)!,
+                    },
+                  ]
+                : []),
+              {
+                label: statusLabelTr('pending'),
+                value: String(applicantCounts.pending),
+              },
+              {
+                label: statusLabelTr('accepted'),
+                value: String(applicantCounts.accepted),
+              },
+              {
+                label: statusLabelTr('substitute'),
+                value: String(applicantCounts.substitute),
+              },
+            ]}
+          />
+        </View>
+      ) : null}
+      {job ? (
+        <View className="mt-3">
+          <JobCard status={status || undefined} title={job.title ?? job.branchName ?? job.id}>
+            <JobFacts
+              branchName={job.branchName}
+              startsAt={job.startsAt}
+              endsAt={job.endsAt}
+              payAmountMinor={job.payAmountMinor}
+              payCurrency={job.payCurrency}
+              headcount={job.headcount}
+              remainingHeadcount={job.remainingHeadcount}
+              favoritesOnly={job.favoritesOnly}
+              instantAutoApprove={job.instantAutoApprove}
+              requiredDocumentTypes={job.requiredDocumentTypes}
+              amenities={job.amenities}
+              notes={job.notes}
+            />
+          </JobCard>
+        </View>
+      ) : null}
+      {job?.branchLatitude != null && job.branchLongitude != null ? (
+        <View className="mt-4">
+          <LocationMap
+            pin={{
+              latitude: job.branchLatitude,
+              longitude: job.branchLongitude,
+            }}
+            pinLabel={job.branchName}
+            radiusM={radii?.radiusM}
+            softRadiusM={radii?.softRadiusM}
+          />
+        </View>
+      ) : null}
       {published ? (
         <View className="mt-6 gap-3">
-          <TextField
-            label={t('employer:jobs.headcount')}
-            value={headcount}
-            onChangeText={setHeadcount}
-            keyboardType="number-pad"
+          <View className="flex-row flex-wrap gap-2">
+            {(
+              [
+                ['pending', applicantCounts.pending],
+                ['accepted', applicantCounts.accepted],
+                ['substitute', applicantCounts.substitute],
+              ] as const
+            ).map(([value, count]) => (
+              <Pressable
+                key={value}
+                className="rounded-full bg-surface-1 px-3 py-2"
+                onPress={() =>
+                  navigation.navigate('EmployerApplicants', {
+                    jobId,
+                    jobTitle: title,
+                    filter: value,
+                  })
+                }
+              >
+                <Text className="font-sans text-sm text-text-high">
+                  {statusLabelTr(value)} · {count}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          {pendingPreview.map((item) => {
+            const name =
+              item.workerDisplayName ??
+              `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`.trim();
+            return (
+              <JobCard
+                key={item.id}
+                status={item.status}
+                title={name || t('employer:applicants.detailTitle')}
+                onPress={() =>
+                  navigation.navigate('EmployerApplicantDetail', {
+                    applicationId: item.id,
+                    jobTitle: title,
+                  })
+                }
+              />
+            );
+          })}
+          <Button
+            label={t('employer:jobs.applicants')}
+            onPress={() =>
+              navigation.navigate('EmployerApplicants', {
+                jobId,
+                jobTitle: title,
+              })
+            }
           />
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.headcount')}
+          </Text>
+          <View className="flex-row items-center gap-3">
+            <Pressable
+              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              onPress={() =>
+                setHeadcount(
+                  String(Math.max(1, (Number.parseInt(headcount, 10) || 1) - 1)),
+                )
+              }
+            >
+              <Text className="font-sans text-lg text-text-high">−</Text>
+            </Pressable>
+            <Text className="font-display text-xl font-semibold text-text-high">
+              {Number.parseInt(headcount, 10) || 1}
+            </Text>
+            <Pressable
+              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              onPress={() =>
+                setHeadcount(
+                  String((Number.parseInt(headcount, 10) || 1) + 1),
+                )
+              }
+            >
+              <Text className="font-sans text-lg text-text-high">+</Text>
+            </Pressable>
+          </View>
           {error ? (
             <Text className="font-sans text-sm text-feedback-error">{error}</Text>
           ) : null}
@@ -124,6 +313,7 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
                 ? t('common:loading')
                 : t('employer:jobs.detail.saveHeadcount')
             }
+            variant="secondary"
             onPress={() => void saveHeadcount()}
             disabled={submitting}
           />
@@ -132,16 +322,6 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
             variant="destructive"
             onPress={() => void closeJob()}
             disabled={submitting}
-          />
-          <Button
-            label={t('employer:jobs.applicants')}
-            variant="secondary"
-            onPress={() =>
-              navigation.navigate('EmployerApplicants', {
-                jobId,
-                jobTitle: title,
-              })
-            }
           />
         </View>
       ) : (

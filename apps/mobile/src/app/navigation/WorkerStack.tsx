@@ -4,6 +4,7 @@ import React from 'react';
 
 import { DockTabBar, useDockItems } from '../../components/ui/RoleDock';
 import { SharedAbuseReportScreen } from '../../features/shared/screens/SharedAbuseReportScreen';
+import { SharedSupportRequestScreen } from '../../features/shared/screens/SharedSupportRequestScreen';
 import { SharedNotificationDetailScreen } from '../../features/shared/screens/SharedNotificationDetailScreen';
 import { SharedNotificationPrefsScreen } from '../../features/shared/screens/SharedNotificationPrefsScreen';
 import { SharedNotificationsListScreen } from '../../features/shared/screens/SharedNotificationsListScreen';
@@ -21,11 +22,16 @@ import { WorkerJobDetailScreen } from '../../features/worker/screens/WorkerJobDe
 import { WorkerJobsListScreen } from '../../features/worker/screens/WorkerJobsListScreen';
 import { WorkerProfileEditScreen } from '../../features/worker/screens/WorkerProfileEditScreen';
 import { WorkerProfileRootScreen } from '../../features/worker/screens/WorkerProfileRootScreen';
+import { SharedAccountEmailScreen } from '../../features/shared/screens/SharedAccountEmailScreen';
+import { SharedJobProcessScreen } from '../../features/shared/screens/SharedJobProcessScreen';
+import { SharedSettingsScreen } from '../../features/shared/screens/SharedSettingsScreen';
 import { WorkerShiftAvailabilityScreen } from '../../features/worker/screens/WorkerShiftAvailabilityScreen';
 import { WorkerShiftCheckInScreen } from '../../features/worker/screens/WorkerShiftCheckInScreen';
 import { WorkerShiftCheckOutScreen } from '../../features/worker/screens/WorkerShiftCheckOutScreen';
 import { WorkerShiftDisputeScreen } from '../../features/worker/screens/WorkerShiftDisputeScreen';
 import { WorkerShiftInShiftScreen } from '../../features/worker/screens/WorkerShiftInShiftScreen';
+import { WorkerShiftPrepScreen } from '../../features/worker/screens/WorkerShiftPrepScreen';
+import { WorkerRevenueScreen } from '../../features/worker/screens/WorkerRevenueScreen';
 import { WORKER_SCREEN_TAB } from './dock-routes';
 import type { WorkerStackParamList } from './worker-types';
 
@@ -56,6 +62,11 @@ function WorkerShiftScreens({
         component={WorkerShiftAvailabilityScreen}
         name="WorkerShiftAvailability"
         options={{ title: '3 saat teyidi' }}
+      />
+      <Stack.Screen
+        component={WorkerShiftPrepScreen}
+        name="WorkerShiftPrep"
+        options={{ title: 'Hazırlık' }}
       />
       <Stack.Screen
         component={WorkerShiftCheckInScreen}
@@ -185,6 +196,26 @@ function WorkerProfileNavigator() {
         options={{ title: 'Başvurularım' }}
       />
       <ProfileStack.Screen
+        component={SharedJobProcessScreen}
+        name="SharedJobProcess"
+        options={{ title: 'Süreç' }}
+      />
+      <ProfileStack.Screen
+        component={WorkerRevenueScreen}
+        name="WorkerRevenue"
+        options={{ title: 'Kazanç' }}
+      />
+      <ProfileStack.Screen
+        component={SharedSettingsScreen}
+        name="SharedSettings"
+        options={{ title: 'Hesap' }}
+      />
+      <ProfileStack.Screen
+        component={SharedAccountEmailScreen}
+        name="SharedAccountEmail"
+        options={{ title: 'E-posta' }}
+      />
+      <ProfileStack.Screen
         component={WorkerFavoritesListScreen}
         name="WorkerFavoritesList"
         options={{ title: 'Favoriler' }}
@@ -203,6 +234,11 @@ function WorkerProfileNavigator() {
         component={SharedAbuseReportScreen}
         name="SharedAbuseReport"
         options={{ title: 'Şikayet' }}
+      />
+      <ProfileStack.Screen
+        component={SharedSupportRequestScreen}
+        name="SharedSupportRequest"
+        options={{ title: 'Destek' }}
       />
       <ProfileStack.Screen
         component={SharedRatingsPendingScreen}

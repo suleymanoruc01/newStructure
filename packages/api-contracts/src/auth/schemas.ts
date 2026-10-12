@@ -82,6 +82,9 @@ export const meUserSchema = z.object({
   id: z.string().uuid(),
   phone: z.string(),
   locale: z.string().optional(),
+  email: z.string().nullable().optional(),
+  status: z.enum(['active', 'restricted', 'banned']).optional(),
+  deletionRequestedAt: z.string().datetime().nullable().optional(),
   roles: z.array(userRoleSchema),
 });
 
@@ -182,7 +185,14 @@ export type MeResponse = z.infer<typeof meResponseSchema>;
 
 export const mePatchBodySchema = z.object({
   locale: z.string().min(2).max(10).optional(),
+  email: z.string().trim().toLowerCase().pipe(z.email()).nullable().optional(),
 });
+
+export const meDeletionRequestBodySchema = z.object({
+  reason: z.string().trim().max(2000).optional(),
+});
+
+export type MeDeletionRequestBody = z.infer<typeof meDeletionRequestBodySchema>;
 
 export type MePatchBody = z.infer<typeof mePatchBodySchema>;
 

@@ -1,6 +1,7 @@
 {
   "appName": "PartOn",
   "continue": "Devam",
+  "step": "Adım {{current}} / {{total}}",
   "back": "Geri",
   "skip": "Atla",
   "retry": "Tekrar dene",
@@ -8,12 +9,19 @@
   "cancel": "İptal",
   "refresh": "Yenile",
   "networkError": "Bağlantı hatası. Lütfen tekrar deneyin.",
+  "noMatch": "Eşleşen yok.",
   "maintenance": "PartOn bakım modunda. Lütfen biraz sonra tekrar deneyin.",
   "forceUpdate": "Uygulamanızı güncellemeniz gerekiyor. Mağazadan en son sürümü yükleyin.",
   "yes": "Evet",
   "no": "Hayır",
   "signOut": "Çıkış",
   "signOutBody": "Oturum kapanır. İstediğiniz zaman yeniden giriş yapabilirsiniz.",
+  "map": {
+    "useMyLocation": "Konumumu kullan",
+    "tapToPin": "Haritaya dokunarak pin koyun",
+    "openSettings": "Konum iznini aç",
+    "expand": "Haritayı aç"
+  },
   "dock": {
     "home": "Ana sayfa",
     "jobs": "İlanlar",

@@ -45,7 +45,7 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>PartOn, vardiya check-in doğrulaması ve şube/ev pin seçimi için konumunuzu kullanır. Arka planda takip yapılmaz.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

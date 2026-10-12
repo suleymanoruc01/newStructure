@@ -7,9 +7,10 @@ describe('permission moment', () => {
     expect(mayRequestNotifications('inbox')).toBe(true);
   });
 
-  it('asks for location only at check-in', () => {
+  it('asks for location at check-in and pin pick, never at launch', () => {
     expect(mayRequestLocation('launch')).toBe(false);
     expect(mayRequestLocation('inbox')).toBe(false);
     expect(mayRequestLocation('check-in')).toBe(true);
+    expect(mayRequestLocation('pin-pick')).toBe(true);
   });
 });

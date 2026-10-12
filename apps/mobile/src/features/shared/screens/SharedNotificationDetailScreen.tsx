@@ -2,8 +2,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { Notification } from '@parton/api-contracts';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Text } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -16,7 +15,13 @@ import {
   fetchNotification,
   markNotificationRead,
 } from '../../../api/notifications-api';
+import { JobCard } from '../../../components/job/JobCard';
+import { Button } from '../../../components/ui/Button';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { notificationTypeLabel } from '../../../shared/notifications/type-label';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type DetailNav = {
@@ -32,6 +37,7 @@ type Props = {
 
 export function SharedNotificationDetailScreen({ navigation, route }: Props) {
   const { t } = useTranslation(['system', 'common', 'errors']);
+  const zone = useDisplayTimeZone();
   const [item, setItem] = useState<Notification | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,22 +82,42 @@ export function SharedNotificationDetailScreen({ navigation, route }: Props) {
     <ModulePage title={item?.title ?? t('system:notifications.title')} testID="m.shared.notifications.detail" scroll>
       {item ? (
         <>
-          
-          <Text className="font-sans mt-3 text-base text-text-medium">{item.body}</Text>
-          {chosen ? (
-            <Pressable
-              accessibilityRole="button"
-              className="mt-8 rounded-lg bg-action-primary px-4 py-3"
-              onPress={openTarget}
-            >
-              <Text className="font-sans text-center text-base font-semibold text-text-on">
-                {t('system:notifications.openTarget')}
+          <View className="mt-2 flex-row flex-wrap gap-2">
+            <StatusBadge
+              label={
+                item.readAt
+                  ? t('system:notifications.read')
+                  : t('system:notifications.unread')
+              }
+              tone={item.readAt ? 'neutral' : 'warn'}
+            />
+            <StatusBadge
+              label={notificationTypeLabel(item.type)}
+              tone="neutral"
+            />
+          </View>
+          <View className="mt-3">
+            <JobCard title={item.title}>
+              <Text className="font-sans text-base text-text-medium">
+                {item.body}
               </Text>
-            </Pressable>
+              <Text className="font-sans mt-2 text-xs text-text-low">
+                {formatIstanbul(item.createdAt, zone)}
+              </Text>
+            </JobCard>
+          </View>
+          {chosen ? (
+            <Button
+              className="mt-8"
+              label={t('system:notifications.openTarget')}
+              onPress={openTarget}
+            />
           ) : null}
         </>
       ) : (
-        <Text className="font-sans text-text-medium">{t('common:loading')}</Text>
+        <View className="mt-4">
+          <SkeletonList rows={2} />
+        </View>
       )}
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>

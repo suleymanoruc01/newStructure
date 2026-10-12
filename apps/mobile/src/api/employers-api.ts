@@ -1,4 +1,5 @@
 import {
+  employerCalendarResponseSchema,
   employerCreateBodySchema,
   employerCreateResponseSchema,
   employerPatchBodySchema,
@@ -43,6 +44,25 @@ export async function fetchEmployerSetupStatus(accessToken: string) {
   return apiRequest(
     '/employers/me/setup-status',
     employerSetupStatusResponseSchema,
+    { accessToken },
+  );
+}
+
+export async function fetchEmployerCalendar(
+  accessToken: string,
+  range?: { from?: string; to?: string },
+) {
+  const params = new URLSearchParams();
+  if (range?.from) {
+    params.set('from', range.from);
+  }
+  if (range?.to) {
+    params.set('to', range.to);
+  }
+  const query = params.toString();
+  return apiRequest(
+    `/employers/me/calendar${query ? `?${query}` : ''}`,
+    employerCalendarResponseSchema,
     { accessToken },
   );
 }

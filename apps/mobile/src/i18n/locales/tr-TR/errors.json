@@ -6,6 +6,8 @@
   "UNAUTHORIZED": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
   "SESSION_EXPIRED": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
   "FORBIDDEN": "Bu işlem için yetkiniz yok.",
+  "SUBSCRIPTION_LIMIT_REACHED": "Abonelik planı limitine ulaşıldı.",
+  "SUPPORT_TICKET_CLOSED": "Bu destek talebi kapalı.",
   "NOT_FOUND": "Kayıt bulunamadı.",
   "INTERNAL_ERROR": "Beklenmeyen bir hata oluştu.",
   "TOKEN_INSUFFICIENT": "Yetersiz jeton bakiyesi.",
@@ -31,5 +33,10 @@
   "IDENTITY_TOKEN_INVALID": "Kimlik doğrulanamadı.",
   "IDENTITY_NOT_CONFIGURED": "Bu giriş yöntemi henüz yapılandırılmadı.",
   "POLICY_READ_REQUIRED": "Bu metnin sonuna kadar okumadan onaylayamazsınız.",
-  "POLICY_VERSION_STALE": "Metin güncellendi. Güncel sürümü onaylayın."
+  "POLICY_VERSION_STALE": "Metin güncellendi. Güncel sürümü onaylayın.",
+  "JOB_CATALOG_INVALID": "Seçilen sektör veya meslek katalogda yok.",
+  "ACCOUNT_RESTRICTED": "Hesabınız kısıtlandı.",
+  "ACCOUNT_BANNED": "Hesap erişime kapalı.",
+  "INVALID_DOCUMENT": "Desteklenmeyen belge formatı.",
+  "DOCUMENT_TOO_LARGE": "Belge boyutu limiti aşıldı."
 }

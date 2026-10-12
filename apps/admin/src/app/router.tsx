@@ -1,14 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AdminLayout } from "@/components/admin-layout";
 import { useAuth } from "@/features/auth/auth-context";
-import {
-  AbuseResolveControl,
-  EmployerControls,
-  JobForceCloseControl,
-  RatingModerationControl,
-  UserStatusControl,
-} from "@/routes/admin-controls";
-import { AdminDetailRoute } from "@/routes/admin-detail-route";
 import { AdminListRoute } from "@/routes/admin-list-route";
 import { DashboardPage } from "@/routes/dashboard-page";
 import { DevopsErrorsListPage } from "@/routes/devops-errors-list-page";
@@ -23,8 +15,26 @@ import {
   MatchingDiagnosticsPage,
   PerfMetricsPage,
   RemoteConfigPage,
+  SupportTicketDetailPage,
 } from "@/routes/ops-special-pages";
+import {
+  AbuseDetailPage,
+  ApplicationDetailPage,
+  DisputeDetailPage,
+  DocumentDetailPage,
+  EmployerDetailPage,
+  JobDetailPage,
+  RatingDetailPage,
+  ShiftDetailPage,
+  UserDetailPage,
+  WorkerDetailPage,
+} from "@/routes/ops-entity-pages";
 import { PoliciesManagePage } from "@/routes/policies-manage-page";
+import { SubscriptionsManagePage } from "@/routes/subscriptions-manage-page";
+import { CatalogManagePage } from "@/routes/catalog-manage-page";
+import { TokenPackagesManagePage } from "@/routes/token-packages-manage-page";
+import { BranchesManagePage } from "@/routes/branches-manage-page";
+import { BranchDetailPage } from "@/routes/branch-detail-page";
 import { ProtectedRoute } from "@/routes/protected-route";
 
 function LoginRoute() {
@@ -63,25 +73,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="users/:id"
-            element={
-              <AdminDetailRoute
-                title="Kullanıcı detayı"
-                screenId="w.admin.users.detail"
-                buildPath={(id) => `/admin/users/${id}`}
-                controls={(data, reload) =>
-                  typeof data.id === "string" ? (
-                    <UserStatusControl
-                      userId={data.id}
-                      status={typeof data.status === "string" ? data.status : "active"}
-                      onDone={reload}
-                    />
-                  ) : null
-                }
-              />
-            }
-          />
+          <Route path="users/:id" element={<UserDetailPage />} />
           <Route
             path="workers"
             element={
@@ -93,16 +85,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="workers/:id"
-            element={
-              <AdminDetailRoute
-                title="İş arayan detayı"
-                screenId="w.admin.workers.detail"
-                buildPath={(id) => `/admin/workers/${id}`}
-              />
-            }
-          />
+          <Route path="workers/:id" element={<WorkerDetailPage />} />
           <Route
             path="employers"
             element={
@@ -114,47 +97,9 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="employers/:id"
-            element={
-              <AdminDetailRoute
-                title="İşveren detayı"
-                screenId="w.admin.employers.detail"
-                buildPath={(id) => `/admin/employers/${id}`}
-                controls={(data, reload) => {
-                  const employer = data.employer;
-                  if (!employer || typeof employer !== "object") {
-                    return null;
-                  }
-                  const record = employer as Record<string, unknown>;
-                  if (typeof record.id !== "string") {
-                    return null;
-                  }
-                  return (
-                    <EmployerControls
-                      employerId={record.id}
-                      verificationStatus={
-                        typeof record.verificationStatus === "string"
-                          ? record.verificationStatus
-                          : "pending"
-                      }
-                      onDone={reload}
-                    />
-                  );
-                }}
-              />
-            }
-          />
-          <Route
-            path="branches"
-            element={
-              <AdminListRoute
-                title="Şubeler"
-                screenId="w.admin.branches.list"
-                apiPath="/admin/branches"
-              />
-            }
-          />
+          <Route path="employers/:id" element={<EmployerDetailPage />} />
+          <Route path="branches" element={<BranchesManagePage />} />
+          <Route path="branches/:id" element={<BranchDetailPage />} />
           <Route
             path="verification"
             element={
@@ -177,31 +122,8 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="jobs/:id"
-            element={
-              <AdminDetailRoute
-                title="İlan detayı"
-                screenId="w.admin.jobs.detail"
-                buildPath={(id) => `/admin/jobs/${id}`}
-                controls={(data, reload) =>
-                  typeof data.id === "string" ? (
-                    <JobForceCloseControl jobId={data.id} onDone={reload} />
-                  ) : null
-                }
-              />
-            }
-          />
-          <Route
-            path="catalog"
-            element={
-              <AdminListRoute
-                title="Katalog"
-                screenId="w.admin.catalog.manage"
-                apiPath="/admin/catalog"
-              />
-            }
-          />
+          <Route path="jobs/:id" element={<JobDetailPage />} />
+          <Route path="catalog" element={<CatalogManagePage />} />
           <Route
             path="applications"
             element={
@@ -213,16 +135,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="applications/:id"
-            element={
-              <AdminDetailRoute
-                title="Başvuru detayı"
-                screenId="w.admin.applications.detail"
-                buildPath={(id) => `/admin/applications/${id}`}
-              />
-            }
-          />
+          <Route path="applications/:id" element={<ApplicationDetailPage />} />
           <Route path="matching/diagnostics" element={<MatchingDiagnosticsPage />} />
           <Route
             path="shifts"
@@ -235,16 +148,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="shifts/:id"
-            element={
-              <AdminDetailRoute
-                title="Vardiya detayı"
-                screenId="w.admin.shifts.detail"
-                buildPath={(id) => `/admin/shifts/${id}`}
-              />
-            }
-          />
+          <Route path="shifts/:id" element={<ShiftDetailPage />} />
           <Route
             path="disputes"
             element={
@@ -252,9 +156,11 @@ export function AppRouter() {
                 title="Uyuşmazlıklar"
                 screenId="w.admin.disputes.queue"
                 apiPath="/admin/disputes"
+                linkBase="/disputes"
               />
             }
           />
+          <Route path="disputes/:id" element={<DisputeDetailPage />} />
           <Route
             path="tokens/ledger"
             element={
@@ -265,6 +171,7 @@ export function AppRouter() {
               />
             }
           />
+          <Route path="tokens/packages" element={<TokenPackagesManagePage />} />
           <Route
             path="ratings"
             element={
@@ -276,29 +183,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="ratings/:id"
-            element={
-              <AdminDetailRoute
-                title="Puan detayı"
-                screenId="w.admin.ratings.detail"
-                buildPath={(id) => `/admin/ratings/${id}`}
-                controls={(data, reload) =>
-                  typeof data.id === "string" ? (
-                    <RatingModerationControl
-                      ratingId={data.id}
-                      moderationStatus={
-                        typeof data.moderationStatus === "string"
-                          ? data.moderationStatus
-                          : "visible"
-                      }
-                      onDone={reload}
-                    />
-                  ) : null
-                }
-              />
-            }
-          />
+          <Route path="ratings/:id" element={<RatingDetailPage />} />
           <Route
             path="notifications/outbox"
             element={
@@ -317,9 +202,11 @@ export function AppRouter() {
                 title="Belge kuyruğu"
                 screenId="w.admin.documents.queue"
                 apiPath="/admin/documents"
+                linkBase="/documents"
               />
             }
           />
+          <Route path="documents/:id" element={<DocumentDetailPage />} />
           <Route
             path="abuse"
             element={
@@ -331,25 +218,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="abuse/:id"
-            element={
-              <AdminDetailRoute
-                title="Kötüye kullanım detayı"
-                screenId="w.admin.abuse.detail"
-                buildPath={(id) => `/admin/abuse-reports/${id}`}
-                controls={(data, reload) =>
-                  typeof data.id === "string" ? (
-                    <AbuseResolveControl
-                      reportId={data.id}
-                      status={typeof data.status === "string" ? data.status : "open"}
-                      onDone={reload}
-                    />
-                  ) : null
-                }
-              />
-            }
-          />
+          <Route path="abuse/:id" element={<AbuseDetailPage />} />
           <Route
             path="risk"
             element={
@@ -360,6 +229,19 @@ export function AppRouter() {
               />
             }
           />
+          <Route path="subscriptions" element={<SubscriptionsManagePage />} />
+          <Route
+            path="support"
+            element={
+              <AdminListRoute
+                title="Destek talepleri"
+                screenId="w.admin.support.list"
+                apiPath="/admin/support/tickets"
+                linkBase="/support"
+              />
+            }
+          />
+          <Route path="support/:id" element={<SupportTicketDetailPage />} />
           <Route path="policies" element={<PoliciesManagePage />} />
           <Route path="config" element={<RemoteConfigPage />} />
           <Route

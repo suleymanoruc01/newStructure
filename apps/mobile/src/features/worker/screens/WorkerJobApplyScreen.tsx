@@ -1,13 +1,17 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Text } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { applyToJob } from '../../../api/applications-api';
 import { ApiClientError } from '../../../api/client';
 import { fetchJobDetail } from '../../../api/jobs-api';
+import { JobCard } from '../../../components/job/JobCard';
+import { JobFacts } from '../../../components/job/JobFacts';
+import { Button } from '../../../components/ui/Button';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import {
   OverlapConflictCard,
@@ -38,7 +42,9 @@ export function WorkerJobApplyScreen({ route, navigation }: Props) {
   const [overlapAck, setOverlapAck] = useState(false);
   const [conflicts, setConflicts] = useState<OverlapConflict[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [title, setTitle] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Awaited<
+    ReturnType<typeof fetchJobDetail>
+  > | null>(null);
 
   React.useEffect(() => {
     void (async () => {
@@ -46,8 +52,7 @@ export function WorkerJobApplyScreen({ route, navigation }: Props) {
       if (!token) {
         return;
       }
-      const detail = await fetchJobDetail(jobId, token);
-      setTitle(detail.title ?? detail.branchName ?? null);
+      setDetail(await fetchJobDetail(jobId, token));
     })();
   }, [jobId]);
 
@@ -86,8 +91,44 @@ export function WorkerJobApplyScreen({ route, navigation }: Props) {
   return (
     <ModulePage title={t('worker:apply.title')} testID="m.worker.jobs.apply-confirm" scroll>
       
-      {title ? (
-        <Text className="font-sans mt-2 text-base text-text-medium">{title}</Text>
+      {!detail && !error ? (
+        <View className="mt-4">
+          <SkeletonList rows={2} />
+        </View>
+      ) : null}
+      {detail ? (
+        <View className="mt-2">
+          <JobCard
+            title={detail.title ?? detail.branchName ?? t('worker:jobs.untitled')}
+          >
+            {detail.eligibility ? (
+              <View className="mb-2">
+                <StatusBadge
+                  label={
+                    detail.eligibility.eligible
+                      ? t('worker:jobs.eligible')
+                      : t('worker:jobs.notEligible')
+                  }
+                  tone={detail.eligibility.eligible ? 'strong' : 'error'}
+                />
+              </View>
+            ) : null}
+            <JobFacts
+              branchName={detail.branchName}
+              startsAt={detail.startsAt}
+              endsAt={detail.endsAt}
+              payAmountMinor={detail.payAmountMinor}
+              payCurrency={detail.payCurrency}
+              distanceKm={detail.distanceKm}
+              headcount={detail.headcount}
+              remainingHeadcount={detail.remainingHeadcount}
+              favoritesOnly={detail.favoritesOnly}
+              instantAutoApprove={detail.instantAutoApprove}
+              requiredDocumentTypes={detail.requiredDocumentTypes}
+              amenities={detail.amenities}
+            />
+          </JobCard>
+        </View>
       ) : null}
       {overlapAck ? (
         <OverlapConflictCard conflicts={conflicts} />
@@ -95,20 +136,19 @@ export function WorkerJobApplyScreen({ route, navigation }: Props) {
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <Pressable
-        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
+      <Button
+        className="mt-8"
         disabled={submitting}
-        onPress={() => void onConfirm()}
-        testID="ApplyConfirmSheet"
-      >
-        <Text className="font-sans text-center text-base font-semibold text-text-on">
-          {submitting
+        label={
+          submitting
             ? t('common:loading')
             : overlapAck
               ? t('worker:apply.confirmDespiteOverlap')
-              : t('worker:apply.confirm')}
-        </Text>
-      </Pressable>
+              : t('worker:apply.confirm')
+        }
+        onPress={() => void onConfirm()}
+        testID="ApplyConfirmSheet"
+      />
     </ModulePage>
   );
 }

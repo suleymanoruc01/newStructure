@@ -1,12 +1,17 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
-import { Text } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
+import React, { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkerStackParamList } from '../../../app/navigation/worker-types';
 import { ApiClientError } from '../../../api/client';
-import { createShiftDispute } from '../../../api/shifts-api';
+import { createShiftDispute, fetchShift } from '../../../api/shifts-api';
+import { JobCard } from '../../../components/job/JobCard';
+import { ShiftFacts } from '../../../components/job/ShiftFacts';
+import { Button } from '../../../components/ui/Button';
+import { Pressable } from '../../../components/ui/Pressable';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
@@ -19,6 +24,19 @@ export function WorkerShiftDisputeScreen({ route, navigation }: Props) {
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [shift, setShift] = useState<Awaited<
+    ReturnType<typeof fetchShift>
+  > | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      const token = getAccessToken();
+      if (!token) {
+        return;
+      }
+      setShift(await fetchShift(shiftId, token));
+    })();
+  }, [shiftId]);
 
   const onSubmit = async () => {
     const trimmed = note.trim();
@@ -52,6 +70,61 @@ export function WorkerShiftDisputeScreen({ route, navigation }: Props) {
       <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:dispute.lead')}
       </Text>
+      {shift ? (
+        <View className="mt-3">
+          <JobCard
+            status={shift.status}
+            title={shift.jobTitle ?? shift.branchName ?? t('worker:jobs.untitled')}
+          >
+            <ShiftFacts shift={shift} />
+          </JobCard>
+        </View>
+      ) : null}
+      <View className="mt-3 flex-row flex-wrap gap-2">
+        {(
+          [
+            t('worker:dispute.chipGeofence'),
+            t('worker:dispute.chipGps'),
+            t('worker:dispute.chipLate'),
+          ] as const
+        ).map((label) => (
+          <Pressable
+            key={label}
+            className={`rounded-full px-3 py-2 ${
+              note === label ? 'bg-action-primary' : 'bg-surface-1'
+            }`}
+            onPress={() => setNote(label)}
+          >
+            <Text
+              className={`font-sans text-sm ${
+                note === label ? 'text-text-on' : 'text-text-high'
+              }`}
+            >
+              {label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <View className="mt-3">
+        <StatStrip
+          items={[
+            {
+              label: t('worker:dispute.noteLabel'),
+              value: String(note.trim().length),
+            },
+          ]}
+        />
+      </View>
+      <View className="mt-3">
+        <StatusBadge
+          label={
+            note.trim().length >= 10
+              ? t('worker:dispute.submit')
+              : t('worker:dispute.noteTooShort')
+          }
+          tone={note.trim().length >= 10 ? 'strong' : 'warn'}
+        />
+      </View>
       <TextField
         label={t('worker:dispute.noteLabel')}
         multiline
@@ -62,16 +135,13 @@ export function WorkerShiftDisputeScreen({ route, navigation }: Props) {
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <Pressable
-        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
+      <Button
+        className="mt-8"
         disabled={submitting}
+        label={submitting ? t('common:loading') : t('worker:dispute.submit')}
         onPress={() => void onSubmit()}
         testID="DisputeSubmitButton"
-      >
-        <Text className="font-sans text-center text-base font-semibold text-text-on">
-          {submitting ? t('common:loading') : t('worker:dispute.submit')}
-        </Text>
-      </Pressable>
+      />
     </ModulePage>
   );
 }

@@ -1,30 +1,55 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 
-import { statusLabelTr } from '@parton/api-contracts';
+import { statusLabelTr, type ApplicationStatus } from '@parton/api-contracts';
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import {
   acceptApplication,
   listJobApplications,
+  moveApplicationToSubstitute,
+  rejectApplication,
+  removeApplicationSubstitute,
+  revokeAcceptApplication,
 } from '../../../api/applications-api';
+import { createFavorite } from '../../../api/favorites-api';
+import { fetchJobCatalog } from '../../../api/jobs-api';
 import { ApiClientError } from '../../../api/client';
+import { ApplicantFacts } from '../../../components/application/ApplicantFacts';
+import { JobCard } from '../../../components/job/JobCard';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+
+type CatalogSector = Awaited<ReturnType<typeof fetchJobCatalog>>['sectors'][number];
+
+type Filter = 'pending' | 'accepted' | 'substitute' | 'rejected';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerApplicants'>;
 
 export function EmployerApplicantsScreen({ route, navigation }: Props) {
-  const { jobId, jobTitle } = route.params;
+  const { jobId, jobTitle, filter: initialFilter } = route.params;
   const { t } = useTranslation(['employer', 'common', 'errors', 'system']);
+  const [filter, setFilter] = useState<Filter>(initialFilter ?? 'pending');
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<
     Awaited<ReturnType<typeof listJobApplications>>['items']
   >([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+  const [sectors, setSectors] = useState<CatalogSector[]>([]);
+
+  useEffect(() => {
+    void fetchJobCatalog()
+      .then((catalog) => setSectors(catalog.sectors))
+      .catch(() => setError(t('common:networkError')));
+  }, [t]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -34,7 +59,7 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      const data = await listJobApplications(jobId, token, 'pending');
+      const data = await listJobApplications(jobId, token, filter);
       setItems(data.items);
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -45,7 +70,7 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [jobId, t]);
+  }, [filter, jobId, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -53,13 +78,35 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
     }, [load]),
   );
 
-  const onAccept = async (applicationId: string) => {
+  useEffect(() => {
+    if (initialFilter) {
+      setFilter(initialFilter);
+    }
+  }, [initialFilter]);
+
+  const shown = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase('tr-TR');
+    if (!needle) {
+      return items;
+    }
+    return items.filter((item) => {
+      const name = (
+        item.workerDisplayName ??
+        `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`
+      )
+        .trim()
+        .toLocaleLowerCase('tr-TR');
+      return name.includes(needle);
+    });
+  }, [items, query]);
+
+  const run = async (fn: () => Promise<unknown>) => {
     try {
       const token = getAccessToken();
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      await acceptApplication(applicationId, token, `accept-${applicationId}`);
+      await fn();
       await load();
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -70,45 +117,215 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
     }
   };
 
+  const filters: Filter[] = ['pending', 'accepted', 'substitute', 'rejected'];
+
   return (
-    <ModulePage title={jobTitle ?? t('employer:applicants.title')} testID="m.employer.applicants.list" scroll={false}>
-      
+    <ModulePage
+      title={jobTitle ?? t('employer:applicants.title')}
+      testID="m.employer.applicants.list"
+      scroll={false}
+    >
+      <View className="mb-3 flex-row flex-wrap gap-2">
+        {filters.map((value) => (
+          <Pressable
+            key={value}
+            className={`rounded-full px-3 py-2 ${
+              filter === value ? 'bg-action-primary' : 'bg-surface-1'
+            }`}
+            onPress={() => setFilter(value)}
+          >
+            <Text
+              className={`font-sans text-sm ${
+                filter === value ? 'text-text-on' : 'text-text-high'
+              }`}
+            >
+              {statusLabelTr(value)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <View className="mb-3">
+        <TextField
+          inset
+          shape="capsule"
+          label={t('employer:applicants.search')}
+          onChangeText={setQuery}
+          value={query}
+        />
+      </View>
+      <View className="mb-3">
+        <StatStrip
+          items={[
+            {
+              label: statusLabelTr(filter),
+              value: loading ? '—' : String(shown.length),
+            },
+          ]}
+        />
+      </View>
       {error ? (
         <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
       ) : null}
       {loading ? (
-        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
+        <SkeletonList />
       ) : (
         <FlatList
           style={{ flex: 1 }}
-          data={items}
+          data={shown}
           keyExtractor={(item) => item.id}
           ListEmptyComponent={
-            <Text className="font-sans text-text-medium">{t('employer:applicants.empty')}</Text>
+            <EmptyState
+              title={
+                query.trim()
+                  ? t('employer:applicants.searchEmpty')
+                  : t('employer:applicants.empty')
+              }
+            />
           }
           renderItem={({ item }) => (
-            <View className="mb-3 rounded-lg bg-surface-1 p-4">
-              <Text className="font-sans text-base font-semibold text-text-high">
-                {item.workerDisplayName ??
-                  `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`.trim()}
-              </Text>
-              <Text className="font-sans mt-1 text-sm text-text-medium">
-                {statusLabelTr(item.status)}
-              </Text>
-              {item.status === 'pending' ? (
-                <Pressable
-                  className="mt-3 rounded-lg bg-action-primary px-3 py-2"
-                  onPress={() => void onAccept(item.id)}
-                >
-                  <Text className="font-sans text-center text-sm font-semibold text-text-on">
-                    {t('employer:applicants.accept')}
-                  </Text>
-                </Pressable>
-              ) : null}
+            <View className="mb-3">
+              <JobCard
+                status={item.status}
+                title={
+                  item.workerDisplayName ??
+                  `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`.trim()
+                }
+                onPress={() =>
+                  navigation.navigate('EmployerApplicantDetail', {
+                    applicationId: item.id,
+                    jobTitle,
+                  })
+                }
+              >
+                <ApplicantFacts
+                  snapshot={item.profileSnapshot}
+                  sectors={sectors}
+                />
+              </JobCard>
+              <ApplicantActions
+                status={item.status}
+                onProcess={() =>
+                  navigation.navigate('SharedJobProcess', {
+                    applicationId: item.id,
+                  })
+                }
+                onAccept={() =>
+                  void run(async () => {
+                    const token = getAccessToken()!;
+                    await acceptApplication(item.id, token, `accept-${item.id}`);
+                  })
+                }
+                onReject={() =>
+                  void run(async () => {
+                    await rejectApplication(item.id, getAccessToken()!);
+                  })
+                }
+                onSubstitute={() =>
+                  void run(async () => {
+                    await moveApplicationToSubstitute(item.id, getAccessToken()!);
+                  })
+                }
+                onRemoveSubstitute={() =>
+                  void run(async () => {
+                    await removeApplicationSubstitute(item.id, getAccessToken()!);
+                  })
+                }
+                onRevoke={() =>
+                  void run(async () => {
+                    await revokeAcceptApplication(
+                      item.id,
+                      getAccessToken()!,
+                      `revoke-${item.id}`,
+                    );
+                  })
+                }
+                onFavorite={() =>
+                  void run(async () => {
+                    await createFavorite(
+                      getAccessToken()!,
+                      { type: 'worker', id: item.workerUserId },
+                      `fav-worker-${item.workerUserId}`,
+                    );
+                  })
+                }
+                labels={{
+                  accept: t('employer:applicants.accept'),
+                  reject: t('employer:applicants.reject'),
+                  substitute: t('employer:applicants.substitute'),
+                  remove: t('employer:applicants.removeSubstitute'),
+                  revoke: t('employer:applicants.revoke'),
+                  favorite: t('employer:applicants.favorite'),
+                  process: t('employer:applicants.process'),
+                }}
+              />
             </View>
           )}
         />
       )}
     </ModulePage>
+  );
+}
+
+function ApplicantActions({
+  status,
+  onProcess,
+  onAccept,
+  onReject,
+  onSubstitute,
+  onRemoveSubstitute,
+  onRevoke,
+  onFavorite,
+  labels,
+}: {
+  status: ApplicationStatus;
+  onProcess: () => void;
+  onAccept: () => void;
+  onReject: () => void;
+  onSubstitute: () => void;
+  onRemoveSubstitute: () => void;
+  onRevoke: () => void;
+  onFavorite: () => void;
+  labels: Record<string, string>;
+}) {
+  return (
+    <View className="mt-3 flex-row flex-wrap gap-2">
+      <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onProcess}>
+        <Text className="font-sans text-sm text-text-high">{labels.process}</Text>
+      </Pressable>
+      {status === 'pending' || status === 'substitute' ? (
+        <Pressable className="rounded-full bg-action-primary px-3 py-2" onPress={onAccept}>
+          <Text className="font-sans text-sm font-semibold text-text-on">
+            {labels.accept}
+          </Text>
+        </Pressable>
+      ) : null}
+      {status === 'pending' || status === 'substitute' ? (
+        <Pressable className="rounded-full bg-feedback-error px-3 py-2" onPress={onReject}>
+          <Text className="font-sans text-sm font-semibold text-text-on">
+            {labels.reject}
+          </Text>
+        </Pressable>
+      ) : null}
+      {status === 'pending' ? (
+        <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onSubstitute}>
+          <Text className="font-sans text-sm text-text-high">{labels.substitute}</Text>
+        </Pressable>
+      ) : null}
+      {status === 'substitute' ? (
+        <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onRemoveSubstitute}>
+          <Text className="font-sans text-sm text-text-high">{labels.remove}</Text>
+        </Pressable>
+      ) : null}
+      {status === 'accepted' ? (
+        <Pressable className="rounded-full bg-feedback-error px-3 py-2" onPress={onRevoke}>
+          <Text className="font-sans text-sm font-semibold text-text-on">
+            {labels.revoke}
+          </Text>
+        </Pressable>
+      ) : null}
+      <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onFavorite}>
+        <Text className="font-sans text-sm text-text-high">{labels.favorite}</Text>
+      </Pressable>
+    </View>
   );
 }

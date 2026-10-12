@@ -170,6 +170,13 @@ export class SessionService {
         'Hesap erişime kapalı.',
       );
     }
+    if (session.user.status === 'restricted') {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.ACCOUNT_RESTRICTED,
+        'Hesabınız kısıtlandı.',
+      );
+    }
     const ban = await this.prisma.authBan.findFirst({
       where: { phoneE164: session.user.phoneE164 },
     });

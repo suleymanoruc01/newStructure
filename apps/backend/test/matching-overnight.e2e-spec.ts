@@ -16,6 +16,8 @@ describe('Matching overnight availability (e2e) @T-073', () => {
   let tokens: TokenService;
   let workerUserId: string;
   let workerSessionId: string;
+  let dayOnlyUserId: string;
+  let dayOnlySessionId: string;
   let overnightJobId: string;
 
   beforeAll(async () => {
@@ -80,6 +82,48 @@ describe('Matching overnight availability (e2e) @T-073', () => {
       },
     });
 
+    const dayOnly = await prisma.user.create({
+      data: { phoneE164: `+905561${Date.now().toString().slice(-7)}` },
+    });
+    dayOnlyUserId = dayOnly.id;
+    dayOnlySessionId = (
+      await prisma.refreshSession.create({
+        data: {
+          userId: dayOnly.id,
+          tokenHash: 'overnight-day-only',
+          expiresAt: new Date(Date.now() + 86400000),
+          activeContext: { role: 'worker' },
+        },
+      })
+    ).id;
+    const dayProfile = await prisma.workerProfile.create({
+      data: {
+        userId: dayOnly.id,
+        firstName: 'Gunduz',
+        lastName: 'Ak',
+        birthDate: new Date('1997-02-02'),
+        gender: 'male',
+        homeLatitude: 41.01,
+        homeLongitude: 28.98,
+        nightShiftAvailable: false,
+      },
+    });
+    await prisma.workerSector.create({
+      data: { workerProfileId: dayProfile.id, sectorCode: 'hospitality' },
+    });
+    await prisma.workerOccupation.create({
+      data: { workerProfileId: dayProfile.id, occupationCode: 'waiter' },
+    });
+    await prisma.availabilityWindow.create({
+      data: {
+        workerProfileId: dayProfile.id,
+        dayOfWeek: startDay,
+        startMinute: 22 * 60,
+        endMinute: 6 * 60,
+        crossesMidnight: true,
+      },
+    });
+
     const employer = await prisma.employer.create({
       data: {
         legalName: 'Gece Vardiya AŞ',
@@ -113,11 +157,11 @@ describe('Matching overnight availability (e2e) @T-073', () => {
       },
     });
     overnightJobId = job.id;
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await app?.close();
-  });
+  }, 30_000);
 
   it('includes cross-midnight job when overnight availability covers interval', async () => {
     const access = tokens.signAccess(workerUserId, workerSessionId, {
@@ -126,5 +170,14 @@ describe('Matching overnight availability (e2e) @T-073', () => {
 
     const ids = await collectFeedJobIds(app, access);
     expect(ids).toContain(overnightJobId);
+  });
+
+  it('omits overnight jobs when nightShiftAvailable is false', async () => {
+    const access = tokens.signAccess(dayOnlyUserId, dayOnlySessionId, {
+      role: 'worker',
+    }).accessToken;
+
+    const ids = await collectFeedJobIds(app, access);
+    expect(ids).not.toContain(overnightJobId);
   });
 });

@@ -1,8 +1,4 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { AuthModule } from './auth/auth.module.js';
 import { AppConfigModule } from './config/app-config.module.js';
@@ -30,8 +26,7 @@ import { WorkersModule } from './workers/workers.module.js';
 import { PlatformModule } from './platform/platform.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
 import { BullmqModule } from './queue/bullmq.module.js';
-
-const adminDist = join(process.cwd(), '../admin/dist');
+import { SupportModule } from './support/support.module.js';
 
 @Module({
   imports: [
@@ -57,20 +52,12 @@ const adminDist = join(process.cwd(), '../admin/dist');
     FavoritesModule,
     RatingsModule,
     ModerationModule,
+    SupportModule,
     AdminModule,
     AuditModule,
     DevopsModule,
     PlatformModule,
     RealtimeModule,
-    ...(existsSync(adminDist)
-      ? [
-          ServeStaticModule.forRoot({
-            rootPath: adminDist,
-            serveRoot: '/admin',
-            exclude: ['/api/(.*)'],
-          }),
-        ]
-      : []),
   ],
   providers: [ApiExceptionFilter],
   exports: [ApiExceptionFilter],

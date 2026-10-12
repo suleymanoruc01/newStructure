@@ -9,7 +9,7 @@ import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
-describe('Workers availability (e2e) @T-016 @T-017', () => {
+describe('Workers availability (e2e) @T-016 @T-017 @T-019', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let tokens: TokenService;
@@ -86,6 +86,38 @@ describe('Workers availability (e2e) @T-016 @T-017', () => {
       .set('Authorization', `Bearer ${bearer()}`);
     expect(getRes.status).toBe(200);
     expect(getRes.body.data.windows).toEqual(putRes.body.data.windows);
+  });
+
+  it('persists night-shift flag and overnight windows', async () => {
+    const patchRes = await request(app.getHttpServer())
+      .patch('/api/v1/workers/me')
+      .set('Authorization', `Bearer ${bearer()}`)
+      .send({ nightShiftAvailable: true });
+    expect(patchRes.status).toBe(200);
+    expect(patchRes.body.data.nightShiftAvailable).toBe(true);
+
+    const putRes = await request(app.getHttpServer())
+      .put('/api/v1/workers/me/availability')
+      .set('Authorization', `Bearer ${bearer()}`)
+      .send({
+        windows: [
+          {
+            dayOfWeek: 5,
+            startMinute: 22 * 60,
+            endMinute: 6 * 60,
+            crossesMidnight: true,
+          },
+        ],
+      });
+    expect(putRes.status).toBe(200);
+    expect(putRes.body.data.windows).toEqual([
+      {
+        dayOfWeek: 5,
+        startMinute: 1320,
+        endMinute: 360,
+        crossesMidnight: true,
+      },
+    ]);
   });
 
   it('rejects overlapping windows on the same day', async () => {

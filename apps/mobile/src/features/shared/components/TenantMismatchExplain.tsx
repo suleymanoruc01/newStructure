@@ -1,5 +1,7 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
+
+import { ClayCard } from '../../../components/ui/ClayCard';
 
 type Props = {
   hint: string;
@@ -7,8 +9,8 @@ type Props = {
 
 export function TenantMismatchExplain({ hint }: Props) {
   return (
-    <View className="mt-6 rounded-2xl bg-surface-1 p-4">
+    <ClayCard className="mt-6">
       <Text className="font-sans text-sm text-text-medium">{hint}</Text>
-    </View>
+    </ClayCard>
   );
 }

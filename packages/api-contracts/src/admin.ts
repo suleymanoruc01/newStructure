@@ -23,6 +23,22 @@ export const adminUserPatchSchema = z.object({
   status: z.enum(['active', 'restricted', 'banned']).optional(),
 });
 
+export const adminEmployerPatchSchema = z.object({
+  legalName: z.string().trim().min(2).max(200).optional(),
+  tradingName: z.string().trim().min(2).max(200).nullable().optional(),
+});
+
+export type AdminEmployerPatchBody = z.infer<typeof adminEmployerPatchSchema>;
+
+export const adminApplicationStatusPatchSchema = z.object({
+  status: z.enum(['rejected', 'accepted', 'accept_revoked', 'withdrawn']),
+  reason: z.string().trim().min(1).max(500),
+});
+
+export type AdminApplicationStatusPatchBody = z.infer<
+  typeof adminApplicationStatusPatchSchema
+>;
+
 export type AdminUserPatchBody = z.infer<typeof adminUserPatchSchema>;
 
 export type AdminVerificationPatchBody = z.infer<
@@ -41,6 +57,24 @@ export type AdminBroadcastBody = z.infer<typeof adminBroadcastSchema>;
 
 export type AdminRemoteConfigBody = z.infer<typeof adminRemoteConfigSchema>;
 
+export const adminDashboardBusinessSchema = z.object({
+  totalUsers: z.number().int(),
+  totalEmployers: z.number().int(),
+  publishedJobs: z.number().int(),
+  totalApplications: z.number().int(),
+  acceptedApplications: z.number().int(),
+  completedShifts: z.number().int(),
+  topUpTokensToday: z.number().int(),
+  estimatedRevenueTryMonth: z.number().int(),
+});
+
+export const adminDashboardTrendsSchema = z.object({
+  dayKeys: z.array(z.string()),
+  newUsersByDay: z.array(z.number().int()),
+  applicationsByDay: z.array(z.number().int()),
+  topUpTokensByDay: z.array(z.number().int()),
+});
+
 export const adminDashboardDataSchema = z.object({
   openAbuseReports: z.number().int(),
   openDisputes: z.number().int(),
@@ -48,6 +82,9 @@ export const adminDashboardDataSchema = z.object({
   outboxPending: z.number().int(),
   openDevopsErrors: z.number().int(),
   queuedRatings: z.number().int(),
+  openSupportTickets: z.number().int(),
+  business: adminDashboardBusinessSchema,
+  trends: adminDashboardTrendsSchema,
 });
 
 export const adminDashboardResponseSchema = successEnvelopeSchema(
@@ -98,6 +135,10 @@ export const adminMatchingDiagnosticsDataSchema = z.object({
   eligible: z.boolean(),
   reasons: z.array(z.string()),
   matchReasons: z.array(z.string()),
+  distanceKm: z.number().nullable().optional(),
+  jobFavoritesOnly: z.boolean(),
+  workerNightShiftAvailable: z.boolean(),
+  workerUploadedDocumentTypes: z.array(z.string()),
 });
 
 export const adminMatchingDiagnosticsResponseSchema = successEnvelopeSchema(
@@ -110,3 +151,27 @@ export const adminPolicyPatchSchema = z.object({
 });
 
 export type AdminPolicyPatchBody = z.infer<typeof adminPolicyPatchSchema>;
+
+export const adminJobPatchSchema = z.object({
+  favoritesOnly: z.boolean(),
+});
+
+export type AdminJobPatchBody = z.infer<typeof adminJobPatchSchema>;
+
+export const adminWorkerPatchSchema = z.object({
+  nightShiftAvailable: z.boolean(),
+});
+
+export type AdminWorkerPatchBody = z.infer<typeof adminWorkerPatchSchema>;
+
+export const adminDocumentPatchSchema = z.object({
+  status: z.enum(['uploaded', 'rejected']),
+});
+
+export type AdminDocumentPatchBody = z.infer<typeof adminDocumentPatchSchema>;
+
+export const adminDisputePatchSchema = z.object({
+  status: z.enum(['resolved', 'rejected']),
+});
+
+export type AdminDisputePatchBody = z.infer<typeof adminDisputePatchSchema>;

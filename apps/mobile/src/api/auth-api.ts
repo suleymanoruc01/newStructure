@@ -23,6 +23,8 @@ import {
   contextSwitchBodySchema,
   contextSwitchResponseSchema,
   contextsListResponseSchema,
+  meDeletionRequestBodySchema,
+  mePatchBodySchema,
   meResponseSchema,
   type AuthContext,
   type AssignRoleBody,
@@ -99,6 +101,30 @@ export async function assignRole(
 export async function fetchMe(accessToken: string) {
   return apiRequest('/me', meResponseSchema, {
     method: 'GET',
+    accessToken,
+  });
+}
+
+export async function patchMe(
+  accessToken: string,
+  body: { locale?: string; email?: string | null },
+) {
+  const payload = mePatchBodySchema.parse(body);
+  return apiRequest('/me', meResponseSchema, {
+    method: 'PATCH',
+    body: payload,
+    accessToken,
+  });
+}
+
+export async function requestAccountDeletion(
+  accessToken: string,
+  reason?: string,
+) {
+  const payload = meDeletionRequestBodySchema.parse({ reason });
+  return apiRequest('/me/deletion-request', meResponseSchema, {
+    method: 'POST',
+    body: payload,
     accessToken,
   });
 }

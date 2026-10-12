@@ -1,7 +1,6 @@
 import type { NotificationPreferences } from '@parton/api-contracts';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, Text, View } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import { ApiClientError } from '../../../api/client';
@@ -9,6 +8,11 @@ import {
   fetchNotificationPreferences,
   patchNotificationPreferences,
 } from '../../../api/notifications-api';
+import { JobCard } from '../../../components/job/JobCard';
+import { Button } from '../../../components/ui/Button';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatStrip } from '../../../components/ui/StatStrip';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -74,38 +78,50 @@ export function SharedNotificationPrefsScreen() {
       <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('system:notifications.prefsLead')}
       </Text>
+      {prefs ? (
+        <View className="mt-3">
+          <StatStrip
+            items={[
+              {
+                label: t('common:yes'),
+                value: String(KEYS.filter((key) => prefs[key]).length),
+              },
+              {
+                label: t('common:no'),
+                value: String(KEYS.filter((key) => !prefs[key]).length),
+              },
+            ]}
+          />
+        </View>
+      ) : null}
       {prefs
         ? KEYS.map((key) => (
-            <Pressable
-              key={key}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: prefs[key] }}
-              className="mt-3 rounded-xl bg-surface-1 px-4 py-3"
-              onPress={() => void toggle(key)}
-            >
-              <Text className="font-sans text-base text-text-high">
-                {t(`system:notifications.categories.${key}`)}
-              </Text>
-              <Text className="font-sans mt-1 text-sm text-text-medium">
-                {prefs[key] ? t('common:yes') : t('common:no')}
-              </Text>
-            </Pressable>
+            <View key={key} className="mt-3">
+              <JobCard
+                title={t(`system:notifications.categories.${key}`)}
+                onPress={() => void toggle(key)}
+              >
+                <StatusBadge
+                  label={prefs[key] ? t('common:yes') : t('common:no')}
+                  tone={prefs[key] ? 'strong' : 'neutral'}
+                />
+              </JobCard>
+            </View>
           ))
         : (
-          <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
+          <View className="mt-4">
+            <SkeletonList rows={5} />
+          </View>
         )}
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <Pressable
-        accessibilityRole="button"
+      <Button
         className="mt-6"
+        label={t('system:notifications.openOsSettings')}
         onPress={() => void Linking.openSettings()}
-      >
-        <Text className="font-sans text-base text-text-high">
-          {t('system:notifications.openOsSettings')}
-        </Text>
-      </Pressable>
+        variant="secondary"
+      />
     </ModulePage>
   );
 }

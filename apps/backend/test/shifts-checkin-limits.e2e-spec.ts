@@ -9,13 +9,14 @@ import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
-describe('Admin check-in limits (e2e) T-127 T-129 T-130', () => {
+describe('Admin check-in limits (e2e) T-127 T-129 T-130 T-144', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let workerAccess: string;
   let earlyShiftId: string;
   let lateShiftId: string;
   let driftShiftId: string;
+  let wifiShiftId: string;
   const branchLat = 41.02;
   const branchLng = 28.97;
 
@@ -128,6 +129,7 @@ describe('Admin check-in limits (e2e) T-127 T-129 T-130', () => {
       await seedShift(new Date(Date.now() - 10 * 60 * 1000))
     ).id;
     driftShiftId = (await seedShift(new Date())).id;
+    wifiShiftId = (await seedShift(new Date())).id;
   }, 120_000);
 
   afterAll(async () => {
@@ -142,7 +144,11 @@ describe('Admin check-in limits (e2e) T-127 T-129 T-130', () => {
     await app?.close();
   }, 30_000);
 
-  async function checkIn(shiftId: string, accuracyM: number) {
+  async function checkIn(
+    shiftId: string,
+    accuracyM: number,
+    locationSource?: 'gps' | 'network',
+  ) {
     return request(app.getHttpServer())
       .post(`/api/v1/shifts/${shiftId}/check-in`)
       .set('Authorization', `Bearer ${workerAccess}`)
@@ -153,6 +159,7 @@ describe('Admin check-in limits (e2e) T-127 T-129 T-130', () => {
         accuracyM,
         locationPermissionGranted: true,
         mockLocation: false,
+        locationSource,
       });
   }
 
@@ -209,5 +216,16 @@ describe('Admin check-in limits (e2e) T-127 T-129 T-130', () => {
         data: { geofenceMaxAccuracyM: 30 },
       });
     }
+  });
+
+  it('rejects Wi-Fi/network location even inside the geofence', async () => {
+    const res = await checkIn(wifiShiftId, 8, 'network');
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('OUTSIDE_GEOFENCE');
+    const row = await prisma.checkIn.findFirst({
+      where: { shiftId: wifiShiftId, success: false },
+    });
+    expect(row?.locationSource).toBe('network');
+    expect(row?.failureCode).toBe('OUTSIDE_GEOFENCE');
   });
 });

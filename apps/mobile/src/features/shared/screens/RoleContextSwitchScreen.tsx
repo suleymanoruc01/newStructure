@@ -1,7 +1,10 @@
 import type { AuthContext } from '@parton/api-contracts';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
+import { JobCard } from '../../../components/job/JobCard';
+import { Button } from '../../../components/ui/Button';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { StatStrip } from '../../../components/ui/StatStrip';
 import { useTranslation } from 'react-i18next';
 
 import { ApiClientError } from '../../../api/client';
@@ -56,6 +59,16 @@ export function RoleContextSwitchScreen({ onClose }: Props) {
       <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('auth:contextSwitch.lead')}
       </Text>
+      <View className="mt-3">
+        <StatStrip
+          items={[
+            {
+              label: t('auth:contextSwitch.title'),
+              value: String(contexts.length),
+            },
+          ]}
+        />
+      </View>
       <View className="mt-6 gap-2">
         {contexts.map((ctx, index) => {
           const isActive =
@@ -64,38 +77,36 @@ export function RoleContextSwitchScreen({ onClose }: Props) {
             JSON.stringify(active.branchIds ?? []) ===
               JSON.stringify(ctx.branchIds ?? []);
           return (
-            <Pressable
+            <View
               key={`${ctx.role}-${ctx.employerId ?? 'none'}-${index}`}
-              accessibilityRole="button"
-              className={`rounded-xl px-4 py-3 ${
-                isActive ? 'bg-accent-mustard' : 'bg-surface-1'
-              }`}
-              disabled={submitting || isActive}
-              onPress={() => void onSelect(ctx)}
               testID="MembershipListItem"
             >
-              <Text className="font-sans font-semibold text-text-high">
-                {contextLabel(ctx, t)}
-              </Text>
-              {ctx.employerId ? (
-                <Text
-                  className="font-sans mt-1 text-xs text-text-medium"
-                >
-                  {ctx.employerId}
-                </Text>
-              ) : null}
-            </Pressable>
+              <JobCard
+                title={contextLabel(ctx, t)}
+                onPress={
+                  submitting || isActive ? undefined : () => void onSelect(ctx)
+                }
+              >
+                {isActive ? (
+                  <StatusBadge
+                    label={t('auth:contextSwitch.active')}
+                    tone="strong"
+                  />
+                ) : null}
+              </JobCard>
+            </View>
           );
         })}
       </View>
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <Pressable className="mt-8" onPress={onClose}>
-        <Text className="font-sans text-center text-base text-text-medium">
-          {t('common:back')}
-        </Text>
-      </Pressable>
+      <Button
+        className="mt-8"
+        label={t('common:back')}
+        onPress={onClose}
+        variant="ghost"
+      />
     </ModulePage>
   );
 }

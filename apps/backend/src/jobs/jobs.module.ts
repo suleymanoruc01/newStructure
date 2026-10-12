@@ -7,6 +7,7 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
 import { PlatformModule } from '../platform/platform.module.js';
 import { TokensModule } from '../tokens/tokens.module.js';
 import { WorkersModule } from '../workers/workers.module.js';
+import { JobCatalogModule } from '../job-catalog/job-catalog.module.js';
 import { BranchJobsController } from './branch-jobs.controller.js';
 import { JobsController } from './jobs.controller.js';
 import { JobsService } from './jobs.service.js';
@@ -19,6 +20,7 @@ import { JobsService } from './jobs.service.js';
     WorkersModule,
     NotificationsModule,
     PlatformModule,
+    JobCatalogModule,
   ],
   controllers: [JobsController, BranchJobsController],
   providers: [JobsService, RoleContextGuard],

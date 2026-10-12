@@ -288,6 +288,8 @@ Shared packages may export **role/permission enums** only — **never** the poli
 | `POST /applications/:id/accept` | — | ✓ | ✓ | ✓ |
 | `POST /jobs/:id/applications` | ✓ | — | — | — |
 | `POST /shifts/:id/check-in` | ✓ own | — | — | — |
+| `GET /workers/me/calendar` | ✓ own | — | — | — |
+| `GET /employers/me/calendar` | — | ✓ org | ✓ branch | ✓ |
 | `POST /shifts/:id/manual-confirm` | — | ✓ | ✓ | ✓ |
 | `POST /branches` | — | ✓ (T-014) | ✗ | ✓ |
 | `GET /employers/me/tokens` | — | ✓ | limited | ✓ |

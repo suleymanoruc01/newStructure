@@ -12,7 +12,9 @@ model User {
   phoneE164    String  @unique @map("phone_e164")
   passwordHash String? @map("password_hash")
   locale       String  @default("tr-TR")
+  email        String?
   status       String  @default("active")
+  deletionRequestedAt DateTime? @map("deletion_requested_at") @db.Timestamptz(6)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -34,6 +36,9 @@ model User {
   deviceFingerprints    DeviceFingerprint[]
   linkedIdentities      LinkedIdentity[]
   policyReads           PolicyRead[]
+  supportTickets        SupportTicket[]        @relation("SupportTicketRequester")
+  supportTicketMessages SupportTicketMessage[] @relation("SupportTicketMessageAuthor")
+  supportTicketsAssigned SupportTicket[]       @relation("SupportTicketAssignee")
 
   @@map("users")
 }
@@ -129,14 +134,17 @@ model WorkerOccupation {
 }
 
 model Employer {
-  id                 String   @id @default(uuid()) @db.Uuid
-  legalName          String   @map("legal_name")
-  tradingName        String?  @map("trading_name")
-  taxId              String   @unique @map("tax_id")
-  industryCodes      Json     @default("[]") @map("industry_codes")
-  verificationStatus String   @default("pending") @map("verification_status")
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                   String    @id @default(uuid()) @db.Uuid
+  legalName            String    @map("legal_name")
+  tradingName          String?   @map("trading_name")
+  taxId                String    @unique @map("tax_id")
+  industryCodes        Json      @default("[]") @map("industry_codes")
+  verificationStatus   String    @default("pending") @map("verification_status")
+  subscriptionPlanCode String    @default("free") @map("subscription_plan_code")
+  subscriptionStatus   String    @default("active") @map("subscription_status")
+  subscriptionEndsAt   DateTime? @map("subscription_ends_at") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   memberships EmployerMembership[]
   branches    Branch[]
@@ -326,17 +334,39 @@ model PolicyRead {
   @@map("policy_reads")
 }
 
-model JobCatalogItem {
-  id             String   @id @default(uuid()) @db.Uuid
-  sectorCode     String   @map("sector_code")
-  occupationCode String?  @map("occupation_code")
-  title          String
-  sortOrder      Int      @default(0) @map("sort_order")
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+model JobCatalogSector {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  displayName String   @map("display_name")
+  icon        String   @default("📂")
+  sortOrder   Int      @default(0) @map("sort_order")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  @@index([sectorCode, active])
-  @@map("job_catalog_items")
+  occupations JobCatalogOccupation[]
+
+  @@index([active, sortOrder])
+  @@map("job_catalog_sectors")
+}
+
+model JobCatalogOccupation {
+  id           String   @id @default(uuid()) @db.Uuid
+  sectorId     String   @map("sector_id") @db.Uuid
+  code         String
+  title        String
+  description  String?
+  requirements Json     @default("{}")
+  sortOrder    Int      @default(0) @map("sort_order")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sector JobCatalogSector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId, active, sortOrder])
+  @@map("job_catalog_occupations")
 }
 
 model Job {
@@ -358,6 +388,8 @@ model Job {
   minAge               Int?     @map("min_age")
   maxAge               Int?     @map("max_age")
   requiredDocumentTypes Json    @default("[]") @map("required_document_types")
+  amenities            Json     @default("[]")
+  instantAutoApprove   Boolean  @default(false) @map("instant_auto_approve")
   notes                String?
   publishedAt          DateTime? @map("published_at") @db.Timestamptz(6)
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -400,6 +432,22 @@ model TokenHold {
 
   @@index([employerId, status])
   @@map("token_holds")
+}
+
+model TokenPackage {
+  id              String   @id @default(uuid()) @db.Uuid
+  label           String
+  tokenCount      Int      @map("token_count")
+  priceTry        Int      @map("price_try")
+  discountPercent Int      @default(0) @map("discount_percent")
+  isPopular       Boolean  @default(false) @map("is_popular")
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive, sortOrder])
+  @@map("token_packages")
 }
 
 model TokenLedgerEntry {
@@ -556,6 +604,7 @@ model Shift {
   confirms    AvailabilityConfirm[]
   checkIns    CheckIn[]
   disputes    CheckInDispute[]
+  incidents   ShiftIncident[]
   riskEvents  RiskEvent[]
   ratings     Rating[]
 
@@ -589,6 +638,7 @@ model CheckIn {
   accuracyM       Decimal  @map("accuracy_m") @db.Decimal(8, 2)
   distanceM       Decimal  @map("distance_m") @db.Decimal(10, 2)
   mockLocation    Boolean  @default(false) @map("mock_location")
+  locationSource  String?  @map("location_source")
   softPass        Boolean  @default(false) @map("soft_pass")
   success         Boolean
   failureCode     String?  @map("failure_code")
@@ -599,6 +649,21 @@ model CheckIn {
 
   @@index([shiftId, createdAt])
   @@map("check_ins")
+}
+
+model ShiftIncident {
+  id           String   @id @default(uuid()) @db.Uuid
+  shiftId      String   @map("shift_id") @db.Uuid
+  workerUserId String   @map("worker_user_id") @db.Uuid
+  type         String
+  severity     String
+  note         String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([shiftId, createdAt])
+  @@map("shift_incidents")
 }
 
 model CheckInDispute {
@@ -773,6 +838,60 @@ model AbuseReport {
 
   @@index([status, createdAt])
   @@map("abuse_reports")
+}
+
+model EmployerSubscriptionPlan {
+  id                   String   @id @default(uuid()) @db.Uuid
+  planCode             String   @unique @map("plan_code")
+  displayName          String   @map("display_name")
+  monthlyPriceTry      Int      @map("monthly_price_try")
+  yearlyPriceTry       Int      @map("yearly_price_try")
+  maxBranches          Int      @map("max_branches")
+  maxMemberships       Int      @map("max_memberships")
+  tokenBonusOnPurchase Int      @default(0) @map("token_bonus_on_purchase")
+  prioritySupport      Boolean  @default(false) @map("priority_support")
+  analyticsAccess      Boolean  @default(false) @map("analytics_access")
+  apiAccess            Boolean  @default(false) @map("api_access")
+  isActive             Boolean  @default(true) @map("is_active")
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("employer_subscription_plans")
+}
+
+model SupportTicket {
+  id                  String    @id @default(uuid()) @db.Uuid
+  requesterUserId     String    @map("requester_user_id") @db.Uuid
+  subject             String
+  body                String
+  status              String    @default("open")
+  priority            String    @default("normal")
+  assignedAdminUserId String?   @map("assigned_admin_user_id") @db.Uuid
+  resolvedAt          DateTime? @map("resolved_at") @db.Timestamptz(6)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  requester User                  @relation("SupportTicketRequester", fields: [requesterUserId], references: [id], onDelete: Cascade)
+  assignee  User?                 @relation("SupportTicketAssignee", fields: [assignedAdminUserId], references: [id], onDelete: SetNull)
+  messages  SupportTicketMessage[]
+
+  @@index([status, createdAt])
+  @@index([requesterUserId, createdAt])
+  @@map("support_tickets")
+}
+
+model SupportTicketMessage {
+  id           String   @id @default(uuid()) @db.Uuid
+  ticketId     String   @map("ticket_id") @db.Uuid
+  authorUserId String   @map("author_user_id") @db.Uuid
+  body         String
+  isStaff      Boolean  @default(false) @map("is_staff")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User          @relation("SupportTicketMessageAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@map("support_ticket_messages")
 }
 
 model RemoteConfig {

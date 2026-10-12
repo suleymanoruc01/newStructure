@@ -51,12 +51,24 @@ export class TokensController {
       );
     }
     const idem = req.headers['idempotency-key'];
+    const resolved = await this.tokens.resolveTopUpAmount(employerId, parsed);
     const data = await this.tokens.creditTopUp(
       employerId,
-      parsed.amount,
+      resolved.total,
       typeof idem === 'string' ? idem : undefined,
       parsed.paymentOutcome,
+      {
+        packageId: resolved.packageId,
+        bonus: resolved.bonus,
+        base: resolved.base,
+      },
     );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get('packages')
+  async packages(@Req() req: Request) {
+    const data = await this.tokens.listTopUpPackages();
     return successResponse(req.requestId ?? '', data);
   }
 

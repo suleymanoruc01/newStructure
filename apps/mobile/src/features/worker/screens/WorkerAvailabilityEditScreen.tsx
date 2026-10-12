@@ -12,14 +12,21 @@ import {
   fetchWorkerAvailability,
   putWorkerAvailability,
 } from '../../../api/workers-api';
+import { AvailabilityWeekGrid } from '../../../components/availability/AvailabilityWeekGrid';
+import { JobCard } from '../../../components/job/JobCard';
+import { Button } from '../../../components/ui/Button';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatStrip } from '../../../components/ui/StatStrip';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
-import { TextField } from '../../../components/ui/TextField';
 import {
+  AVAIL_HOURS,
   DAY_NAMES_TR,
   formatMinuteOfDay,
   parseTimeToMinute,
 } from '../../../shared/availability/time-minutes';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { weekdaySun0 } from '../../../shared/datetime/istanbul';
 
 type Props = NativeStackScreenProps<
   WorkerStackParamList,
@@ -38,7 +45,8 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [newDay, setNewDay] = useState('1');
+  const todayDow = weekdaySun0();
+  const [newDay, setNewDay] = useState(String(todayDow));
   const [newStart, setNewStart] = useState('09:00');
   const [newEnd, setNewEnd] = useState('17:00');
   const [newCrossesMidnight, setNewCrossesMidnight] = useState(false);
@@ -143,70 +151,118 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
       <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('worker:availability.lead')}
       </Text>
-      {loading ? (
-        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
+      {loading && windows.length === 0 ? (
+        <View className="mt-4">
+          <SkeletonList rows={2} />
+        </View>
       ) : null}
+      <View className="mt-4">
+        <AvailabilityWeekGrid
+          markedDays={[...new Set(windows.map((window) => window.dayOfWeek))]}
+          selectedDay={
+            Number.isInteger(Number.parseInt(newDay, 10))
+              ? Number.parseInt(newDay, 10)
+              : 1
+          }
+          onSelect={(day) => setNewDay(String(day))}
+        />
+      </View>
+      <View className="mt-3">
+        <StatStrip
+          items={[
+            {
+              label: t('worker:calendar.today'),
+              value: String(
+                windows.filter((window) => window.dayOfWeek === todayDow)
+                  .length,
+              ),
+            },
+            {
+              label: t('worker:availability.statWindows'),
+              value: String(windows.length),
+            },
+          ]}
+        />
+      </View>
       <View className="mt-4 gap-2">
         {windows.map((w) => (
-          <View
-            key={w.key}
-            className="flex-row items-center justify-between rounded-xl bg-surface-1 p-3"
-          >
-            <View className="flex-1">
-              <Text className="font-sans font-semibold text-text-high">
-                {DAY_NAMES_TR[w.dayOfWeek]}
-              </Text>
-              <Text className="font-sans text-sm text-text-medium">
-                {formatMinuteOfDay(w.startMinute)} –{' '}
-                {formatMinuteOfDay(w.endMinute)}
-                {w.crossesMidnight ? ` (${t('worker:availability.overnight')})` : ''}
-              </Text>
-            </View>
+          <JobCard key={w.key} title={DAY_NAMES_TR[w.dayOfWeek]}>
+            {w.dayOfWeek === todayDow ? (
+              <StatusBadge label={t('worker:calendar.today')} tone="strong" />
+            ) : null}
+            <Text className="font-sans text-sm text-text-medium">
+              {formatMinuteOfDay(w.startMinute)} –{' '}
+              {formatMinuteOfDay(w.endMinute)}
+            </Text>
+            {w.crossesMidnight ? (
+              <StatusBadge
+                label={t('worker:availability.overnight')}
+                tone="warn"
+              />
+            ) : null}
             <Pressable
               accessibilityRole="button"
+              className="mt-2 self-start"
               onPress={() => onRemove(w.key)}
             >
               <Text className="font-sans text-sm font-semibold text-feedback-error">
                 {t('worker:availability.remove')}
               </Text>
             </Pressable>
-          </View>
+          </JobCard>
         ))}
       </View>
-      <View className="mt-6 gap-2 rounded-xl border border-surface-2 p-4">
-        <Text className="font-sans font-semibold text-text-high">
-          {t('worker:availability.addTitle')}
+      <JobCard title={t('worker:availability.addTitle')}>
+        <Text className="font-sans text-sm text-text-medium">
+          {t('worker:availability.startTime')}
         </Text>
-        <TextField
-          label={t('worker:availability.dayOfWeek')}
-          value={newDay}
-          onChangeText={setNewDay}
-          keyboardType="number-pad"
-          error={error === t('worker:availability.invalidDay') ? error : undefined}
-        />
-        <Text className="font-sans text-xs text-text-low">
-          {t('worker:availability.dayHint')}
+        <View className="flex-row flex-wrap gap-2">
+          {AVAIL_HOURS.map((hour) => {
+            const value = `${String(hour).padStart(2, '0')}:00`;
+            return (
+              <Pressable
+                key={`s-${hour}`}
+                className={`rounded-full px-3 py-2 ${
+                  newStart === value ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setNewStart(value)}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    newStart === value ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {t('worker:availability.hour', { hour })}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text className="font-sans text-sm text-text-medium">
+          {t('worker:availability.endTime')}
         </Text>
-        <TextField
-          label={t('worker:availability.startTime')}
-          value={newStart}
-          onChangeText={setNewStart}
-          error={
-            error === 'Saat biçimi HH:MM olmalı.' || error === 'Geçersiz saat.'
-              ? error
-              : undefined
-          }
-        />
-        <TextField
-          label={t('worker:availability.endTime')}
-          value={newEnd}
-          onChangeText={setNewEnd}
-          error={
-            error === 'Saat biçimi HH:MM olmalı.' || error === 'Geçersiz saat.'
-              ? error
-              : undefined
-          }
-        />
+        <View className="flex-row flex-wrap gap-2">
+          {AVAIL_HOURS.map((hour) => {
+            const value = `${String(hour).padStart(2, '0')}:00`;
+            return (
+              <Pressable
+                key={`e-${hour}`}
+                className={`rounded-full px-3 py-2 ${
+                  newEnd === value ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setNewEnd(value)}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    newEnd === value ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {t('worker:availability.hour', { hour })}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
         <Pressable
           accessibilityRole="switch"
           accessibilityState={{ checked: newCrossesMidnight }}
@@ -216,31 +272,27 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
           <Text className="font-sans text-sm text-text-high">
             {t('worker:availability.crossesMidnight')}
           </Text>
-          <Text className="font-sans text-sm font-semibold text-text-high">
-            {newCrossesMidnight ? t('common:yes') : t('common:no')}
-          </Text>
+          <StatusBadge
+            label={newCrossesMidnight ? t('common:yes') : t('common:no')}
+            tone={newCrossesMidnight ? 'warn' : 'neutral'}
+          />
         </Pressable>
-        <Pressable
-          className="rounded-xl bg-surface-1 px-4 py-3"
+        <Button
+          label={t('worker:availability.addWindow')}
           onPress={() => onAddWindow()}
-        >
-          <Text className="font-sans text-center font-semibold text-text-high">
-            {t('worker:availability.addWindow')}
-          </Text>
-        </Pressable>
-      </View>
+          variant="secondary"
+        />
+      </JobCard>
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <Pressable
-        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
-        disabled={submitting}
-        onPress={() => void onSave()}
-      >
-        <Text className="font-sans text-center text-base font-semibold text-text-on">
-          {submitting ? t('common:loading') : t('worker:availability.save')}
-        </Text>
-      </Pressable>
+      <View className="mt-8">
+        <Button
+          disabled={submitting}
+          label={submitting ? t('common:loading') : t('worker:availability.save')}
+          onPress={() => void onSave()}
+        />
+      </View>
     </ModulePage>
   );
 }

@@ -6,6 +6,7 @@ import type {
   CheckInBody,
   CheckOutBody,
   DisputeCreateBody,
+  ShiftIncidentCreateBody,
   ShiftStatus,
 } from '@parton/api-contracts';
 import { ErrorCode } from '@parton/api-contracts';
@@ -28,6 +29,55 @@ import {
 } from './shift-timing.util.js';
 
 type Tx = Prisma.TransactionClient;
+
+function jsonStrings(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
+function parseInstant(raw: string | undefined, field: string): Date | undefined {
+  if (raw == null || raw === '') {
+    return undefined;
+  }
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) {
+    throw new ApiException(
+      HttpStatus.BAD_REQUEST,
+      ErrorCode.VALIDATION_FAILED,
+      `${field} geçersiz.`,
+    );
+  }
+  return date;
+}
+
+function startsAtWhere(
+  from?: string,
+  to?: string,
+): Prisma.DateTimeFilter | undefined {
+  const gte = parseInstant(from, 'from');
+  const lt = parseInstant(to, 'to');
+  if (!gte && !lt) {
+    return undefined;
+  }
+  return {
+    ...(gte ? { gte } : {}),
+    ...(lt ? { lt } : {}),
+  };
+}
+
+function profileDisplayName(
+  profile:
+    | { firstName: string | null; lastName: string | null }
+    | null
+    | undefined,
+): string | null {
+  if (!profile) {
+    return null;
+  }
+  const name = `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim();
+  return name || null;
+}
 
 @Injectable()
 export class ShiftsService {
@@ -96,8 +146,16 @@ export class ShiftsService {
       checkedInAt: Date | null;
       completedAt: Date | null;
     },
-    job?: { title: string | null; sectorCode: string } | null,
+    job?: {
+      title: string | null;
+      sectorCode: string;
+      payAmountMinor?: number | null;
+      payCurrency?: string | null;
+      amenities?: unknown;
+      requiredDocumentTypes?: unknown;
+    } | null,
     branch?: { name: string; latitude: unknown; longitude: unknown } | null,
+    extra?: { workerDisplayName?: string | null },
   ) {
     const now = new Date();
     return {
@@ -114,6 +172,10 @@ export class ShiftsService {
       branchName: branch?.name ?? null,
       branchLatitude: branch ? Number(branch.latitude) : undefined,
       branchLongitude: branch ? Number(branch.longitude) : undefined,
+      payAmountMinor: job?.payAmountMinor ?? null,
+      payCurrency: job?.payCurrency ?? 'TRY',
+      amenities: jsonStrings(job?.amenities),
+      requiredDocumentTypes: jsonStrings(job?.requiredDocumentTypes),
       confirmWindow: {
         opensAt: row.confirmOpensAt.toISOString(),
         deadlineAt: row.confirmDeadlineAt.toISOString(),
@@ -132,17 +194,52 @@ export class ShiftsService {
         row.availabilityRespondedAt?.toISOString() ?? null,
       checkedInAt: row.checkedInAt?.toISOString() ?? null,
       completedAt: row.completedAt?.toISOString() ?? null,
+      workerDisplayName: extra?.workerDisplayName ?? null,
     };
   }
 
-  async listMine(workerUserId: string) {
+  async listMine(workerUserId: string, from?: string, to?: string) {
+    const startsAt = startsAtWhere(from, to);
     const rows = await this.prisma.shift.findMany({
-      where: { workerUserId },
+      where: { workerUserId, ...(startsAt ? { startsAt } : {}) },
       orderBy: { startsAt: 'asc' },
       include: { job: true, branch: true },
     });
     return {
       items: rows.map((r) => this.mapShift(r, r.job, r.branch)),
+    };
+  }
+
+  async listEmployerCalendar(ctx: AuthContext, from?: string, to?: string) {
+    if (!ctx.employerId) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.FORBIDDEN,
+        'İşveren bağlamı gerekli.',
+      );
+    }
+    const startsAt = startsAtWhere(from, to);
+    const rows = await this.prisma.shift.findMany({
+      where: {
+        employerId: ctx.employerId,
+        ...(startsAt ? { startsAt } : {}),
+        ...(ctx.role === 'manager' && ctx.branchIds?.length
+          ? { branchId: { in: ctx.branchIds } }
+          : {}),
+      },
+      orderBy: { startsAt: 'asc' },
+      include: {
+        job: true,
+        branch: true,
+        workerUser: { include: { workerProfile: true } },
+      },
+    });
+    return {
+      items: rows.map((row) =>
+        this.mapShift(row, row.job, row.branch, {
+          workerDisplayName: profileDisplayName(row.workerUser.workerProfile),
+        }),
+      ),
     };
   }
 
@@ -439,6 +536,7 @@ export class ShiftsService {
           accuracyM: body.accuracyM,
           mockLocation: body.mockLocation,
           locationPermissionGranted: body.locationPermissionGranted,
+          locationSource: body.locationSource,
         },
         {
           radiusM: remote.geofenceRadiusM,
@@ -478,6 +576,7 @@ export class ShiftsService {
           accuracyM: body.accuracyM,
           distanceM: geo.distanceM,
           mockLocation: body.mockLocation ?? false,
+          locationSource: body.locationSource ?? 'gps',
           softPass: geo.softPass,
           success: true,
           idempotencyKey,
@@ -589,12 +688,79 @@ export class ShiftsService {
     };
   }
 
+  async createIncident(
+    workerUserId: string,
+    shiftId: string,
+    body: ShiftIncidentCreateBody,
+  ) {
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+      include: { job: true },
+    });
+    if (!shift || shift.workerUserId !== workerUserId) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Vardiya bulunamadı.',
+      );
+    }
+    const created = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.shiftIncident.create({
+        data: {
+          shiftId,
+          workerUserId,
+          type: body.type,
+          severity: body.severity,
+          note: body.note ?? null,
+        },
+      });
+      const audience = await resolveEmployerAudience(
+        tx,
+        shift.employerId,
+        shift.branchId,
+      );
+      for (const userId of audience) {
+        await this.notifications.enqueueInTransaction(tx, {
+          userId,
+          type: 'shift.dispute_update',
+          dedupeKey: `shift.incident:${row.id}:${userId}`,
+          templateInput: { jobTitle: shift.job.title ?? shift.job.sectorCode },
+          data: { shiftId, incidentId: row.id, type: body.type },
+        });
+      }
+      return row;
+    });
+    return {
+      id: created.id,
+      shiftId: created.shiftId,
+      type: created.type,
+      severity: created.severity,
+      note: created.note,
+      createdAt: created.createdAt.toISOString(),
+    };
+  }
+
   async manualConfirm(
     actorUserId: string,
     ctx: AuthContext,
     shiftId: string,
     idempotencyKey?: string,
   ) {
+    const shift = await this.loadShiftForConfirm(shiftId);
+    await this.assertEmployerAccess(ctx, shift);
+    return this.applyManualConfirm(actorUserId, shift, idempotencyKey);
+  }
+
+  async adminManualConfirm(
+    actorUserId: string,
+    shiftId: string,
+    idempotencyKey?: string,
+  ) {
+    const shift = await this.loadShiftForConfirm(shiftId);
+    return this.applyManualConfirm(actorUserId, shift, idempotencyKey);
+  }
+
+  private async loadShiftForConfirm(shiftId: string) {
     const shift = await this.prisma.shift.findUnique({
       where: { id: shiftId },
       include: { job: true, branch: true },
@@ -606,41 +772,59 @@ export class ShiftsService {
         'Vardiya bulunamadı.',
       );
     }
-    await this.assertEmployerAccess(ctx, shift);
+    return shift;
+  }
+
+  private async applyManualConfirm(
+    actorUserId: string,
+    shift: {
+      id: string;
+      jobId: string;
+      workerUserId: string;
+      checkedInAt: Date | null;
+      job: { title: string | null; sectorCode: string };
+      branch: { name: string };
+    },
+    idempotencyKey?: string,
+  ) {
     if (shift.checkedInAt) {
-      return this.mapShift(shift, shift.job, shift.branch);
+      const current = await this.prisma.shift.findUnique({
+        where: { id: shift.id },
+        include: { job: true, branch: true },
+      });
+      return this.mapShift(current!, current!.job, current!.branch);
     }
 
     const checkedInAt = new Date();
     await this.prisma.$transaction(async (tx) => {
       await tx.shift.update({
-        where: { id: shiftId },
+        where: { id: shift.id },
         data: { status: 'manual_confirmed', checkedInAt },
       });
-      await this.ratings.markAttendanceConfirmed(tx, shiftId, checkedInAt);
+      await this.ratings.markAttendanceConfirmed(tx, shift.id, checkedInAt);
       await tx.checkInDispute.updateMany({
-        where: { shiftId, status: 'open' },
+        where: { shiftId: shift.id, status: 'open' },
         data: {
           status: 'manual_confirmed',
           resolvedByUserId: actorUserId,
           resolvedAt: checkedInAt,
         },
       });
-      await this.tokens.captureForShift(tx, shiftId, idempotencyKey);
+      await this.tokens.captureForShift(tx, shift.id, idempotencyKey);
       await this.notifications.enqueueInTransaction(tx, {
         userId: shift.workerUserId,
         type: 'shift.manual_confirmed',
-        dedupeKey: `shift.manual_confirmed:${shiftId}`,
+        dedupeKey: `shift.manual_confirmed:${shift.id}`,
         templateInput: {
           jobTitle: shift.job.title ?? shift.job.sectorCode,
           branchName: shift.branch.name,
         },
-        data: { shiftId, jobId: shift.jobId },
+        data: { shiftId: shift.id, jobId: shift.jobId },
       });
     });
 
     const updated = await this.prisma.shift.findUnique({
-      where: { id: shiftId },
+      where: { id: shift.id },
       include: { job: true, branch: true },
     });
     return this.mapShift(updated!, updated!.job, updated!.branch);
@@ -728,6 +912,7 @@ export class ShiftsService {
         accuracyM: body.accuracyM,
         distanceM: params.distanceM,
         mockLocation: body.mockLocation ?? false,
+        locationSource: body.locationSource ?? 'gps',
         success: false,
         failureCode: params.failureCode,
         idempotencyKey,

@@ -28,6 +28,7 @@ import type { EmployerCreateData } from '../../api/employers-api-types';
 import type { ManagerJoinData } from '../../api/manager-api-types';
 import { unregisterPushToken } from '../../notifications/push-registration';
 import { ApiClientError } from '../../api/client';
+import { clearSystemRoute } from '../system/system-route-store';
 import {
   clearSessionMemory,
   getAccessToken,
@@ -201,7 +202,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setContexts(ctx.items);
           await syncGate(tokens.accessToken, me, ctx.items);
         }
-      } catch {
+      } catch (err) {
+        if (
+          err instanceof ApiClientError &&
+          (err.code === 'ACCOUNT_RESTRICTED' || err.code === 'ACCOUNT_BANNED')
+        ) {
+          if (!cancelled) {
+            setPhase('authenticated');
+          }
+          return;
+        }
         await clearRefreshToken();
         clearSessionMemory();
         if (!cancelled) {
@@ -506,6 +516,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     await clearRefreshToken();
     clearSessionMemory();
+    clearSystemRoute();
     setUser(null);
     setContexts([]);
     setOnboardingKind(null);

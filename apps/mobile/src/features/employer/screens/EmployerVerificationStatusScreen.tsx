@@ -1,8 +1,6 @@
-import { statusLabelTr } from '@parton/api-contracts';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Text } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
@@ -10,6 +8,10 @@ import { openInTab } from '../../../app/navigation/dock-routes';
 import { ApiClientError } from '../../../api/client';
 import { fetchEmployerMe } from '../../../api/employers-api';
 import { AccountLinkSection } from '../../shared/AccountLinkSection';
+import { JobCard } from '../../../components/job/JobCard';
+import { Button } from '../../../components/ui/Button';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -60,42 +62,45 @@ export function EmployerVerificationStatusScreen({ navigation }: Props) {
       <Text className="font-sans mt-2 text-sm text-text-medium">
         {t('employer:verification.lead')}
       </Text>
-      {loading ? (
-        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
-      ) : null}
-      {legalName ? (
-        <Text className="font-sans mt-4 text-base font-semibold text-text-high">
-          {legalName}
-        </Text>
+      {loading && !status ? (
+        <View className="mt-4">
+          <SkeletonList rows={2} />
+        </View>
       ) : null}
       {status ? (
-        <Text className="font-sans mt-2 text-sm text-text-medium">
-          {statusLabelTr(status)}
-        </Text>
-      ) : null}
-      {!canPublish && status ? (
-        <Text className="font-sans mt-4 rounded-xl bg-surface-1 p-3 text-sm text-feedback-error">
-          {t('employer:verification.publishBlocked')}
-        </Text>
+        <View className="mt-4">
+          <JobCard
+            status={status}
+            title={legalName ?? t('employer:verification.title')}
+          >
+            <StatusBadge
+              label={t(`employer:verification.status.${status}`, {
+                defaultValue: status,
+              })}
+              tone={canPublish ? 'strong' : 'warn'}
+            />
+            {!canPublish ? (
+              <Text className="font-sans mt-2 text-sm text-feedback-error">
+                {t('employer:verification.publishBlocked')}
+              </Text>
+            ) : null}
+          </JobCard>
+        </View>
       ) : null}
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
       <AccountLinkSection />
-      <Pressable
-        accessibilityRole="button"
-        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
+      <Button
+        className="mt-8"
+        label={t('employer:verification.backToJobs')}
         onPress={() =>
           openInTab(navigation, 'EmployerJobsList', [
             'EmployerJobs',
             'ManagerJobs',
           ])
         }
-      >
-        <Text className="font-sans text-center font-semibold text-text-on">
-          {t('employer:verification.backToJobs')}
-        </Text>
-      </Pressable>
+      />
     </ModulePage>
   );
 }

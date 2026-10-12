@@ -5,6 +5,8 @@ import {
   disputeCreateBodySchema,
   disputeResponseSchema,
   employerOpenDisputesResponseSchema,
+  shiftIncidentCreateBodySchema,
+  shiftIncidentResponseSchema,
   shiftListResponseSchema,
   shiftResponseSchema,
   type AvailabilityConfirmBody,
@@ -13,6 +15,7 @@ import {
   type CheckOutBody,
   type DisputeCreateBody,
   type Shift,
+  type ShiftIncidentCreateBody,
 } from '@parton/api-contracts';
 
 import { apiRequest } from './client';
@@ -55,6 +58,19 @@ export async function manualConfirmShift(
     method: 'POST',
     accessToken,
     idempotencyKey,
+  });
+}
+
+export async function createShiftIncident(
+  shiftId: string,
+  accessToken: string,
+  body: ShiftIncidentCreateBody,
+) {
+  shiftIncidentCreateBodySchema.parse(body);
+  return apiRequest(`/shifts/${shiftId}/incidents`, shiftIncidentResponseSchema, {
+    method: 'POST',
+    body,
+    accessToken,
   });
 }
 

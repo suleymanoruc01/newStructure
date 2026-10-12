@@ -11,7 +11,7 @@ export function workerShiftRoute(status: ShiftStatus): string | null {
     case 'cannot_come':
       return 'WorkerShiftAvailability';
     case 'can_come':
-      return 'WorkerShiftCheckIn';
+      return 'WorkerShiftPrep';
     case 'checked_in':
     case 'manual_confirmed':
       return 'WorkerShiftInShift';
@@ -25,9 +25,33 @@ export function workerShiftRoute(status: ShiftStatus): string | null {
   }
 }
 
+export function workerShiftCtaKey(
+  status: ShiftStatus,
+): 'ctaAvailability' | 'ctaPrep' | 'ctaInShift' | null {
+  switch (status) {
+    case 'scheduled':
+    case 'awaiting_confirm':
+    case 'cannot_come':
+      return 'ctaAvailability';
+    case 'can_come':
+      return 'ctaPrep';
+    case 'checked_in':
+    case 'manual_confirmed':
+      return 'ctaInShift';
+    case 'released':
+    case 'completed':
+      return null;
+    default: {
+      const unreachable: never = status;
+      return unreachable;
+    }
+  }
+}
+
 export const WORKER_SCREEN_TAB: Record<string, string> = {
   WorkerHome: 'WorkerHome',
   WorkerShiftAvailability: 'WorkerHome',
+  WorkerShiftPrep: 'WorkerHome',
   WorkerShiftCheckIn: 'WorkerHome',
   WorkerShiftInShift: 'WorkerHome',
   WorkerShiftCheckOut: 'WorkerHome',
@@ -48,7 +72,12 @@ export const WORKER_SCREEN_TAB: Record<string, string> = {
   WorkerFavoritesList: 'WorkerProfile',
   WorkerDocumentsList: 'WorkerProfile',
   WorkerDocumentsUpload: 'WorkerProfile',
+  WorkerRevenue: 'WorkerProfile',
   SharedAbuseReport: 'WorkerProfile',
+  SharedSupportRequest: 'WorkerProfile',
+  SharedSettings: 'WorkerProfile',
+  SharedAccountEmail: 'WorkerProfile',
+  SharedJobProcess: 'WorkerProfile',
 };
 
 export const EMPLOYER_SCREEN_TAB: Record<string, string> = {
@@ -64,13 +93,26 @@ export const EMPLOYER_SCREEN_TAB: Record<string, string> = {
   EmployerCreateJob: 'EmployerJobs',
   EmployerJobDetail: 'EmployerJobs',
   EmployerApplicants: 'EmployerJobs',
+  EmployerApplicantDetail: 'EmployerJobs',
   EmployerVerificationStatus: 'EmployerJobs',
+  EmployerDashboard: 'EmployerHome',
+  EmployerCalendar: 'EmployerHome',
   EmployerBranches: 'EmployerBranches',
+  EmployerBranchDetail: 'EmployerBranches',
+  EmployerBranchForm: 'EmployerBranches',
   EmployerProfileRoot: 'EmployerProfile',
   EmployerFavoriteWorkers: 'EmployerProfile',
+  EmployerBusiness: 'EmployerProfile',
+  EmployerIndustry: 'EmployerProfile',
+  EmployerChecklist: 'EmployerProfile',
+  EmployerOpsSettings: 'EmployerProfile',
   SharedRatingsPending: 'EmployerProfile',
   SharedRatingsCompose: 'EmployerProfile',
   SharedAbuseReport: 'EmployerProfile',
+  SharedSupportRequest: 'EmployerProfile',
+  SharedSettings: 'EmployerProfile',
+  SharedAccountEmail: 'EmployerProfile',
+  SharedJobProcess: 'EmployerJobs',
 };
 
 export const MANAGER_SCREEN_TAB: Record<string, string> = {
@@ -80,7 +122,9 @@ export const MANAGER_SCREEN_TAB: Record<string, string> = {
   EmployerCreateJob: 'ManagerJobs',
   EmployerJobDetail: 'ManagerJobs',
   EmployerApplicants: 'ManagerJobs',
+  EmployerApplicantDetail: 'ManagerJobs',
   EmployerVerificationStatus: 'ManagerJobs',
+  SharedJobProcess: 'ManagerJobs',
   SharedNotificationsList: 'ManagerAlerts',
   SharedNotificationDetail: 'ManagerAlerts',
   SharedNotificationPrefs: 'ManagerAlerts',
@@ -90,9 +134,18 @@ export const MANAGER_SCREEN_TAB: Record<string, string> = {
   EmployerOpenDisputes: 'ManagerProfile',
   EmployerShiftManualConfirm: 'ManagerProfile',
   EmployerFavoriteWorkers: 'ManagerProfile',
+  EmployerDashboard: 'ManagerProfile',
+  EmployerCalendar: 'ManagerHome',
+  EmployerBusiness: 'ManagerProfile',
+  EmployerIndustry: 'ManagerProfile',
+  EmployerChecklist: 'ManagerProfile',
+  EmployerOpsSettings: 'ManagerProfile',
   SharedRatingsPending: 'ManagerProfile',
   SharedRatingsCompose: 'ManagerProfile',
   SharedAbuseReport: 'ManagerProfile',
+  SharedSupportRequest: 'ManagerProfile',
+  SharedSettings: 'ManagerProfile',
+  SharedAccountEmail: 'ManagerProfile',
 };
 
 type TabNavigation = {

@@ -1,6 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
-export type SystemRoute = 'forbidden' | 'session-expired' | null;
+export type SystemRoute =
+  | 'forbidden'
+  | 'session-expired'
+  | 'restriction'
+  | 'blocking'
+  | null;
 
 let route: SystemRoute = null;
 const listeners = new Set<() => void>();

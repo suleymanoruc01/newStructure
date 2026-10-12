@@ -84,3 +84,13 @@ export const managerJoinDataSchema = z.object({
 
 export const managerJoinResponseSchema =
   successEnvelopeSchema(managerJoinDataSchema);
+
+export const adminBranchCreateBodySchema = branchCreateBodySchema.extend({
+  employerId: z.string().uuid(),
+});
+
+export type AdminBranchCreateBody = z.infer<typeof adminBranchCreateBodySchema>;
+
+export const adminBranchPatchBodySchema = branchPatchBodySchema;
+
+export type AdminBranchPatchBody = z.infer<typeof adminBranchPatchBodySchema>;

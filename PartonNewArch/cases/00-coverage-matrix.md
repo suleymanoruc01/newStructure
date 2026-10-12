@@ -3,7 +3,7 @@
 **Source:** [`../../parton_case_tests_tr.json`](../../parton_case_tests_tr.json)  
 **NewArch scenarios:** [`parton_case_tests_newarch_en.json`](parton_case_tests_newarch_en.json) · [`parton_case_tests_newarch_tr.json`](parton_case_tests_newarch_tr.json)  
 **Status:** `accepted` · [agents/10](../agents/10-production-ready.md)  
-**Last updated:** 2026-10-10  
+**Last updated:** 2026-10-12  
 **UI mandate:** [`03-ui-coverage-mandate.md`](03-ui-coverage-mandate.md) · components [`../shared/02-ui-components.md`](../shared/02-ui-components.md)
 
 Maps all **248** Parton cases to Nest modules and UI surfaces (screens + components). Missing catalog IDs (not in source): `T-095`, `T-120`, `T-208`, `T-224`.
@@ -62,7 +62,7 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-010` | Kayıt sonrası profil tamamlama zorunluluğu | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 | `T-011` | Geçerli firma bilgileri ile kayıt | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 | `T-012` | Eksik firma bilgileri ile kayıt denemesi | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
-| `T-013` | Aynı vergi numarası ile mükerrer hesap kontrolü | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `gap` | gap-tax-verification |
+| `T-013` | Aynı vergi numarası ile mükerrer hesap kontrolü | Orta | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` | gap-tax-verification |
 | `T-014` | Yetkisiz kullanıcının şube açma denemesi | Kritik | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 | `T-015` | Firma doğrulaması olmadan ilan açma denemesi | Kritik | Fonksiyonel | auth, users, policies, employers | m.auth.*, m.worker.onboarding.*, m.employer.onboarding.* | `covered` |  |
 
@@ -75,12 +75,12 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-016` | Uygun gün seçiminin doğru kaydedilmesi | Yüksek | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 | `T-017` | Gün içinde birden fazla saat aralığı ekleme | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 | `T-018` | Çakışan saat aralıklarını engelleme | Kritik | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
-| `T-019` | Gece vardiyası uygunluğu tanımlama | Yüksek | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `gap` | gap-night-shift |
+| `T-019` | Gece vardiyası uygunluğu tanımlama | Yüksek | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` | gap-night-shift |
 | `T-020` | Çoklu sektör seçimi | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 | `T-021` | Çoklu meslek seçimi | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
-| `T-022` | Belge seçimi doğru kaydediliyor mu | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `gap` | gap-documents |
-| `T-023` | Belge yükleme varsa dosya tipi kontrolü | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `gap` | gap-documents |
-| `T-024` | Geçersiz belge yükleme | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `gap` | gap-documents |
+| `T-022` | Belge seçimi doğru kaydediliyor mu | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` | gap-documents |
+| `T-023` | Belge yükleme varsa dosya tipi kontrolü | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` | gap-documents |
+| `T-024` | Geçersiz belge yükleme | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` | gap-documents |
 | `T-025` | Konum pinleme doğruluğu | Kritik | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 | `T-026` | Profil güncelleme sonrası eşleşme güncelleniyor mu | Yüksek | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` |  |
 | `T-027` | Yaş değişikliği sonrası ilan görünürlüğü değişiyor mu | Orta | Fonksiyonel | workers, matching, applications | m.worker.profile.*, m.worker.availability.edit, m.worker.onboarding.profile | `covered` | gap-age-filter |
@@ -150,7 +150,7 @@ Kayıt, giriş, oturum, hesap oluşturma ve hesap güvenliği akışları.
 | `T-070` | Çoklu meslek seçen işçiye tüm uygun ilanların görünmesi | Yüksek | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-071` | Kısmi saat çakışmasında davranış | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-072` | Tam kapsama kuralı testi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
-| `T-073` | Gece vardiyası eşleşmesi | Yüksek | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `gap` | gap-night-shift |
+| `T-073` | Gece vardiyası eşleşmesi | Yüksek | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `covered` | gap-night-shift |
 | `T-074` | Favori işveren ilanlarının ayrı gösterimi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
 | `T-075` | Sadece favorilere açık ilanın diğer işçilere görünmemesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `covered` | gap-favorites-only-job |
 | `T-076` | En yakın işin üstte görünmesi | Orta | İş Kuralı | matching, jobs, workers, favorites | m.worker.jobs.list, m.worker.jobs.detail | `partial` | matching-rules-engine |
@@ -261,7 +261,7 @@ Konum izni, konum doğrulama, mesafe ve geo bağımlı kontroller.
 | `T-141` | AVM içinde lokasyon sapması | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
 | `T-142` | Plaza ve çok katlı yapı senaryosu | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
 | `T-143` | Kırsal bölgede düşük GPS kalitesi | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
-| `T-144` | Wi-Fi destekli konum doğrulama | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `gap` | gap-wifi-location |
+| `T-144` | Wi-Fi destekli konum doğrulama | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `covered` | gap-wifi-location |
 | `T-145` | Hareket halindeyken check-in | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
 | `T-146` | Arka planda konum izni yokken davranış | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
 | `T-147` | iOS ve Android farkları | Kritik | İş Kuralı | location, shifts, branches | m.worker.shift.check-in, m.employer.branches.form, w.employer.branches.form | `partial` | geofence-policy |
@@ -299,8 +299,8 @@ Favoriye alma, favoriden çıkarma, listeleme ve favori tutarlılığı akışla
 | `T-165` | İşçinin işvereni favoriye alması | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `covered` |  |
 | `T-166` | Tek taraflı favori mantığı | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `covered` |  |
 | `T-167` | Karşılıklı favori davranışı varsa testi | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `covered` |  |
-| `T-168` | Favorilere özel ilan oluşturma | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `gap` | gap-favorites-only-job |
-| `T-169` | Bu ilanın sadece favorilere görünmesi | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `gap` | gap-favorites-only-job |
+| `T-168` | Favorilere özel ilan oluşturma | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `covered` | gap-favorites-only-job |
+| `T-169` | Bu ilanın sadece favorilere görünmesi | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `covered` | gap-favorites-only-job |
 | `T-170` | Favoriler ekranında ilan görünmesi | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `covered` |  |
 | `T-171` | Favoriden çıkarınca erişimin kalkması | Orta | Fonksiyonel | favorites, jobs, matching, notifications | m.worker.favorites.list, m.employer.favorites.workers, w.employer.favorites.workers | `covered` |  |
 
@@ -314,7 +314,7 @@ Değerlendirme, puanlama, yorum, görünürlük ve puan güvenilirliği akışla
 | `T-173` | İşçinin işvereni puanlaması | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `covered` |  |
 | `T-174` | İşverenin işçiyi puanlaması | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `covered` |  |
 | `T-175` | Yorum bırakma | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `covered` |  |
-| `T-176` | Hakaret içerikli yorum filtresi | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `gap` | gap-profanity-filter |
+| `T-176` | Hakaret içerikli yorum filtresi | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `covered` | gap-profanity-filter |
 | `T-177` | Aynı iş için tekrar puan verememe | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `covered` |  |
 | `T-178` | İşe gelmeyen kullanıcı için değerlendirme kuralı | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `covered` |  |
 | `T-179` | İptal edilen işte değerlendirme tetiklenmesi | Orta | Fonksiyonel | ratings, notifications, shifts | m.shared.ratings.*, w.employer.ratings.pending | `covered` |  |
@@ -367,7 +367,7 @@ Birden fazla modülü kapsayan tam kullanıcı yolculukları.
 | `T-213` | İşveren doğrular | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-214` | Jeton kararı doğru uygulanır | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-215` | İşveren işçiyi favoriye alır | Kritik | Uçtan Uca | * | multi | `covered` |  |
-| `T-216` | Yeni ilanı sadece favorilere açar | Kritik | Uçtan Uca | * | multi | `gap` | gap-favorites-only-job |
+| `T-216` | Yeni ilanı sadece favorilere açar | Kritik | Uçtan Uca | * | multi | `covered` | gap-favorites-only-job |
 | `T-217` | İlgili işçi ilanı görür | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-218` | Başvuru ve onay tamamlanır | Kritik | Uçtan Uca | * | multi | `covered` |  |
 | `T-219` | İşveren 5 kişilik ilan açar | Kritik | Uçtan Uca | * | multi | `covered` |  |
@@ -429,9 +429,9 @@ Yetkilendirme, veri koruma, hassas veri, erişim kontrolü ve güvenlik akışla
 
 | Status | Count |
 | --- | ---: |
-| covered | 160 |
-| partial | 61 |
-| gap | 27 |
+| covered | 190 |
+| partial | 57 |
+| gap | 1 |
 | **total** | **248** |
 
 See [01-gap-backlog.md](01-gap-backlog.md) for remediation of `gap` / `partial` items.  

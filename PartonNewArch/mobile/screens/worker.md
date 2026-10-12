@@ -130,7 +130,7 @@
 | **Entry** | Calendar tab |
 | **Layout** | Month/week toggle; event chips; CTA to edit availability |
 | **Actions** | Open shift; Edit availability |
-| **API** | `GET /api/v1/workers/me/calendar` |
+| **API** | `GET /api/v1/workers/me/calendar` (`from`/`to` optional ISO instants) |
 | **Cases** | `CASE-WORKER-PROFILE`, `CASE-CHECKIN` |
 | **Legacy** | `EmployeeCalendarScreen` |
 

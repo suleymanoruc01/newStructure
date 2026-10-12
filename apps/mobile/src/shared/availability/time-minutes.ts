@@ -27,6 +27,8 @@ export function parseTimeToMinute(value: string): number {
   return hour * 60 + minute;
 }
 
+export const AVAIL_HOURS = [6, 8, 9, 10, 12, 14, 16, 17, 18, 20, 22] as const;
+
 export const DAY_NAMES_TR = [
   'Pazar',
   'Pazartesi',

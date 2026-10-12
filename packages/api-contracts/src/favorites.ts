@@ -17,6 +17,7 @@ export const favoriteItemSchema = z.object({
   id: z.string().uuid(),
   type: favoriteTargetTypeSchema,
   targetId: z.string().uuid(),
+  targetLabel: z.string().nullable().optional(),
   mutual: z.boolean(),
   createdAt: z.string().datetime(),
 });

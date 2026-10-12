@@ -1,7 +1,7 @@
 export type WorkerStackParamList = {
   WorkerHome: undefined;
   WorkerCalendar: undefined;
-  WorkerJobsList: undefined;
+  WorkerJobsList: { query?: string } | undefined;
   WorkerApplicationsList: undefined;
   WorkerFavoritesList: undefined;
   WorkerAvailabilityEdit: undefined;
@@ -12,12 +12,18 @@ export type WorkerStackParamList = {
   WorkerJobDetail: { jobId: string };
   WorkerJobApply: { jobId: string };
   WorkerShiftAvailability: { shiftId: string };
+  WorkerShiftPrep: { shiftId: string };
   WorkerShiftCheckIn: { shiftId: string };
   WorkerShiftInShift: { shiftId: string };
   WorkerShiftCheckOut: { shiftId: string };
   WorkerShiftDispute: { shiftId: string };
+  WorkerRevenue: undefined;
   SharedRatingsPending: undefined;
   SharedAbuseReport: { targetUserId?: string } | undefined;
+  SharedSupportRequest: undefined;
+  SharedSettings: undefined;
+  SharedAccountEmail: undefined;
+  SharedJobProcess: { applicationId: string };
   SharedNotificationsList: undefined;
   SharedNotificationDetail: { notificationId: string };
   SharedNotificationPrefs: undefined;

@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -24,6 +25,7 @@ import { AppConfigService } from '../config/app-config.service.js';
 import { RequireRoles, RoleContextGuard } from '../common/role-context.guard.js';
 import { successResponse } from '../common/response.util.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { ShiftsService } from '../shifts/shifts.service.js';
 import { EmployersService } from './employers.service.js';
 
 @Controller('employers')
@@ -31,6 +33,7 @@ export class EmployersController {
   constructor(
     private readonly employers: EmployersService,
     private readonly config: AppConfigService,
+    private readonly shifts: ShiftsService,
   ) {}
 
   @Post()
@@ -98,6 +101,22 @@ export class EmployersController {
       req.userId!,
       employerId,
       parsed,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get('me/calendar')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer', 'manager')
+  async calendar(
+    @Req() req: Request,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const data = await this.shifts.listEmployerCalendar(
+      req.authContext!,
+      from,
+      to,
     );
     return successResponse(req.requestId ?? '', data);
   }

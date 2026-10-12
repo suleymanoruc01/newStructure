@@ -1,4 +1,16 @@
 {
+  "support": {
+    "title": "Destek",
+    "lead": "Hesap, ödeme veya uygulama sorunlarınız için destek ekibine yazın.",
+    "subjectLabel": "Konu",
+    "bodyLabel": "Mesaj",
+    "subjectTooShort": "Konu en az 3 karakter olmalı.",
+    "bodyTooShort": "Mesaj en az 10 karakter olmalı.",
+    "submit": "Talebi gönder",
+    "chipTokens": "Jeton ve ödeme",
+    "chipShift": "Vardiya check-in",
+    "chipAccount": "Hesap ve belgeler"
+  },
   "abuse": {
     "title": "Şikayet",
     "lead": "Kategori seçin ve ne olduğunu yazın. Şikayet yönetici kuyruğuna düşer.",
@@ -25,6 +37,13 @@
     "title": "Bildirimler",
     "empty": "Henüz bildirim yok. Push kapalı olsa da gelen kayıtlar burada durur.",
     "readAll": "Tümünü okundu işaretle",
+    "filterAll": "Tümü",
+    "search": "Bildirim ara",
+    "searchEmpty": "Bu aramaya uyan bildirim yok.",
+    "unread": "Okunmamış",
+    "read": "Okundu",
+    "unreadEmpty": "Okunmamış bildirim yok.",
+    "typeEmpty": "Bu türde bildirim yok.",
     "prefs": "Bildirim tercihleri",
     "prefsTitle": "Bildirim tercihleri",
     "prefsLead": "Kapalı kategori için anlık bildirim gitmez. Uygulama içi kutu dolmaya devam eder.",
@@ -52,5 +71,46 @@
     "title": "Oturum sona erdi",
     "body": "Güvenliğiniz için oturumunuz kapatıldı. Devam etmek için tekrar giriş yapın.",
     "reauth": "Yeniden giriş yap"
+  },
+  "restriction": {
+    "title": "Hesap kısıtlandı",
+    "body": "Hesabınız geçici olarak kısıtlandı. Destek ile iletişime geçebilirsiniz."
+  },
+  "blocking": {
+    "title": "Hesap kapalı",
+    "body": "Bu hesap kullanıma kapalı. Yeni bir kayıt açılamaz."
+  },
+  "settings": {
+    "title": "Hesap ayarları",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "theme": "Görünüm",
+    "themeValue": {
+      "light": "Açık",
+      "dark": "Koyu"
+    },
+    "deleteTitle": "Hesabı sil",
+    "deleteBody": "Silme talebi kaydedilir. Destek ekibi KVKK sürecini tamamlar.",
+    "deleteCta": "Hesap silme talebi",
+    "deleteRequested": "Silme talebiniz alındı."
+  },
+  "email": {
+    "title": "E-posta",
+    "lead": "Hesap bildirimleri ve kurtarma için e-posta ekleyin. Giriş telefon numarasıyladır.",
+    "label": "E-posta"
+  },
+  "process": {
+    "title": "İş süreci",
+    "done": "Tamam",
+    "waiting": "Bekliyor",
+    "steps": {
+      "applied": "Başvuru alındı",
+      "review": "İşveren incelemesi",
+      "decision": "Karar",
+      "shift": "Vardiya"
+    },
+    "openShift": "Vardiyaya git",
+    "openJob": "İlanı aç",
+    "openApplicants": "Başvuranlar"
   }
 }

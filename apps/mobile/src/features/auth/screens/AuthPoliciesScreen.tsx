@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { clayCard } from '../../../components/ui/clay';
 import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { listPublishedPolicies } from '../../../api/auth-api';
@@ -203,9 +205,14 @@ export function AuthPoliciesScreen({ navigation }: Props) {
     >
       <View className="min-h-0 flex-1">
       {loading ? (
-        <Text className="font-sans text-text-medium">{t('common:loading')}</Text>
+        <View className="mt-4">
+          <SkeletonList rows={3} />
+        </View>
       ) : current ? (
-        <View className="min-h-0 flex-1 rounded-[28px] bg-surface-1 p-5">
+        <View
+          style={clayCard}
+          className="min-h-0 flex-1 rounded-[28px] bg-surface-1 p-5"
+        >
           <View className="mb-4 flex-row gap-1.5">
             {Array.from({ length: Math.max(total, policies.length, 1) }, (_, index) => (
               <View
@@ -286,7 +293,8 @@ export function AuthPoliciesScreen({ navigation }: Props) {
             <Pressable
               accessibilityRole="checkbox"
               accessibilityState={{ checked, disabled: !scrolled || submitting }}
-              className="mt-4 flex-row items-center gap-3 rounded-[22px] bg-surface-base px-4 py-3"
+              style={clayCard}
+              className="mt-4 flex-row items-center gap-3 rounded-[22px] bg-surface-1 px-4 py-3"
               disabled={!scrolled || submitting}
               onPress={() => {
                 if (!scrolled) {

@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { clayCard } from '../../../components/ui/clay';
 import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { ApiClientError } from '../../../api/client';
@@ -117,6 +119,7 @@ export function AuthOtpScreen({ navigation, route }: Props) {
         onPress={() => inputRef.current?.focus()}
       >
         <View
+          style={clayCard}
           className={`h-16 flex-row items-center overflow-hidden rounded-[22px] bg-surface-1 ${
             error ? 'border border-feedback-error' : ''
           }`}
@@ -156,13 +159,29 @@ export function AuthOtpScreen({ navigation, route }: Props) {
       {error ? (
         <Text className="font-sans text-sm text-feedback-error">{error}</Text>
       ) : (
-        <Text className="font-sans text-sm text-text-low">{t('auth:otp.codeLabel')}</Text>
+        <View className="flex-row flex-wrap gap-2">
+          <StatusBadge
+            label={
+              code.length === CODE_LENGTH
+                ? t('auth:otp.codeReady')
+                : t('auth:otp.needDigits')
+            }
+            tone={code.length === CODE_LENGTH ? 'strong' : 'warn'}
+          />
+          <StatusBadge
+            label={
+              secondsLeft > 0
+                ? t('auth:otp.resendWait', { seconds: secondsLeft })
+                : t('auth:otp.resendReady')
+            }
+            tone={secondsLeft > 0 ? 'warn' : 'strong'}
+          />
+        </View>
       )}
       <Button
         disabled={submitting || code.length !== CODE_LENGTH}
         label={submitting ? t('common:loading') : t('common:continue')}
         onPress={() => void onVerify()}
-        shape="capsule"
       />
       <Button
         disabled={secondsLeft > 0}
@@ -172,13 +191,11 @@ export function AuthOtpScreen({ navigation, route }: Props) {
             : t('auth:otp.resend')
         }
         onPress={() => void onResend()}
-        shape="capsule"
         variant="ghost"
       />
       <Button
         label={t('auth:otp.changeNumber')}
         onPress={() => navigation.goBack()}
-        shape="capsule"
         variant="ghost"
       />
     </ModulePage>

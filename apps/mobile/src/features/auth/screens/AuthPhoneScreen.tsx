@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayCard } from '../../../components/ui/ClayCard';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
@@ -134,7 +134,6 @@ export function AuthPhoneScreen({ navigation }: Props) {
         }}
         placeholder={t('auth:phone.phonePlaceholder')}
         prefix="+90"
-        shape="capsule"
         testID="auth-phone-input"
         value={phone}
       />
@@ -143,14 +142,12 @@ export function AuthPhoneScreen({ navigation }: Props) {
           disabled={submitting}
           label={t('auth:phone.signUp')}
           onPress={() => void onSignUp()}
-          shape="capsule"
           testID="auth-phone-continue"
         />
         <Button
           disabled={submitting}
           label={t('auth:phone.signIn')}
           onPress={onSignIn}
-          shape="capsule"
           testID="auth-phone-signin"
           variant="secondary"
         />
@@ -165,21 +162,7 @@ export function AuthPhoneScreen({ navigation }: Props) {
       </View>
       </View>
       <View className="min-h-8 flex-1" />
-      <Pressable
-        accessibilityRole="link"
-        onPress={() => navigation.navigate('AuthPolicies')}
-        className="rounded-[22px] bg-surface-1 px-4 py-4"
-        style={{
-          borderTopWidth: 2,
-          borderTopColor: 'rgba(251, 246, 236, 0.9)',
-          borderBottomWidth: 4,
-          borderBottomColor: '#DDD4C7',
-          shadowColor: '#252823',
-          shadowOffset: { width: 2, height: 6 },
-          shadowOpacity: 0.12,
-          shadowRadius: 8,
-        }}
-      >
+      <ClayCard onPress={() => navigation.navigate('AuthPolicies')}>
         <Text className="font-sans text-sm leading-5 text-text-medium">
           {t('auth:phone.legalHint')}
         </Text>
@@ -189,7 +172,7 @@ export function AuthPhoneScreen({ navigation }: Props) {
           </Text>
           <Text className="font-sans text-xl text-text-low">›</Text>
         </View>
-      </Pressable>
+      </ClayCard>
       </View>
     </ModulePage>
   );

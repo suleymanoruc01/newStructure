@@ -82,6 +82,30 @@ export class ApplicationsController {
     return successResponse(req.requestId ?? '', data);
   }
 
+  @Post(':id/substitute')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer', 'manager')
+  async substitute(@Req() req: Request, @Param('id') id: string) {
+    const data = await this.applications.moveToSubstitute(
+      req.userId!,
+      req.authContext!,
+      id,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post(':id/substitute-remove')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer', 'manager')
+  async substituteRemove(@Req() req: Request, @Param('id') id: string) {
+    const data = await this.applications.removeSubstitute(
+      req.userId!,
+      req.authContext!,
+      id,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
   @Post(':id/accept-revoke')
   @UseGuards(RoleContextGuard)
   @RequireRoles('employer', 'manager')

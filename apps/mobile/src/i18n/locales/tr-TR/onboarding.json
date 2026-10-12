@@ -7,12 +7,13 @@
     "lastName": "Soyad",
     "birthDate": "Doğum tarihi",
     "gender": "Cinsiyet",
-    "sectors": "Sektörler (virgülle)",
+    "sectors": "Sektörler",
+    "pinPicked": "Pin: {{lat}}, {{lng}}",
     "nightShiftOn": "Gece vardiyası: uygun",
     "nightShiftOff": "Gece vardiyası: uygun değil",
     "latitude": "Ev konumu — enlem",
     "longitude": "Ev konumu — boylam",
-    "availabilityHint": "Hafta içi 09:00–17:00 müsaitliği kaydedilecek.",
+    "availabilityHint": "Müsait olduğunuz günleri ve saatleri seçin.",
     "finish": "Profili tamamla",
     "invalidCoords": "Geçerli enlem ve boylam girin."
   },
@@ -22,7 +23,8 @@
     "legalName": "Ticari unvan",
     "tradingName": "Marka adı (isteğe bağlı)",
     "taxId": "Vergi numarası",
-    "industries": "Sektörler (virgülle)",
+    "industries": "Sektörler",
+    "pinPicked": "Pin: {{lat}}, {{lng}}",
     "branchTitle": "İlk şube",
     "branchSubtitle": "Çalışanların konumunu doğrulamak için şube adresi gerekli.",
     "branchName": "Şube adı",
@@ -30,7 +32,8 @@
     "city": "İl",
     "latitude": "Enlem",
     "longitude": "Boylam",
-    "finish": "Kurulumu bitir"
+    "finish": "Kurulumu bitir",
+    "invalidCoords": "Geçerli enlem ve boylam girin."
   },
   "manager": {
     "title": "Şube yöneticisi kodu",

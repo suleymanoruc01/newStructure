@@ -35,9 +35,19 @@ export class JobsController {
     @Req() req: Request,
     @Query('limit') limitRaw?: string,
     @Query('cursor') cursor?: string,
+    @Query('sectorCode') sectorCode?: string,
+    @Query('occupationCode') occupationCode?: string,
+    @Query('onlyFavorites') onlyFavoritesRaw?: string,
+    @Query('onlyInstantApproval') onlyInstantApprovalRaw?: string,
   ) {
     const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 20;
-    const result = await this.jobs.workerFeed(req.userId!, limit, cursor);
+    const result = await this.jobs.workerFeed(req.userId!, limit, cursor, {
+      sectorCode: sectorCode?.trim() || undefined,
+      occupationCode: occupationCode?.trim() || undefined,
+      onlyFavorites: onlyFavoritesRaw === '1' || onlyFavoritesRaw === 'true',
+      onlyInstantApproval:
+        onlyInstantApprovalRaw === '1' || onlyInstantApprovalRaw === 'true',
+    });
     const { nextCursor, limit: pageLimit, items } = result;
     return successPaginatedResponse(
       req.requestId ?? '',

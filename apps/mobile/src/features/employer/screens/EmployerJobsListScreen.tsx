@@ -1,27 +1,44 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useState } from 'react';
+import type { Job } from '@parton/api-contracts';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import { statusLabelTr } from '@parton/api-contracts';
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
+import { JobCard } from '../../../components/job/JobCard';
+import { JobFacts } from '../../../components/job/JobFacts';
+import { JobsMap } from '../../../components/map/JobsMap';
 import { Button } from '../../../components/ui/Button';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatStrip } from '../../../components/ui/StatStrip';
+import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { listEmployerJobs } from '../../../api/jobs-api';
+import { uniqueJobBranches } from '../../../shared/jobs/unique-branches';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerJobsList'>;
+type StatusFilter = 'all' | Job['status'];
 
 export function EmployerJobsListScreen({ navigation }: Props) {
   const { t } = useTranslation(['employer', 'common', 'errors']);
   const [items, setItems] = useState<
-    { id: string; status: string; title: string | null }[]
+    Awaited<ReturnType<typeof listEmployerJobs>>['items']
   >([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<'list' | 'map'>('list');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [query, setQuery] = useState('');
+  const [branchId, setBranchId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       const token = getAccessToken();
@@ -29,19 +46,15 @@ export function EmployerJobsListScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const jobs = await listEmployerJobs(token);
-      setItems(
-        jobs.items.map((j) => ({
-          id: j.id,
-          status: j.status,
-          title: j.title ?? null,
-        })),
-      );
+      setItems(jobs.items);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
       } else {
         setError(t('common:networkError'));
       }
+    } finally {
+      setLoading(false);
     }
   }, [t]);
 
@@ -49,11 +62,163 @@ export function EmployerJobsListScreen({ navigation }: Props) {
     void load();
   }, [load]);
 
+  const branches = useMemo(() => uniqueJobBranches(items), [items]);
+  const shown = useMemo(() => {
+    const byStatus =
+      statusFilter === 'all'
+        ? items
+        : items.filter((job) => job.status === statusFilter);
+    const byBranch = branchId
+      ? byStatus.filter((job) => job.branchId === branchId)
+      : byStatus;
+    const needle = query.trim().toLocaleLowerCase('tr-TR');
+    if (!needle) {
+      return byBranch;
+    }
+    return byBranch.filter((job) => {
+      const title = (job.title ?? '').toLocaleLowerCase('tr-TR');
+      const branch = (job.branchName ?? '').toLocaleLowerCase('tr-TR');
+      return title.includes(needle) || branch.includes(needle);
+    });
+  }, [branchId, items, query, statusFilter]);
+  const pins = useMemo(
+    () =>
+      shown.filter(
+        (job) => job.branchLatitude != null && job.branchLongitude != null,
+      ),
+    [shown],
+  );
+
+  useEffect(() => {
+    if (view !== 'map') {
+      return;
+    }
+    if (selectedId && pins.some((job) => job.id === selectedId)) {
+      return;
+    }
+    setSelectedId(pins[0]?.id ?? null);
+  }, [view, pins, selectedId]);
+
+  const filters: StatusFilter[] = ['all', 'published', 'draft', 'closed'];
+
   return (
-    <ModulePage title={t('employer:jobs.title')} testID="m.employer.jobs.list" scroll dock>
-      
+    <ModulePage
+      title={t('employer:jobs.title')}
+      testID="m.employer.jobs.list"
+      dock
+      refreshing={loading}
+      scroll
+      onRefresh={() => void load()}
+    >
+      <View className="mt-2 flex-row flex-wrap gap-2">
+        {(['list', 'map'] as const).map((mode) => (
+          <Pressable
+            key={mode}
+            className={`rounded-full px-3 py-2 ${
+              view === mode ? 'bg-action-primary' : 'bg-surface-1'
+            }`}
+            onPress={() => setView(mode)}
+          >
+            <Text
+              className={`font-sans text-sm ${
+                view === mode ? 'text-text-on' : 'text-text-high'
+              }`}
+            >
+              {mode === 'list' ? t('employer:jobs.viewList') : t('employer:jobs.viewMap')}
+            </Text>
+          </Pressable>
+        ))}
+        {filters.map((value) => (
+          <Pressable
+            key={value}
+            className={`rounded-full px-3 py-2 ${
+              statusFilter === value ? 'bg-action-primary' : 'bg-surface-1'
+            }`}
+            onPress={() => setStatusFilter(value)}
+          >
+            <Text
+              className={`font-sans text-sm ${
+                statusFilter === value ? 'text-text-on' : 'text-text-high'
+              }`}
+            >
+              {value === 'all'
+                ? t('employer:jobs.filterAll')
+                : statusLabelTr(value)}
+            </Text>
+          </Pressable>
+        ))}
+        {branches.length > 1
+          ? branches.map((branch) => (
+              <Pressable
+                key={branch.branchId}
+                className={`rounded-full px-3 py-2 ${
+                  branchId === branch.branchId
+                    ? 'bg-action-primary'
+                    : 'bg-surface-1'
+                }`}
+                onPress={() =>
+                  setBranchId((current) =>
+                    current === branch.branchId ? null : branch.branchId,
+                  )
+                }
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    branchId === branch.branchId
+                      ? 'text-text-on'
+                      : 'text-text-high'
+                  }`}
+                >
+                  {branch.label}
+                </Text>
+              </Pressable>
+            ))
+          : null}
+      </View>
+      <View className="mt-3">
+        <TextField
+          inset
+          shape="capsule"
+          label={t('employer:jobs.search')}
+          onChangeText={setQuery}
+          value={query}
+        />
+      </View>
+      {items.length > 0 ? (
+        <View className="mt-3">
+          <StatStrip
+            items={[
+              {
+                label: statusLabelTr('published'),
+                value: String(
+                  items.filter((job) => job.status === 'published').length,
+                ),
+              },
+              {
+                label: statusLabelTr('draft'),
+                value: String(
+                  items.filter((job) => job.status === 'draft').length,
+                ),
+              },
+              {
+                label: t('employer:home.statSeats'),
+                value: String(
+                  items
+                    .filter((job) => job.status === 'published')
+                    .reduce((sum, job) => sum + job.remainingHeadcount, 0),
+                ),
+              },
+            ]}
+          />
+        </View>
+      ) : null}
       {error ? (
         <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
+      ) : null}
+      {loading && items.length === 0 ? (
+        <View className="mt-4">
+          <SkeletonList />
+        </View>
       ) : null}
       <View className="mt-4">
         <Button
@@ -61,25 +226,82 @@ export function EmployerJobsListScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('EmployerCreateJob')}
         />
       </View>
-      <View className="mt-6 gap-3">
-        {items.map((job) => (
-          <Pressable
-            key={job.id}
-            accessibilityRole="button"
-            className="rounded-lg bg-surface-1 p-4"
-            onPress={() =>
-              navigation.navigate('EmployerJobDetail', { jobId: job.id })
-            }
-          >
-            <Text className="font-sans text-lg font-semibold text-text-high">
-              {job.title ?? job.id}
-            </Text>
-            <Text className="font-sans mt-1 text-sm text-text-medium">
-              {statusLabelTr(job.status)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      {view === 'map' ? (
+        <View className="mt-6 gap-3">
+          {pins.length === 0 ? (
+            <EmptyState title={t('employer:jobs.mapEmpty')} />
+          ) : (
+            <JobsMap
+              pins={pins.map((job) => ({
+                id: job.id,
+                title: job.title ?? job.branchName ?? job.id,
+                latitude: job.branchLatitude!,
+                longitude: job.branchLongitude!,
+              }))}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          )}
+          {shown
+            .filter((job) => job.id === selectedId)
+            .map((job) => (
+              <EmployerJobCard
+                key={job.id}
+                job={job}
+                onPress={() =>
+                  navigation.navigate('EmployerJobDetail', { jobId: job.id })
+                }
+              />
+            ))}
+        </View>
+      ) : (
+        <View className="mt-6 gap-3">
+          {shown.map((job) => (
+            <EmployerJobCard
+              key={job.id}
+              job={job}
+              onPress={() =>
+                navigation.navigate('EmployerJobDetail', { jobId: job.id })
+              }
+            />
+          ))}
+          {!loading && items.length === 0 ? (
+            <EmptyState
+              title={t('employer:jobs.empty')}
+              actionLabel={t('employer:jobs.create')}
+              onAction={() => navigation.navigate('EmployerCreateJob')}
+            />
+          ) : null}
+          {!loading && items.length > 0 && shown.length === 0 ? (
+            <EmptyState title={t('employer:jobs.searchEmpty')} />
+          ) : null}
+        </View>
+      )}
     </ModulePage>
+  );
+}
+
+function EmployerJobCard({
+  job,
+  onPress,
+}: {
+  job: Awaited<ReturnType<typeof listEmployerJobs>>['items'][number];
+  onPress: () => void;
+}) {
+  return (
+    <JobCard onPress={onPress} status={job.status} title={job.title ?? job.id}>
+      <JobFacts
+        branchName={job.branchName}
+        startsAt={job.startsAt}
+        endsAt={job.endsAt}
+        payAmountMinor={job.payAmountMinor}
+        payCurrency={job.payCurrency}
+        headcount={job.headcount}
+        remainingHeadcount={job.remainingHeadcount}
+        favoritesOnly={job.favoritesOnly}
+        instantAutoApprove={job.instantAutoApprove}
+        amenities={job.amenities}
+      />
+    </JobCard>
   );
 }

@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
@@ -13,8 +14,10 @@ describe('Matching favorites-only visibility (e2e) @T-075 @T-169', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let tokens: TokenService;
-  let workerUserId: string;
-  let workerSessionId: string;
+  let outsiderUserId: string;
+  let outsiderSessionId: string;
+  let insiderUserId: string;
+  let insiderSessionId: string;
   let favoritesOnlyJobId: string;
   let publicJobId: string;
 
@@ -31,45 +34,21 @@ describe('Matching favorites-only visibility (e2e) @T-075 @T-169', () => {
     prisma = moduleRef.get(PrismaService);
     tokens = moduleRef.get(TokenService);
 
-    const worker = await prisma.user.create({
-      data: { phoneE164: `+905559${Date.now().toString().slice(-7)}` },
+    const employerUser = await prisma.user.create({
+      data: { phoneE164: `+905558${Date.now().toString().slice(-7)}` },
     });
-    workerUserId = worker.id;
-    workerSessionId = (
-      await prisma.refreshSession.create({
-        data: {
-          userId: worker.id,
-          tokenHash: 'fav-hidden-worker',
-          expiresAt: new Date(Date.now() + 86400000),
-          activeContext: { role: 'worker' },
-        },
-      })
-    ).id;
-
-    const profile = await prisma.workerProfile.create({
-      data: {
-        userId: worker.id,
-        firstName: 'Mehmet',
-        lastName: 'Kaya',
-        birthDate: new Date('1996-03-03'),
-        gender: 'male',
-        homeLatitude: 41.01,
-        homeLongitude: 28.98,
-        nightShiftAvailable: true,
-      },
-    });
-    await prisma.workerSector.create({
-      data: { workerProfileId: profile.id, sectorCode: 'hospitality' },
-    });
-    await prisma.workerOccupation.create({
-      data: { workerProfileId: profile.id, occupationCode: 'waiter' },
-    });
-
     const employer = await prisma.employer.create({
       data: {
         legalName: 'Fav Only AŞ',
         taxId: `6${Date.now().toString().slice(-9)}`,
         verificationStatus: 'bypass',
+      },
+    });
+    await prisma.employerMembership.create({
+      data: {
+        userId: employerUser.id,
+        employerId: employer.id,
+        role: 'owner',
       },
     });
     const branch = await prisma.branch.create({
@@ -82,17 +61,74 @@ describe('Matching favorites-only visibility (e2e) @T-075 @T-169', () => {
       },
     });
 
+    const seedWorker = async (label: string) => {
+      const worker = await prisma.user.create({
+        data: {
+          phoneE164: `+905559${Date.now().toString().slice(-7)}${label === 'out' ? '0' : '1'}`,
+        },
+      });
+      const session = await prisma.refreshSession.create({
+        data: {
+          userId: worker.id,
+          tokenHash: `fav-hidden-${label}`,
+          expiresAt: new Date(Date.now() + 86400000),
+          activeContext: { role: 'worker' },
+        },
+      });
+      const profile = await prisma.workerProfile.create({
+        data: {
+          userId: worker.id,
+          firstName: label,
+          lastName: 'Kaya',
+          birthDate: new Date('1996-03-03'),
+          gender: 'male',
+          homeLatitude: 41.01,
+          homeLongitude: 28.98,
+          nightShiftAvailable: true,
+        },
+      });
+      await prisma.workerSector.create({
+        data: { workerProfileId: profile.id, sectorCode: 'hospitality' },
+      });
+      await prisma.workerOccupation.create({
+        data: { workerProfileId: profile.id, occupationCode: 'waiter' },
+      });
+      return { worker, session, profile };
+    };
+
+    const outsider = await seedWorker('out');
+    outsiderUserId = outsider.worker.id;
+    outsiderSessionId = outsider.session.id;
+    const insider = await seedWorker('in');
+    insiderUserId = insider.worker.id;
+    insiderSessionId = insider.session.id;
+
+    await prisma.favorite.create({
+      data: {
+        ownerUserId: employerUser.id,
+        ownerEmployerId: employer.id,
+        targetKind: 'worker_user',
+        targetId: insiderUserId,
+      },
+    });
+
     const startsAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
     const endsAt = new Date(startsAt.getTime() + 4 * 60 * 60 * 1000);
     const publicStartsAt = new Date(startsAt.getTime() + 24 * 60 * 60 * 1000);
     const publicEndsAt = new Date(endsAt.getTime() + 24 * 60 * 60 * 1000);
-    for (const day of [
-      startsAt.getUTCDay(),
-      publicStartsAt.getUTCDay(),
-    ]) {
+    const days = [...new Set([startsAt.getUTCDay(), publicStartsAt.getUTCDay()])];
+    for (const day of days) {
       await prisma.availabilityWindow.create({
         data: {
-          workerProfileId: profile.id,
+          workerProfileId: outsider.profile.id,
+          dayOfWeek: day,
+          startMinute: 0,
+          endMinute: 1439,
+        },
+      });
+      await prisma.availabilityWindow.create({
+        data: {
+          workerProfileId: insider.profile.id,
           dayOfWeek: day,
           startMinute: 0,
           endMinute: 1439,
@@ -135,19 +171,49 @@ describe('Matching favorites-only visibility (e2e) @T-075 @T-169', () => {
       },
     });
     publicJobId = publicJob.id;
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await app?.close();
-  });
+  }, 30_000);
 
   it('omits favorites-only jobs for workers not favorited by employer', async () => {
-    const access = tokens.signAccess(workerUserId, workerSessionId, {
+    const access = tokens.signAccess(outsiderUserId, outsiderSessionId, {
       role: 'worker',
     }).accessToken;
 
     const ids = await collectFeedJobIds(app, access);
     expect(ids).not.toContain(favoritesOnlyJobId);
     expect(ids).toContain(publicJobId);
+
+    const detail = await request(app.getHttpServer())
+      .get(`/api/v1/jobs/${favoritesOnlyJobId}`)
+      .set('Authorization', `Bearer ${access}`);
+    expect(detail.status).toBe(404);
+    expect(detail.body.error.code).toBe('NOT_FOUND');
+
+    const apply = await request(app.getHttpServer())
+      .post(`/api/v1/jobs/${favoritesOnlyJobId}/applications`)
+      .set('Authorization', `Bearer ${access}`)
+      .send({});
+    expect(apply.status).toBe(404);
+    expect(apply.body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('shows favorites-only jobs to the employer favorites audience', async () => {
+    const access = tokens.signAccess(insiderUserId, insiderSessionId, {
+      role: 'worker',
+    }).accessToken;
+
+    const ids = await collectFeedJobIds(app, access);
+    expect(ids).toContain(favoritesOnlyJobId);
+    expect(ids).toContain(publicJobId);
+
+    const detail = await request(app.getHttpServer())
+      .get(`/api/v1/jobs/${favoritesOnlyJobId}`)
+      .set('Authorization', `Bearer ${access}`);
+    expect(detail.status).toBe(200);
+    expect(detail.body.data.favoritesOnly).toBe(true);
+    expect(detail.body.data.eligibility.eligible).toBe(true);
   });
 });

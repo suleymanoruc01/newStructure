@@ -4,9 +4,12 @@ import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
+import { LocationMap } from '../../../components/map/LocationMap';
 import { Button } from '../../../components/ui/Button';
+import { CityChips } from '../../../components/ui/CityChips';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
+import { WizardSteps } from '../../../components/ui/WizardSteps';
 import { ApiClientError } from '../../../api/client';
 import { createBranch } from '../../../api/branches-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -25,8 +28,8 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [city, setCity] = useState('');
-  const [latitude, setLatitude] = useState('41.0082');
-  const [longitude, setLongitude] = useState('28.9784');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,6 +43,13 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
       }
       const lat = Number.parseFloat(latitude);
       const lng = Number.parseFloat(longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        throw new ApiClientError(
+          t('onboarding:employer.invalidCoords'),
+          400,
+          'VALIDATION_FAILED',
+        );
+      }
       await createBranch(
         {
           name,
@@ -64,7 +74,7 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
 
   return (
     <ModulePage title={t('onboarding:employer.branchTitle')} testID={ONBOARDING_SCREEN_IDS.employerBranch} scroll>
-      
+      <WizardSteps step={2} total={2} />
       <Text className="font-sans mt-2 text-base text-text-medium">
         {t('onboarding:employer.branchSubtitle')}
       </Text>
@@ -75,18 +85,27 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
           value={addressLine1}
           onChangeText={setAddressLine1}
         />
-        <TextField label={t('onboarding:employer.city')} value={city} onChangeText={setCity} />
-        <TextField
-          label={t('onboarding:employer.latitude')}
-          value={latitude}
-          onChangeText={setLatitude}
-          keyboardType="decimal-pad"
+        <CityChips
+          label={t('onboarding:employer.city')}
+          value={city}
+          onChange={setCity}
         />
-        <TextField
-          label={t('onboarding:employer.longitude')}
-          value={longitude}
-          onChangeText={setLongitude}
-          keyboardType="decimal-pad"
+        <LocationMap
+          pin={
+            Number.isFinite(Number.parseFloat(latitude)) &&
+            Number.isFinite(Number.parseFloat(longitude))
+              ? {
+                  latitude: Number.parseFloat(latitude),
+                  longitude: Number.parseFloat(longitude),
+                }
+              : null
+          }
+          pinLabel={name || undefined}
+          locateMoment="pin-pick"
+          onPick={(pin) => {
+            setLatitude(String(pin.latitude));
+            setLongitude(String(pin.longitude));
+          }}
         />
       </View>
       {error ? (

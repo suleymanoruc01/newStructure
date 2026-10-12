@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { successEnvelopeSchema } from './envelope.js';
+import { shiftSchema } from './shifts.js';
 
 export const workerGenderSchema = z.enum([
   'female',
@@ -74,4 +75,15 @@ export const workerSetupStatusSchema = z.object({
 
 export const workerSetupStatusResponseSchema = successEnvelopeSchema(
   workerSetupStatusSchema,
+);
+
+export const workerCalendarDataSchema = z.object({
+  items: z.array(shiftSchema),
+  windows: z.array(availabilityWindowSchema),
+});
+
+export type WorkerCalendarData = z.infer<typeof workerCalendarDataSchema>;
+
+export const workerCalendarResponseSchema = successEnvelopeSchema(
+  workerCalendarDataSchema,
 );

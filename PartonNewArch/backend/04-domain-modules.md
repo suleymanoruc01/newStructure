@@ -40,8 +40,8 @@ Public surface is REST only ([06-api-conventions.md](06-api-conventions.md), [AD
 | --- | --- |
 | `auth` | `/auth/otp/*`, `/auth/token/refresh`, `/auth/logout`, `/auth/contexts`, `/auth/context` |
 | `users` | `/me`, `/users/me/roles` |
-| `workers` | `/workers/me`, `/workers/me/availability`, `/workers/me/documents`, `/workers/me/home` |
-| `employers` | `/employers`, `/employers/me`, `/employers/me/setup-status`, `/employers/me/industries` |
+| `workers` | `/workers/me`, `/workers/me/calendar`, `/workers/me/availability`, `/workers/me/documents`, `/workers/me/home` |
+| `employers` | `/employers`, `/employers/me`, `/employers/me/calendar`, `/employers/me/setup-status`, `/employers/me/industries` |
 | `branches` | `/branches`, `/branches/:id`, `/branches/manager-join`, `/branches/:id/managers` |
 | `jobs` | `/jobs`, `/jobs/:id`, `/jobs/feed`, `/job-catalog`, `/branches/:id/jobs` |
 | `tokens` | `/employers/me/tokens`, `/employers/me/tokens/ledger`, `/employers/me/tokens/top-ups` |

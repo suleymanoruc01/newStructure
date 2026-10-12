@@ -6,7 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { Pressable } from '../../components/ui/Pressable';
 
 import { RoleContextSwitchScreen } from '../../features/shared/screens/RoleContextSwitchScreen';
+import { SharedBlockingScreen } from '../../features/shared/screens/SharedBlockingScreen';
 import { SharedForbiddenScreen } from '../../features/shared/screens/SharedForbiddenScreen';
+import { SharedRestrictionScreen } from '../../features/shared/screens/SharedRestrictionScreen';
 import { SharedSessionExpiredScreen } from '../../features/shared/screens/SharedSessionExpiredScreen';
 import { useAuth } from '../../shared/auth/AuthProvider';
 import { useSystemRoute } from '../../shared/system/system-route-store';
@@ -107,6 +109,20 @@ function SystemOverlay() {
       </View>
     );
   }
+  if (route === 'restriction') {
+    return (
+      <View className="absolute inset-0 z-50 bg-surface-base">
+        <SharedRestrictionScreen />
+      </View>
+    );
+  }
+  if (route === 'blocking') {
+    return (
+      <View className="absolute inset-0 z-50 bg-surface-base">
+        <SharedBlockingScreen />
+      </View>
+    );
+  }
   return null;
 }
 
@@ -129,7 +145,7 @@ export function RootNavigator() {
             <Stack.Screen name="Auth" component={AuthStackNavigator} />
           )}
         </Stack.Navigator>
-        {showApp ? <SystemOverlay /> : null}
+        <SystemOverlay />
       </View>
     </NavigationContainer>
   );

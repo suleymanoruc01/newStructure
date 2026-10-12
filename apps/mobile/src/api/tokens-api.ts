@@ -1,6 +1,7 @@
 import {
   tokenBalanceResponseSchema,
   tokenLedgerResponseSchema,
+  tokenPackagesListResponseSchema,
   tokenTopUpBodySchema,
   tokenTopUpResponseSchema,
   type TokenTopUpBody,
@@ -12,6 +13,14 @@ export async function fetchTokenBalance(accessToken: string) {
   return apiRequest('/employers/me/tokens', tokenBalanceResponseSchema, {
     accessToken,
   });
+}
+
+export async function fetchTokenPackages(accessToken: string) {
+  return apiRequest(
+    '/employers/me/tokens/packages',
+    tokenPackagesListResponseSchema,
+    { accessToken },
+  );
 }
 
 export async function fetchTokenLedger(accessToken: string) {

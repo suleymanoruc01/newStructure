@@ -81,6 +81,10 @@ export async function apiRequest<T>(
       const code = parsed.data.error.code;
       if (code === 'SESSION_EXPIRED') {
         openSystemRoute('session-expired');
+      } else if (code === 'ACCOUNT_RESTRICTED') {
+        openSystemRoute('restriction');
+      } else if (code === 'ACCOUNT_BANNED') {
+        openSystemRoute('blocking');
       } else if (response.status === 403 && code === 'FORBIDDEN') {
         openSystemRoute('forbidden');
       }

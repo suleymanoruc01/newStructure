@@ -37,8 +37,9 @@ export function TopUpConfirmSheet({
         onPress={onCancel}
       >
         <Pressable
-          className="rounded-t-3xl bg-surface-2 p-6"
+          className="rounded-t-[40px] p-6"
           onPress={(e) => e.stopPropagation()}
+          style={{ backgroundColor: '#FBF6EC' }}
         >
           <Text className="font-display text-xl font-bold text-text-high">{title}</Text>
           <Text className="font-sans mt-2 text-base text-text-medium">{body}</Text>

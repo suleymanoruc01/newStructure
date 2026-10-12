@@ -1,11 +1,13 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ErrorCode } from '@parton/api-contracts';
+import { ErrorCode, type TokenTopUpBody } from '@parton/api-contracts';
 
 import { ApiException } from '../common/api.exception.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service.js';
 import { TopUpProvider, type TopUpPaymentOutcome } from './top-up.provider.js';
+import { TokenPackagesService } from './token-packages.service.js';
 
 type Tx = Prisma.TransactionClient;
 
@@ -15,7 +17,37 @@ export class TokensService {
     private readonly prisma: PrismaService,
     private readonly config: AppConfigService,
     private readonly topUpProvider: TopUpProvider,
+    private readonly packages: TokenPackagesService,
+    private readonly subscriptions: SubscriptionsService,
   ) {}
+
+  async resolveTopUpAmount(
+    employerId: string,
+    body: TokenTopUpBody,
+  ): Promise<{
+    total: number;
+    base: number;
+    bonus: number;
+    packageId: string | null;
+  }> {
+    let base = body.amount ?? 0;
+    let packageId: string | null = null;
+    if (body.packageId) {
+      const pkg = await this.packages.getActiveById(body.packageId);
+      base = pkg.tokenCount;
+      packageId = pkg.id;
+    }
+    if (base <= 0) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Jeton tutarı geçersiz.',
+      );
+    }
+    const plan = await this.subscriptions.planForEmployer(employerId);
+    const bonus = packageId ? plan.tokenBonusOnPurchase : 0;
+    return { total: base + bonus, base, bonus, packageId };
+  }
 
   async ensureAccount(employerId: string, startingBalance: number) {
     await this.prisma.tokenAccount.upsert({
@@ -23,6 +55,10 @@ export class TokensService {
       create: { employerId, balance: startingBalance },
       update: {},
     });
+  }
+
+  listTopUpPackages() {
+    return this.packages.listActivePublic();
   }
 
   async getBalance(employerId: string) {
@@ -346,6 +382,7 @@ export class TokensService {
     amount: number,
     idempotencyKey?: string,
     paymentOutcome?: TopUpPaymentOutcome,
+    meta?: { packageId: string | null; bonus: number; base: number },
   ) {
     this.topUpProvider.assertPaymentAllowed(paymentOutcome);
     if (idempotencyKey) {
@@ -373,6 +410,8 @@ export class TokensService {
         return {
           balance: account?.balance ?? 0,
           credited: prior.amount,
+          packageId: meta?.packageId ?? null,
+          bonusCredited: meta?.bonus ?? 0,
         };
       }
     }
@@ -393,11 +432,17 @@ export class TokensService {
           type: 'top_up',
           amount,
           balanceAfter: balance,
-          refType: 'top_up',
+          refType: meta?.packageId ? 'token_package' : 'top_up',
+          refId: meta?.packageId ?? undefined,
           idempotencyKey,
         },
       });
-      return { balance, credited: amount };
+      return {
+        balance,
+        credited: amount,
+        packageId: meta?.packageId ?? null,
+        bonusCredited: meta?.bonus ?? 0,
+      };
     });
   }
 

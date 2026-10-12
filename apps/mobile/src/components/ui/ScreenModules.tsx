@@ -247,6 +247,8 @@ type ModulePageProps = {
   back?: 'auto' | 'off' | (() => void);
   sheetTitle?: string;
   hero?: React.ReactNode;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   children: React.ReactNode;
 };
 
@@ -259,6 +261,8 @@ export function ModulePage({
   back = 'auto',
   sheetTitle,
   hero,
+  refreshing,
+  onRefresh,
   children,
 }: ModulePageProps) {
   const navigation = useNavigation();
@@ -271,7 +275,14 @@ export function ModulePage({
         : undefined;
 
   return (
-    <Screen bleed dock={dock} scroll={scroll} testID={testID}>
+    <Screen
+      bleed
+      dock={dock}
+      onRefresh={onRefresh}
+      refreshing={refreshing}
+      scroll={scroll}
+      testID={testID}
+    >
       <HeroModule
         backLabel={t('back')}
         eyebrow={eyebrow}

@@ -1,12 +1,18 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import type {
+  AdminApplicationStatusPatchBody,
   AdminBroadcastBody,
+  AdminDisputePatchBody,
+  AdminDocumentPatchBody,
+  AdminEmployerPatchBody,
   AdminJobForceCloseBody,
+  AdminJobPatchBody,
   AdminRatingModerationPatchBody,
   AdminRemoteConfigBody,
   AdminTokenCreditBody,
   AdminUserPatchBody,
   AdminVerificationPatchBody,
+  AdminWorkerPatchBody,
 } from '@parton/api-contracts';
 import { ErrorCode } from '@parton/api-contracts';
 
@@ -20,12 +26,30 @@ import { TokensService } from '../tokens/tokens.service.js';
 import { WorkerDocumentsService } from '../workers/worker-documents.service.js';
 import { LegalAuditLogger } from '../audit/legal-audit.logger.js';
 import { SessionService } from '../auth/session.service.js';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service.js';
+import { SupportService } from '../support/support.service.js';
+import { JobCatalogService } from '../job-catalog/job-catalog.service.js';
+import { TokenPackagesService } from '../tokens/token-packages.service.js';
+import { BranchesService } from '../branches/branches.service.js';
+import { ApplicationsService } from '../applications/applications.service.js';
+import { ShiftsService } from '../shifts/shifts.service.js';
+import { loadDashboardAnalytics } from './admin-dashboard-analytics.js';
 
 function maskPhone(phone: string): string {
   if (phone.length < 8) {
     return phone;
   }
   return `${phone.slice(0, 4)}***${phone.slice(-4)}`;
+}
+
+function iso(value: Date | null | undefined): string | null {
+  return value ? value.toISOString() : null;
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
 }
 
 @Injectable()
@@ -39,6 +63,13 @@ export class AdminOpsService {
     private readonly audit: LegalAuditLogger,
     private readonly sessions: SessionService,
     private readonly platform: PlatformService,
+    private readonly subscriptions: SubscriptionsService,
+    private readonly support: SupportService,
+    private readonly jobCatalog: JobCatalogService,
+    private readonly tokenPackages: TokenPackagesService,
+    private readonly branches: BranchesService,
+    private readonly applications: ApplicationsService,
+    private readonly shifts: ShiftsService,
   ) {}
 
   async dashboard() {
@@ -49,6 +80,8 @@ export class AdminOpsService {
       outboxPending,
       openDevopsErrors,
       queuedRatings,
+      openSupportTickets,
+      analytics,
     ] = await Promise.all([
       this.prisma.abuseReport.count({ where: { status: 'open' } }),
       this.prisma.checkInDispute.count({ where: { status: 'open' } }),
@@ -56,6 +89,10 @@ export class AdminOpsService {
       this.prisma.outboxEvent.count({ where: { status: 'pending' } }),
       this.prisma.devopsErrorGroup.count({ where: { status: 'open' } }),
       this.prisma.rating.count({ where: { moderationStatus: 'queued' } }),
+      this.prisma.supportTicket.count({
+        where: { status: { in: ['open', 'in_progress'] } },
+      }),
+      loadDashboardAnalytics(this.prisma),
     ]);
     return {
       openAbuseReports,
@@ -64,6 +101,8 @@ export class AdminOpsService {
       outboxPending,
       openDevopsErrors,
       queuedRatings,
+      openSupportTickets,
+      ...analytics,
     };
   }
 
@@ -220,6 +259,7 @@ export class AdminOpsService {
         userId: w.userId,
         firstName: w.firstName,
         lastName: w.lastName,
+        nightShiftAvailable: w.nightShiftAvailable,
         phoneE164: maskPhone(w.user.phoneE164),
         createdAt: w.createdAt.toISOString(),
       })),
@@ -247,25 +287,193 @@ export class AdminOpsService {
     const favorites = await this.prisma.favorite.findMany({
       where: { ownerUserId: worker.userId },
       take: 50,
+      select: { id: true, targetKind: true, targetId: true, createdAt: true },
     });
-    return { worker, favorites };
+    return {
+      id: worker.id,
+      userId: worker.userId,
+      firstName: worker.firstName,
+      lastName: worker.lastName,
+      phoneE164: maskPhone(worker.user.phoneE164),
+      userStatus: worker.user.status,
+      nightShiftAvailable: worker.nightShiftAvailable,
+      gender: worker.gender,
+      birthDate: worker.birthDate
+        ? worker.birthDate.toISOString().slice(0, 10)
+        : null,
+      homeLatitude:
+        worker.homeLatitude != null ? Number(worker.homeLatitude) : null,
+      homeLongitude:
+        worker.homeLongitude != null ? Number(worker.homeLongitude) : null,
+      sectors: worker.sectors.map((row) => row.sectorCode),
+      occupations: worker.occupations.map((row) => row.occupationCode),
+      availability: worker.availability.map((row) => ({
+        dayOfWeek: row.dayOfWeek,
+        startMinute: row.startMinute,
+        endMinute: row.endMinute,
+        crossesMidnight: row.crossesMidnight,
+      })),
+      documents: worker.documents.map((row) => ({
+        id: row.id,
+        documentType: row.documentType,
+        status: row.status,
+        contentType: row.contentType,
+        sizeBytes: row.sizeBytes,
+        fileName: row.fileName,
+      })),
+      favorites: favorites.map((row) => ({
+        id: row.id,
+        targetKind: row.targetKind,
+        targetId: row.targetId,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async patchWorker(
+    actorUserId: string,
+    workerProfileId: string,
+    body: AdminWorkerPatchBody,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.workerProfile.findUnique({
+      where: { id: workerProfileId },
+    });
+    if (!existing) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İş arayan bulunamadı.',
+      );
+    }
+    const updated = await this.prisma.workerProfile.update({
+      where: { id: workerProfileId },
+      data: { nightShiftAvailable: body.nightShiftAvailable },
+    });
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'worker.night_shift_updated',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'worker_profile',
+      resourceId: workerProfileId,
+      requestId,
+      metadata: { nightShiftAvailable: body.nightShiftAvailable },
+    });
+    return {
+      id: updated.id,
+      nightShiftAvailable: updated.nightShiftAvailable,
+    };
   }
 
   async listEmployers(limit = 50) {
     const rows = await this.prisma.employer.findMany({
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
+      select: {
+        id: true,
+        legalName: true,
+        tradingName: true,
+        taxId: true,
+        verificationStatus: true,
+        subscriptionPlanCode: true,
+        createdAt: true,
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        legalName: row.legalName,
+        tradingName: row.tradingName,
+        taxId: row.taxId,
+        verificationStatus: row.verificationStatus,
+        subscriptionPlanCode: row.subscriptionPlanCode,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async patchEmployer(
+    actorUserId: string,
+    employerId: string,
+    body: AdminEmployerPatchBody,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.employer.findUnique({
+      where: { id: employerId },
+    });
+    if (!existing) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İşveren bulunamadı.',
+      );
+    }
+    if (body.legalName === undefined && body.tradingName === undefined) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Güncellenecek alan belirtilmedi.',
+      );
+    }
+    const updated = await this.prisma.employer.update({
+      where: { id: employerId },
+      data: {
+        ...(body.legalName !== undefined && { legalName: body.legalName }),
+        ...(body.tradingName !== undefined && {
+          tradingName: body.tradingName,
+        }),
+      },
+    });
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'employer.profile_updated',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'employer',
+      resourceId: employerId,
+      requestId,
+      metadata: body,
+    });
+    return { id: updated.id, legalName: updated.legalName, tradingName: updated.tradingName };
+  }
+
+  async patchApplicationStatus(
+    actorUserId: string,
+    applicationId: string,
+    body: AdminApplicationStatusPatchBody,
+    requestId: string,
+  ) {
+    const application = await this.applications.adminOverrideStatus(
+      actorUserId,
+      applicationId,
+      body.status,
+      requestId,
+    );
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'application.status_overridden',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'application',
+      resourceId: applicationId,
+      requestId,
+      metadata: { status: body.status, reason: body.reason },
+    });
+    return application;
   }
 
   async getEmployer(employerId: string) {
     const employer = await this.prisma.employer.findUnique({
       where: { id: employerId },
       include: {
-        branches: true,
+        branches: {
+          select: { id: true, name: true, city: true, status: true },
+        },
         memberships: {
-          include: { user: { select: { id: true, phoneE164: true, status: true } } },
+          include: {
+            user: { select: { id: true, phoneE164: true, status: true } },
+          },
         },
         tokenAccount: true,
       },
@@ -277,11 +485,51 @@ export class AdminOpsService {
         'İşveren bulunamadı.',
       );
     }
-    const favorites = await this.prisma.favorite.findMany({
-      where: { ownerUserId: { in: employer.memberships.map((m) => m.userId) } },
-      take: 50,
-    });
-    return { employer, favorites };
+    const memberUserIds = employer.memberships.map((row) => row.userId);
+    const [favorites, holds] = await Promise.all([
+      this.prisma.favorite.findMany({
+        where: { ownerUserId: { in: memberUserIds } },
+        take: 50,
+        select: {
+          id: true,
+          targetKind: true,
+          targetId: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.tokenHold.findMany({
+        where: { employerId, status: 'held' },
+        select: { id: true, jobId: true, amount: true, status: true },
+      }),
+    ]);
+    return {
+      id: employer.id,
+      legalName: employer.legalName,
+      tradingName: employer.tradingName,
+      taxId: employer.taxId,
+      verificationStatus: employer.verificationStatus,
+      subscriptionPlanCode: employer.subscriptionPlanCode,
+      subscriptionStatus: employer.subscriptionStatus,
+      subscriptionEndsAt: iso(employer.subscriptionEndsAt),
+      tokenBalance: employer.tokenAccount?.balance ?? 0,
+      heldTokens: holds.reduce((sum, hold) => sum + hold.amount, 0),
+      holds,
+      branches: employer.branches,
+      members: employer.memberships.map((row) => ({
+        userId: row.userId,
+        role: row.role,
+        status: row.status,
+        phoneE164: maskPhone(row.user.phoneE164),
+        userStatus: row.user.status,
+      })),
+      favorites: favorites.map((row) => ({
+        id: row.id,
+        targetKind: row.targetKind,
+        targetId: row.targetId,
+        createdAt: row.createdAt.toISOString(),
+      })),
+      createdAt: employer.createdAt.toISOString(),
+    };
   }
 
   async listPolicies() {
@@ -302,11 +550,73 @@ export class AdminOpsService {
     };
   }
 
-  async listCatalogItems() {
-    const rows = await this.prisma.jobCatalogItem.findMany({
-      orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
-    });
-    return { items: rows };
+  listCatalogItems() {
+    return this.jobCatalog.listAllAdmin();
+  }
+
+  createCatalogItem(
+    body: Parameters<JobCatalogService['createAdminItem']>[0],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.jobCatalog.createAdminItem(body, actorUserId, requestId);
+  }
+
+  patchCatalogItem(
+    id: string,
+    body: Parameters<JobCatalogService['patchAdminItem']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.jobCatalog.patchAdminItem(id, body, actorUserId, requestId);
+  }
+
+  createCatalogSector(
+    body: Parameters<JobCatalogService['createSector']>[0],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.jobCatalog.createSector(body, actorUserId, requestId);
+  }
+
+  patchCatalogSector(
+    id: string,
+    body: Parameters<JobCatalogService['patchSector']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.jobCatalog.patchSector(id, body, actorUserId, requestId);
+  }
+
+  createCatalogOccupation(
+    sectorId: string,
+    body: Parameters<JobCatalogService['createOccupation']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.jobCatalog.createOccupation(
+      sectorId,
+      body,
+      actorUserId,
+      requestId,
+    );
+  }
+
+  patchCatalogOccupation(
+    id: string,
+    body: Parameters<JobCatalogService['patchOccupation']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.jobCatalog.patchOccupation(id, body, actorUserId, requestId);
+  }
+
+  deleteCatalogSector(id: string, actorUserId: string, requestId: string) {
+    return this.jobCatalog.deleteSector(id, actorUserId, requestId);
+  }
+
+  deleteCatalogOccupation(id: string, actorUserId: string, requestId: string) {
+    return this.jobCatalog.deleteOccupation(id, actorUserId, requestId);
   }
 
   async perfMetrics() {
@@ -347,19 +657,70 @@ export class AdminOpsService {
     return updated;
   }
 
-  async listBranches(limit = 50) {
+  async listBranches(limit = 50, employerId?: string) {
     const rows = await this.prisma.branch.findMany({
+      where: employerId ? { employerId } : undefined,
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
-      include: { employer: true },
+      include: {
+        employer: {
+          select: { id: true, legalName: true, tradingName: true },
+        },
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        city: row.city,
+        status: row.status,
+        employerName: row.employer.legalName,
+        employerId: row.employerId,
+        latitude: Number(row.latitude),
+        longitude: Number(row.longitude),
+      })),
+    };
+  }
+
+  getBranch(branchId: string) {
+    return this.branches.adminGetBranch(branchId);
+  }
+
+  createBranch(
+    body: Parameters<BranchesService['adminCreateBranch']>[0],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.branches.adminCreateBranch(body, actorUserId, requestId);
+  }
+
+  patchBranch(
+    branchId: string,
+    body: Parameters<BranchesService['adminPatchBranch']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.branches.adminPatchBranch(
+      branchId,
+      body,
+      actorUserId,
+      requestId,
+    );
   }
 
   async getJob(jobId: string) {
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      include: { employer: true, branch: true, applications: true },
+      include: {
+        employer: { select: { id: true, legalName: true } },
+        branch: { select: { id: true, name: true } },
+        tokenHold: { select: { amount: true, status: true } },
+        applications: {
+          select: { id: true, status: true, workerUserId: true },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+      },
     });
     if (!job) {
       throw new ApiException(
@@ -368,13 +729,96 @@ export class AdminOpsService {
         'İlan bulunamadı.',
       );
     }
-    return job;
+    return {
+      id: job.id,
+      title: job.title,
+      status: job.status,
+      favoritesOnly: job.favoritesOnly,
+      headcount: job.headcount,
+      remainingHeadcount: job.remainingHeadcount,
+      startsAt: job.startsAt.toISOString(),
+      endsAt: job.endsAt.toISOString(),
+      sectorCode: job.sectorCode,
+      occupationCode: job.occupationCode,
+      employerId: job.employerId,
+      employerName: job.employer.legalName,
+      branchId: job.branchId,
+      branchName: job.branch.name,
+      requiredDocumentTypes: stringList(job.requiredDocumentTypes),
+      amenities: stringList(job.amenities),
+      instantAutoApprove: job.instantAutoApprove,
+      genderFilter: job.genderFilter,
+      minAge: job.minAge,
+      maxAge: job.maxAge,
+      payAmountMinor: job.payAmountMinor,
+      payCurrency: job.payCurrency,
+      holdAmount: job.tokenHold?.amount ?? 0,
+      holdStatus: job.tokenHold?.status ?? null,
+      applications: job.applications,
+    };
+  }
+
+  async patchJob(
+    actorUserId: string,
+    jobId: string,
+    body: AdminJobPatchBody,
+    requestId: string,
+  ) {
+    const job = await this.prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İlan bulunamadı.',
+      );
+    }
+    if (body.favoritesOnly && job.status === 'published') {
+      // shortcut: counts favorite workers, not full eligibility; upgrade if admin publish must match JobsService.
+      const favCount = await this.prisma.favorite.count({
+        where: {
+          ownerEmployerId: job.employerId,
+          targetKind: 'worker_user',
+        },
+      });
+      if (favCount === 0) {
+        throw new ApiException(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          ErrorCode.FAVORITES_AUDIENCE_EMPTY,
+          'Favori çalışan listenizde bu ilana uygun kimse yok.',
+        );
+      }
+    }
+    const updated = await this.prisma.job.update({
+      where: { id: jobId },
+      data: { favoritesOnly: body.favoritesOnly },
+    });
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'job.favorites_only_updated',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'job',
+      resourceId: jobId,
+      requestId,
+      metadata: { favoritesOnly: body.favoritesOnly },
+    });
+    return { id: updated.id, favoritesOnly: updated.favoritesOnly };
   }
 
   async getApplication(applicationId: string) {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
-      include: { job: true, workerUser: true },
+      include: {
+        job: {
+          select: { id: true, title: true, status: true, employerId: true },
+        },
+        workerUser: { select: { id: true, phoneE164: true, status: true } },
+        events: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+          select: { eventType: true, createdAt: true, actorUserId: true },
+        },
+      },
     });
     if (!application) {
       throw new ApiException(
@@ -383,13 +827,36 @@ export class AdminOpsService {
         'Başvuru bulunamadı.',
       );
     }
-    return application;
+    return {
+      id: application.id,
+      status: application.status,
+      jobId: application.jobId,
+      jobTitle: application.job.title,
+      jobStatus: application.job.status,
+      employerId: application.job.employerId,
+      workerUserId: application.workerUserId,
+      workerProfileId: application.workerProfileId,
+      workerPhone: maskPhone(application.workerUser.phoneE164),
+      workerUserStatus: application.workerUser.status,
+      createdAt: application.createdAt.toISOString(),
+      updatedAt: application.updatedAt.toISOString(),
+      events: application.events.map((row) => ({
+        eventType: row.eventType,
+        actorUserId: row.actorUserId,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
   }
 
   async getShift(shiftId: string) {
     const shift = await this.prisma.shift.findUnique({
       where: { id: shiftId },
-      include: { job: true, workerUser: true, checkIns: true },
+      include: {
+        job: { select: { id: true, title: true, status: true } },
+        workerUser: { select: { id: true, phoneE164: true } },
+        checkIns: { orderBy: { createdAt: 'desc' }, take: 20 },
+        disputes: { orderBy: { createdAt: 'desc' }, take: 10 },
+      },
     });
     if (!shift) {
       throw new ApiException(
@@ -398,7 +865,63 @@ export class AdminOpsService {
         'Vardiya bulunamadı.',
       );
     }
-    return shift;
+    return {
+      id: shift.id,
+      status: shift.status,
+      jobId: shift.jobId,
+      jobTitle: shift.job.title,
+      jobStatus: shift.job.status,
+      employerId: shift.employerId,
+      branchId: shift.branchId,
+      applicationId: shift.applicationId,
+      workerUserId: shift.workerUserId,
+      workerPhone: maskPhone(shift.workerUser.phoneE164),
+      startsAt: shift.startsAt.toISOString(),
+      endsAt: shift.endsAt.toISOString(),
+      confirmOpensAt: shift.confirmOpensAt.toISOString(),
+      confirmDeadlineAt: shift.confirmDeadlineAt.toISOString(),
+      availabilityDecision: shift.availabilityDecision,
+      checkedInAt: iso(shift.checkedInAt),
+      completedAt: iso(shift.completedAt),
+      checkIns: shift.checkIns.map((row) => ({
+        id: row.id,
+        success: row.success,
+        locationSource: row.locationSource,
+        accuracyM: Number(row.accuracyM),
+        distanceM: Number(row.distanceM),
+        mockLocation: row.mockLocation,
+        failureCode: row.failureCode,
+        createdAt: row.createdAt.toISOString(),
+      })),
+      disputes: shift.disputes.map((row) => ({
+        id: row.id,
+        note: row.note,
+        status: row.status,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async manualConfirmShift(
+    actorUserId: string,
+    shiftId: string,
+    requestId: string,
+  ) {
+    const result = await this.shifts.adminManualConfirm(
+      actorUserId,
+      shiftId,
+      `admin-manual-confirm:${shiftId}:${requestId}`,
+    );
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'shift.manual_confirmed',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'shift',
+      resourceId: shiftId,
+      requestId,
+    });
+    return result;
   }
 
   async getRating(ratingId: string) {
@@ -412,7 +935,18 @@ export class AdminOpsService {
         'Puan bulunamadı.',
       );
     }
-    return rating;
+    return {
+      id: rating.id,
+      shiftId: rating.shiftId,
+      score: rating.score,
+      comment: rating.comment,
+      moderationStatus: rating.moderationStatus,
+      authorRole: rating.authorRole,
+      authorUserId: rating.authorUserId,
+      targetWorkerUserId: rating.targetWorkerUserId,
+      targetEmployerId: rating.targetEmployerId,
+      createdAt: rating.createdAt.toISOString(),
+    };
   }
 
   async getAbuseReport(reportId: string) {
@@ -426,7 +960,17 @@ export class AdminOpsService {
         'Rapor bulunamadı.',
       );
     }
-    return report;
+    return {
+      id: report.id,
+      category: report.category,
+      note: report.note,
+      status: report.status,
+      reporterUserId: report.reporterUserId,
+      targetUserId: report.targetUserId,
+      createdAt: report.createdAt.toISOString(),
+      resolvedAt: iso(report.resolvedAt),
+      resolvedByUserId: report.resolvedByUserId,
+    };
   }
 
   async listJobs(limit = 50) {
@@ -435,7 +979,18 @@ export class AdminOpsService {
       take: Math.min(limit, 100),
       include: { employer: true, branch: true },
     });
-    return { items: rows };
+    return {
+      items: rows.map((job) => ({
+        id: job.id,
+        title: job.title,
+        status: job.status,
+        favoritesOnly: job.favoritesOnly,
+        remainingHeadcount: job.remainingHeadcount,
+        startsAt: job.startsAt.toISOString(),
+        employer: job.employer.legalName,
+        branch: job.branch.name,
+      })),
+    };
   }
 
   async forceCloseJob(
@@ -476,18 +1031,41 @@ export class AdminOpsService {
     const rows = await this.prisma.application.findMany({
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
-      include: { job: true, workerUser: true },
+      include: {
+        job: { select: { title: true } },
+        workerUser: { select: { phoneE164: true } },
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        status: row.status,
+        jobTitle: row.job.title,
+        workerPhone: maskPhone(row.workerUser.phoneE164),
+        createdAt: row.createdAt.toISOString(),
+        jobId: row.jobId,
+        workerUserId: row.workerUserId,
+      })),
+    };
   }
 
   async listShifts(limit = 50) {
     const rows = await this.prisma.shift.findMany({
       orderBy: { startsAt: 'desc' },
       take: Math.min(limit, 100),
-      include: { job: true, workerUser: true },
+      include: { job: { select: { title: true } } },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        status: row.status,
+        jobTitle: row.job.title,
+        startsAt: row.startsAt.toISOString(),
+        availabilityDecision: row.availabilityDecision,
+        checkedInAt: iso(row.checkedInAt),
+        workerUserId: row.workerUserId,
+      })),
+    };
   }
 
   async listDisputes(limit = 50) {
@@ -496,7 +1074,94 @@ export class AdminOpsService {
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        status: row.status,
+        shiftId: row.shiftId,
+        workerUserId: row.workerUserId,
+        note: row.note,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async getDispute(disputeId: string) {
+    const dispute = await this.prisma.checkInDispute.findUnique({
+      where: { id: disputeId },
+      include: {
+        shift: {
+          select: {
+            id: true,
+            status: true,
+            jobId: true,
+            workerUserId: true,
+            checkedInAt: true,
+          },
+        },
+      },
+    });
+    if (!dispute) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Uyuşmazlık bulunamadı.',
+      );
+    }
+    return {
+      id: dispute.id,
+      status: dispute.status,
+      shiftId: dispute.shiftId,
+      shiftStatus: dispute.shift.status,
+      jobId: dispute.shift.jobId,
+      workerUserId: dispute.workerUserId,
+      note: dispute.note,
+      checkedInAt: iso(dispute.shift.checkedInAt),
+      createdAt: dispute.createdAt.toISOString(),
+      resolvedAt: iso(dispute.resolvedAt),
+      resolvedByUserId: dispute.resolvedByUserId,
+    };
+  }
+
+  async patchDispute(
+    actorUserId: string,
+    disputeId: string,
+    body: AdminDisputePatchBody,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.checkInDispute.findUnique({
+      where: { id: disputeId },
+    });
+    if (!existing) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Uyuşmazlık bulunamadı.',
+      );
+    }
+    const updated = await this.prisma.checkInDispute.update({
+      where: { id: disputeId },
+      data: {
+        status: body.status,
+        resolvedAt: new Date(),
+        resolvedByUserId: actorUserId,
+      },
+    });
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'dispute.status_updated',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'check_in_dispute',
+      resourceId: disputeId,
+      requestId,
+      metadata: { status: body.status },
+    });
+    return {
+      id: updated.id,
+      status: updated.status,
+      shiftId: updated.shiftId,
+    };
   }
 
   async listRatingsQueue(limit = 50) {
@@ -504,8 +1169,22 @@ export class AdminOpsService {
       where: { moderationStatus: 'queued' },
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
+      select: {
+        id: true,
+        score: true,
+        comment: true,
+        moderationStatus: true,
+        authorRole: true,
+        shiftId: true,
+        createdAt: true,
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
   }
 
   async patchRating(
@@ -538,24 +1217,107 @@ export class AdminOpsService {
       include: { workerProfile: { include: { user: true } } },
     });
     return {
-      items: rows.map((d) => ({
-        id: d.id,
-        documentType: d.documentType,
-        status: d.status,
-        fileName: d.fileName,
-        workerProfileId: d.workerProfileId,
-        workerUserId: d.workerProfile.userId,
-        updatedAt: d.updatedAt.toISOString(),
+      items: rows.map((row) => ({
+        id: row.id,
+        documentType: row.documentType,
+        status: row.status,
+        contentType: row.contentType,
+        sizeBytes: row.sizeBytes,
+        fileName: row.fileName,
+        workerName: [row.workerProfile.firstName, row.workerProfile.lastName]
+          .filter(Boolean)
+          .join(' '),
+        workerUserId: row.workerProfile.userId,
+        updatedAt: row.updatedAt.toISOString(),
       })),
     };
+  }
+
+  async getDocument(documentId: string) {
+    const row = await this.prisma.workerDocument.findUnique({
+      where: { id: documentId },
+      include: { workerProfile: { include: { user: true } } },
+    });
+    if (!row) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Belge bulunamadı.',
+      );
+    }
+    return {
+      id: row.id,
+      documentType: row.documentType,
+      status: row.status,
+      contentType: row.contentType,
+      sizeBytes: row.sizeBytes,
+      fileName: row.fileName,
+      workerProfileId: row.workerProfileId,
+      workerUserId: row.workerProfile.userId,
+      workerName: [row.workerProfile.firstName, row.workerProfile.lastName]
+        .filter(Boolean)
+        .join(' '),
+      uploadedAt: iso(row.uploadedAt),
+      updatedAt: row.updatedAt.toISOString(),
+    };
+  }
+
+  async patchDocument(
+    actorUserId: string,
+    documentId: string,
+    body: AdminDocumentPatchBody,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.workerDocument.findUnique({
+      where: { id: documentId },
+    });
+    if (!existing) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Belge bulunamadı.',
+      );
+    }
+    const updated = await this.prisma.workerDocument.update({
+      where: { id: documentId },
+      data: { status: body.status },
+    });
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'document.status_updated',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'worker_document',
+      resourceId: documentId,
+      requestId,
+      metadata: { status: body.status },
+    });
+    return { id: updated.id, status: updated.status };
+  }
+
+  documentDownloadUrl(documentId: string) {
+    return this.workerDocuments.adminDownloadUrl(documentId);
   }
 
   async listOutbox(limit = 50) {
     const rows = await this.prisma.outboxEvent.findMany({
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        attempts: true,
+        lastError: true,
+        createdAt: true,
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
   }
 
   async broadcast(
@@ -603,8 +1365,48 @@ export class AdminOpsService {
     const rows = await this.prisma.tokenLedgerEntry.findMany({
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        balanceAfter: true,
+        employerId: true,
+        refType: true,
+        createdAt: true,
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async revokeUserSessions(
+    actorUserId: string,
+    userId: string,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!existing) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Kullanıcı bulunamadı.',
+      );
+    }
+    await this.sessions.revokeAllForUser(userId);
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'user.sessions_revoked',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'user',
+      resourceId: userId,
+      requestId,
+    });
+    return { id: userId, sessionsRevoked: true };
   }
 
   async creditEmployerTokens(
@@ -690,7 +1492,15 @@ export class AdminOpsService {
       },
       { favoredEmployerIds, uploadedDocumentTypes, timeZone },
     );
-    return eligibility;
+    return {
+      eligible: eligibility.eligible,
+      reasons: eligibility.reasons,
+      matchReasons: eligibility.matchReasons,
+      distanceKm: eligibility.distanceKm,
+      jobFavoritesOnly: job.favoritesOnly,
+      workerNightShiftAvailable: worker.nightShiftAvailable,
+      workerUploadedDocumentTypes: [...uploadedDocumentTypes],
+    };
   }
 
   async getRemoteConfig() {
@@ -724,17 +1534,43 @@ export class AdminOpsService {
     const rows = await this.prisma.riskEvent.findMany({
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
-      include: { user: true },
+      select: {
+        id: true,
+        type: true,
+        score: true,
+        userId: true,
+        shiftId: true,
+        createdAt: true,
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
   }
 
   async listAbuseReports(limit = 50) {
     const rows = await this.prisma.abuseReport.findMany({
       orderBy: { createdAt: 'desc' },
       take: Math.min(limit, 100),
+      select: {
+        id: true,
+        category: true,
+        note: true,
+        status: true,
+        reporterUserId: true,
+        targetUserId: true,
+        createdAt: true,
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
   }
 
   async resolveAbuseReport(
@@ -767,7 +1603,98 @@ export class AdminOpsService {
       where: { verificationStatus: 'pending' },
       orderBy: { createdAt: 'asc' },
       take: Math.min(limit, 100),
+      select: {
+        id: true,
+        legalName: true,
+        taxId: true,
+        verificationStatus: true,
+        createdAt: true,
+      },
     });
-    return { items: rows };
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  listSubscriptionPlans() {
+    return this.subscriptions.listPlans();
+  }
+
+  patchSubscriptionPlan(
+    planId: string,
+    body: Parameters<SubscriptionsService['patchPlan']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.subscriptions.patchPlan(planId, body, actorUserId, requestId);
+  }
+
+  patchEmployerSubscription(
+    employerId: string,
+    body: Parameters<SubscriptionsService['patchEmployerSubscription']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.subscriptions.patchEmployerSubscription(
+      employerId,
+      body,
+      actorUserId,
+      requestId,
+    );
+  }
+
+  listSupportTickets(limit = 50, status?: string) {
+    return this.support.listTicketsAdmin(limit, status);
+  }
+
+  getSupportTicket(ticketId: string) {
+    return this.support.getTicketAdmin(ticketId);
+  }
+
+  replySupportTicket(
+    ticketId: string,
+    body: Parameters<SupportService['addStaffMessage']>[2],
+    adminUserId: string,
+    requestId: string,
+  ) {
+    return this.support.addStaffMessage(ticketId, adminUserId, body, requestId);
+  }
+
+  patchSupportTicket(
+    ticketId: string,
+    body: Parameters<SupportService['patchTicketAdmin']>[1],
+    adminUserId: string,
+    requestId: string,
+  ) {
+    return this.support.patchTicketAdmin(
+      ticketId,
+      body,
+      adminUserId,
+      requestId,
+    );
+  }
+
+  listTokenPackages() {
+    return this.tokenPackages.listAllAdmin();
+  }
+
+  createTokenPackage(
+    body: Parameters<TokenPackagesService['createAdmin']>[0],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.tokenPackages.createAdmin(body, actorUserId, requestId);
+  }
+
+  patchTokenPackage(
+    id: string,
+    body: Parameters<TokenPackagesService['patchAdmin']>[1],
+    actorUserId: string,
+    requestId: string,
+  ) {
+    return this.tokenPackages.patchAdmin(id, body, actorUserId, requestId);
   }
 }

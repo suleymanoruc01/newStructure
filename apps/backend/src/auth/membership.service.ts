@@ -101,6 +101,9 @@ export class MembershipService {
       id: user.id,
       phone: user.phoneE164,
       locale: user.locale,
+      email: user.email,
+      status: user.status as MeUser['status'],
+      deletionRequestedAt: user.deletionRequestedAt?.toISOString() ?? null,
       roles,
     };
   }

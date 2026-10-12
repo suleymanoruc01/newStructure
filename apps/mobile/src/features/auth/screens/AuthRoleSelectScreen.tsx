@@ -1,9 +1,9 @@
 import type { UserRole } from '@parton/api-contracts';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
+import { JobCard } from '../../../components/job/JobCard';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { ApiClientError } from '../../../api/client';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -45,25 +45,20 @@ export function AuthRoleSelectScreen() {
 
   return (
     <ModulePage scroll testID={SCREEN_IDS.roleSelect} title={t('auth:role.title')}>
-      {ROLES.map((item) => (
-        <Pressable
-          key={item.role}
-          accessibilityRole="button"
-          disabled={submitting}
-          onPress={() => void onSelect(item.role)}
-          className="flex-row items-center rounded-[22px] bg-surface-1 px-4 py-4"
-        >
-          <View className="flex-1">
-            <Text className="font-display text-lg font-semibold text-text-high">
-              {t(`auth:${item.titleKey}`)}
-            </Text>
-            <Text className="font-sans mt-1 text-base leading-5 text-text-medium">
+      <View className="gap-3">
+        {ROLES.map((item) => (
+          <JobCard
+            key={item.role}
+            disabled={submitting}
+            title={t(`auth:${item.titleKey}`)}
+            onPress={() => void onSelect(item.role)}
+          >
+            <Text className="font-sans text-base leading-5 text-text-medium">
               {t(`auth:${item.bodyKey}`)}
             </Text>
-          </View>
-          <Text className="ml-3 font-sans text-xl text-text-low">›</Text>
-        </Pressable>
-      ))}
+          </JobCard>
+        ))}
+      </View>
       {error ? <Text className="font-sans text-sm text-feedback-error">{error}</Text> : null}
     </ModulePage>
   );

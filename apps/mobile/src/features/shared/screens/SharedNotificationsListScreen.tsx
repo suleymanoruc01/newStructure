@@ -2,7 +2,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { Notification } from '@parton/api-contracts';
 import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect, useNavigationState } from '@react-navigation/native';
 
@@ -17,14 +16,23 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from '../../../api/notifications-api';
+import { JobCard } from '../../../components/job/JobCard';
 import { Button } from '../../../components/ui/Button';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { StatStrip } from '../../../components/ui/StatStrip';
+import { Pressable } from '../../../components/ui/Pressable';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { NavRow } from '../../../components/ui/NavRow';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { TextField } from '../../../components/ui/TextField';
 import {
   notificationsAllowed,
   requestPushAccess,
 } from '../../../notifications/push-registration';
 import { getAccessToken } from '../../../shared/auth/session-memory';
-import { useDisplayTimeZone } from '../../../shared/datetime/istanbul';
+import { notificationTypeLabel } from '../../../shared/notifications/type-label';
+import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
 type InboxNav = {
   SharedNotificationDetail: { notificationId: string };
@@ -67,7 +75,10 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
   const [items, setItems] = useState<Notification[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pushAllowed, setPushAllowed] = useState(true);
+  const [pushAllowed, setPushAllowed] = useState(false);
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,7 +106,7 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
       void load();
       void notificationsAllowed()
         .then(setPushAllowed)
-        .catch(() => setPushAllowed(true));
+        .catch(() => setPushAllowed(false));
     }, [load]),
   );
 
@@ -130,6 +141,24 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
   };
 
   const now = new Date();
+  const types = [...new Set(items.map((item) => item.type))];
+  const needle = query.trim().toLocaleLowerCase('tr-TR');
+  const visible = items.filter((item) => {
+    if (unreadOnly && item.readAt) {
+      return false;
+    }
+    if (typeFilter && item.type !== typeFilter) {
+      return false;
+    }
+    if (!needle) {
+      return true;
+    }
+    return (
+      item.title.toLocaleLowerCase('tr-TR').includes(needle) ||
+      item.body.toLocaleLowerCase('tr-TR').includes(needle) ||
+      notificationTypeLabel(item.type).toLocaleLowerCase('tr-TR').includes(needle)
+    );
+  });
   const groups: Array<'today' | 'yesterday' | 'earlier'> = [
     'today',
     'yesterday',
@@ -139,7 +168,14 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
   const atRoot = useNavigationState((state) => state.index === 0);
 
   return (
-    <ModulePage title={t('system:notifications.title')} testID="m.shared.notifications.list" scroll dock={atRoot}>
+    <ModulePage
+      title={t('system:notifications.title')}
+      testID="m.shared.notifications.list"
+      dock={atRoot}
+      refreshing={loading}
+      scroll
+      onRefresh={() => void load()}
+    >
       
       {pushAllowed ? null : (
         <View className="gap-3">
@@ -152,19 +188,104 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
           />
         </View>
       )}
-      {loading ? (
-        <Text className="font-sans mt-4 text-text-medium">{t('common:loading')}</Text>
+      {loading && items.length === 0 ? (
+        <View className="mt-4">
+          <SkeletonList />
+        </View>
       ) : null}
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
+      {items.length > 0 ? (
+        <View className="mt-3">
+          <StatStrip
+            items={[
+              {
+                label: t('system:notifications.unread'),
+                value: String(items.filter((item) => !item.readAt).length),
+              },
+              {
+                label: t('system:notifications.filterAll'),
+                value: String(items.length),
+              },
+            ]}
+          />
+        </View>
+      ) : null}
+      {items.length > 0 ? (
+        <View className="mt-3">
+          <TextField
+            inset
+            shape="capsule"
+            label={t('system:notifications.search')}
+            onChangeText={setQuery}
+            value={query}
+          />
+        </View>
+      ) : null}
+      <View className="mt-3 flex-row flex-wrap gap-2">
+        {([false, true] as const).map((value) => (
+          <Pressable
+            key={value ? 'unread' : 'all'}
+            className={`rounded-full px-3 py-2 ${
+              unreadOnly === value ? 'bg-action-primary' : 'bg-surface-1'
+            }`}
+            onPress={() => setUnreadOnly(value)}
+          >
+            <Text
+              className={`font-sans text-sm ${
+                unreadOnly === value ? 'text-text-on' : 'text-text-high'
+              }`}
+            >
+              {value
+                ? t('system:notifications.unread')
+                : t('system:notifications.filterAll')}
+            </Text>
+          </Pressable>
+        ))}
+        {types.map((type) => (
+          <Pressable
+            key={type}
+            className={`rounded-full px-3 py-2 ${
+              typeFilter === type ? 'bg-action-primary' : 'bg-surface-1'
+            }`}
+            onPress={() =>
+              setTypeFilter((current) => (current === type ? null : type))
+            }
+          >
+            <Text
+              className={`font-sans text-sm ${
+                typeFilter === type ? 'text-text-on' : 'text-text-high'
+              }`}
+            >
+              {notificationTypeLabel(type)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
       {!loading && items.length === 0 ? (
-        <Text className="font-sans mt-6 text-text-medium" testID="InboxEmpty">
-          {t('system:notifications.empty')}
-        </Text>
+        <View className="mt-6">
+          <EmptyState
+            testID="InboxEmpty"
+            title={t('system:notifications.empty')}
+          />
+        </View>
+      ) : null}
+      {!loading && items.length > 0 && visible.length === 0 ? (
+        <View className="mt-6">
+          <EmptyState
+            title={
+              needle
+                ? t('system:notifications.searchEmpty')
+                : typeFilter
+                  ? t('system:notifications.typeEmpty')
+                  : t('system:notifications.unreadEmpty')
+            }
+          />
+        </View>
       ) : null}
       {groups.map((group) => {
-        const rows = items.filter(
+        const rows = visible.filter(
           (item) => bucketOf(item.createdAt, zone, now) === group,
         );
         if (rows.length === 0) {
@@ -176,60 +297,57 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
               {t(`system:notifications.${group}`)}
             </Text>
             {rows.map((item) => (
-              <Pressable
-                key={item.id}
-                accessibilityRole="button"
-                className="mt-2 rounded-xl bg-surface-1 p-4"
-                onPress={() => {
-                  const names = navigation.getState().routeNames as string[];
-                  const target = notificationTarget(item.type, item.data);
-                  const chosen = target ? pickRoute(target, names) : null;
-                  if (!chosen) {
-                    navigation.navigate('SharedNotificationDetail', {
-                      notificationId: item.id,
-                    });
-                    return;
-                  }
-                  const token = getAccessToken();
-                  if (token && !item.readAt) {
-                    void markNotificationRead(token, item.id);
-                  }
-                  openRoute(navigation, chosen);
-                }}
-                testID="NotificationRow"
-              >
-                <View className="flex-row items-center gap-2">
+              <View key={item.id} className="mt-2" testID="NotificationRow">
+                <JobCard
+                  title={item.title}
+                  onPress={() => {
+                    const names = navigation.getState().routeNames as string[];
+                    const target = notificationTarget(item.type, item.data);
+                    const chosen = target ? pickRoute(target, names) : null;
+                    if (!chosen) {
+                      navigation.navigate('SharedNotificationDetail', {
+                        notificationId: item.id,
+                      });
+                      return;
+                    }
+                    const token = getAccessToken();
+                    if (token && !item.readAt) {
+                      void markNotificationRead(token, item.id);
+                    }
+                    openRoute(navigation, chosen);
+                  }}
+                >
                   {item.readAt ? null : (
-                    <View className="h-2 w-2 rounded-lg bg-accent-mustard" />
+                    <StatusBadge
+                      label={t('system:notifications.unread')}
+                      tone="warn"
+                    />
                   )}
-                  <Text className="font-sans flex-1 font-semibold text-text-high">
-                    {item.title}
+                  <Text className="font-sans mt-1 text-sm text-text-medium">
+                    {item.body}
                   </Text>
-                </View>
-                <Text className="font-sans mt-1 text-sm text-text-medium">{item.body}</Text>
-              </Pressable>
+                  <Text className="font-sans mt-1 text-xs text-text-low">
+                    {formatIstanbul(item.createdAt, zone)}
+                  </Text>
+                </JobCard>
+              </View>
             ))}
           </View>
         );
       })}
-      <Pressable
-        accessibilityRole="button"
-        className="mt-6 min-h-12 justify-center"
-        onPress={() => void onReadAll()}
-      >
-        <Text className="font-sans text-base text-text-high">
-          {t('system:notifications.readAll')}
-        </Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        className="min-h-12 justify-center"
-        onPress={() => navigation.navigate('SharedNotificationPrefs')}
-      >
-        <Text className="font-sans text-base text-text-high">
-          {t('system:notifications.prefs')}
-        </Text>
-      </Pressable>
+      <View className="mt-6">
+        <Button
+          label={t('system:notifications.readAll')}
+          onPress={() => void onReadAll()}
+          variant="secondary"
+        />
+      </View>
+      <View className="mt-3">
+        <NavRow
+          label={t('system:notifications.prefs')}
+          onPress={() => navigation.navigate('SharedNotificationPrefs')}
+        />
+      </View>
     </ModulePage>
   );
 }

@@ -68,7 +68,7 @@
 | **Routes** | `/workers` · `/workers/:id` |
 | **Purpose** | Inspect worker profile, availability, sectors/occupations, favorites, docs status |
 | **MVP** | P0 |
-| **Cases** | `CASE-WORKER-PROFILE` (T-016–030), `CASE-FAVORITES` |
+| **Cases** | `CASE-WORKER-PROFILE` (T-016–030, T-019 night-shift), `CASE-FAVORITES` |
 | **Components** | `WorkerProfilePanel`, `AvailabilityWeekGrid` (read-only), `DocumentStatusChips` |
 
 ### `w.admin.employers.list` / `w.admin.employers.detail`
@@ -78,7 +78,7 @@
 | **Routes** | `/employers` · `/employers/:id` |
 | **Purpose** | Orgs; verification; token balance; branches summary; favorites |
 | **MVP** | P0 |
-| **Cases** | `CASE-EMPLOYER-BRANCH`, `CASE-TOKEN`, `CASE-AUTH` (T-011–015) |
+| **Cases** | `CASE-EMPLOYER-BRANCH`, `CASE-TOKEN`, `CASE-AUTH` (T-011–015, T-013 tax unique) |
 | **Components** | `EmployerOrgCard`, `TokenBalanceChip`, `VerificationStatusBadge` |
 
 ### `w.admin.branches.list`
@@ -120,7 +120,7 @@
 | Field | Detail |
 | --- | --- |
 | **Routes** | `/jobs` · `/jobs/:id` |
-| **Purpose** | Oversight; force-close; inspect favorites-only, headcount, token holds |
+| **Purpose** | Oversight; force-close; inspect favorites-only (T-056, T-168, T-216), headcount, token holds |
 | **MVP** | P0 |
 | **Cases** | `CASE-JOB-POSTING`, `CASE-FAVORITES`, `CASE-TOKEN`, `CASE-ABUSE` |
 | **Components** | `JobOversightTable`, `FavoritesOnlyBadge`, `HoldBreakdown`, `ForceCloseDialog` |
@@ -142,7 +142,7 @@
 | **Route** | `/matching/diagnostics` |
 | **Purpose** | Explain why a worker sees/hides a job (admin-only; no leak to workers) |
 | **MVP** | P0 |
-| **Cases** | `CASE-MATCHING` (T-058–079) |
+| **Cases** | `CASE-MATCHING` (T-058–079, T-073 night-shift, T-075/T-169 favorites-only) |
 | **Components** | `MatchExplainPanel`, `MatchReasonChips` (admin) |
 
 ### `w.admin.applications.list` / `w.admin.applications.detail`
@@ -164,7 +164,7 @@
 | Field | Detail |
 | --- | --- |
 | **Routes** | `/shifts` · `/shifts/:id` |
-| **Purpose** | 3h confirm state, check-in events, seat release, token capture linkage |
+| **Purpose** | 3h confirm state, check-in events (GPS vs network T-144), seat release, token capture linkage |
 | **MVP** | P0 |
 | **Cases** | `CASE-AVAILABILITY-3H`, `CASE-CHECKIN`, `CASE-E2E`, `CASE-TOKEN` |
 | **Components** | `ShiftLifecycleTimeline`, `Confirm3hStatus`, `GeofenceStatus` (read-only) |
@@ -198,7 +198,7 @@
 | Field | Detail |
 | --- | --- |
 | **Routes** | `/ratings` · `/ratings/:id` |
-| **Purpose** | Moderate comments; inspect averages; rating abuse |
+| **Purpose** | Moderate comments (T-176 profanity queue); inspect averages; rating abuse |
 | **MVP** | P0 |
 | **Cases** | `CASE-RATINGS`, `CASE-ABUSE` (T-187) |
 | **Components** | `RatingModerationRow`, `StarRating` (read-only), `ProfanityError` |

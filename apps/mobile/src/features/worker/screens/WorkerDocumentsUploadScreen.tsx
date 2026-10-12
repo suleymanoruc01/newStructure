@@ -13,6 +13,9 @@ import {
   createWorkerDocumentUpload,
   putFileToPresignedUrl,
 } from '../../../api/worker-documents-api';
+import { JobCard } from '../../../components/job/JobCard';
+import { Button } from '../../../components/ui/Button';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -118,27 +121,36 @@ export function WorkerDocumentsUploadScreen({ navigation }: Props) {
           </Pressable>
         ))}
       </View>
-      <Pressable
-        accessibilityRole="button"
-        className="mt-6 rounded-xl border border-surface-2 px-4 py-3"
+      {pickedName ? (
+        <View className="mt-4">
+          <JobCard title={pickedName}>
+            <StatusBadge
+              label={t(`worker:documents.types.${documentType}`)}
+              tone="strong"
+            />
+            {pickedSize != null ? (
+              <Text className="font-sans mt-2 text-sm text-text-medium">
+                {Math.round(pickedSize / 1024)} KB
+              </Text>
+            ) : null}
+          </JobCard>
+        </View>
+      ) : null}
+      <Button
+        className="mt-6"
+        label={pickedName ?? t('worker:documents.pickFile')}
         onPress={() => void onPickFile()}
-      >
-        <Text className="font-sans text-center text-base text-text-high">
-          {pickedName ?? t('worker:documents.pickFile')}
-        </Text>
-      </Pressable>
+        variant="secondary"
+      />
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <Pressable
-        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
+      <Button
+        className="mt-8"
         disabled={submitting}
+        label={submitting ? t('common:loading') : t('worker:documents.uploadSubmit')}
         onPress={() => void onUpload()}
-      >
-        <Text className="font-sans text-center text-base font-semibold text-text-on">
-          {submitting ? t('common:loading') : t('worker:documents.uploadSubmit')}
-        </Text>
-      </Pressable>
+      />
     </ModulePage>
   );
 }

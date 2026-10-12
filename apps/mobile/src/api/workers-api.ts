@@ -1,6 +1,7 @@
 import {
   workerAvailabilityPutSchema,
   workerAvailabilityResponseSchema,
+  workerCalendarResponseSchema,
   workerProfilePatchSchema,
   workerProfileResponseSchema,
   workerSetupStatusResponseSchema,
@@ -50,6 +51,25 @@ export async function fetchWorkerSetupStatus(accessToken: string) {
   return apiRequest(
     '/workers/me/setup-status',
     workerSetupStatusResponseSchema,
+    { accessToken },
+  );
+}
+
+export async function fetchWorkerCalendar(
+  accessToken: string,
+  range?: { from?: string; to?: string },
+) {
+  const params = new URLSearchParams();
+  if (range?.from) {
+    params.set('from', range.from);
+  }
+  if (range?.to) {
+    params.set('to', range.to);
+  }
+  const query = params.toString();
+  return apiRequest(
+    `/workers/me/calendar${query ? `?${query}` : ''}`,
+    workerCalendarResponseSchema,
     { accessToken },
   );
 }

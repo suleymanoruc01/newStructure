@@ -71,6 +71,14 @@ export class AuthService {
     );
   }
 
+  private throwRestricted(): never {
+    throw new ApiException(
+      HttpStatus.FORBIDDEN,
+      ErrorCode.ACCOUNT_RESTRICTED,
+      'Hesabınız kısıtlandı.',
+    );
+  }
+
   private async assertNotBanned(phoneE164: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { phoneE164 },
@@ -78,6 +86,9 @@ export class AuthService {
     });
     if (user?.status === 'banned') {
       this.throwBanned();
+    }
+    if (user?.status === 'restricted') {
+      this.throwRestricted();
     }
     const ban = await this.prisma.authBan.findFirst({
       where: { phoneE164 },
@@ -98,6 +109,9 @@ export class AuthService {
     });
     if (user?.status === 'banned') {
       this.throwBanned();
+    }
+    if (user?.status === 'restricted') {
+      this.throwRestricted();
     }
 
     const memberships = await this.prisma.employerMembership.findMany({
@@ -787,13 +801,25 @@ export class AuthService {
     return this.membership.toMeUser(userId, activeContext);
   }
 
-  async patchMe(userId: string, locale?: string) {
-    if (locale) {
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { locale },
-      });
-    }
+  async patchMe(
+    userId: string,
+    patch: { locale?: string; email?: string | null },
+  ) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        locale: patch.locale,
+        email: patch.email,
+      },
+    });
     return this.membership.toMeUser(userId);
+  }
+
+  async requestDeletion(userId: string, _reason?: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { deletionRequestedAt: new Date() },
+    });
+    return this.membership.toMeUser(user.id);
   }
 }

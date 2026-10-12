@@ -8,6 +8,7 @@ export const applicationStatusSchema = z.enum([
   'accepted',
   'rejected',
   'accept_revoked',
+  'substitute',
 ]);
 
 export type ApplicationStatus = z.infer<typeof applicationStatusSchema>;
@@ -66,6 +67,10 @@ export const applicationListItemSchema = applicationSchema.extend({
   jobStartsAt: z.string().datetime().optional(),
   jobEndsAt: z.string().datetime().optional(),
   workerDisplayName: z.string().nullable().optional(),
+  branchName: z.string().nullable().optional(),
+  payAmountMinor: z.number().int().nonnegative().nullable().optional(),
+  payCurrency: z.string().optional(),
+  amenities: z.array(z.string()).optional(),
 });
 
 export type ApplicationListItem = z.infer<typeof applicationListItemSchema>;
@@ -93,6 +98,9 @@ export const applicationDetailSchema = applicationSchema.extend({
   jobEndsAt: z.string().datetime().optional(),
   branchName: z.string().optional(),
   workerDisplayName: z.string().nullable().optional(),
+  payAmountMinor: z.number().int().nonnegative().nullable().optional(),
+  payCurrency: z.string().optional(),
+  amenities: z.array(z.string()).optional(),
 });
 
 export const applicationResponseSchema = successEnvelopeSchema(

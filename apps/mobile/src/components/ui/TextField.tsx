@@ -1,5 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+
+import { clayCard } from './clay';
 
 type TextFieldProps = {
   label: string;
@@ -37,29 +39,15 @@ export function TextField({
   autoFocus,
   maxLength,
   inset = false,
-  shape = 'rect',
+  shape = 'capsule',
 }: TextFieldProps) {
-  const capsule = shape === 'capsule';
-  const soft = inset || capsule;
-  const radius = capsule ? 'rounded-full' : inset ? 'rounded-[22px]' : 'rounded-lg';
+  const capsule = shape === 'capsule' && !multiline;
+  const soft = inset || capsule || multiline;
+  const radius = capsule ? 'rounded-full' : 'rounded-[22px]';
   const border = error
     ? 'border border-feedback-error'
-    : soft
-      ? 'border border-transparent'
-      : 'border border-surface-2';
-  const clay: ViewStyle | undefined = capsule
-    ? {
-        shadowColor: '#252823',
-        shadowOffset: { width: 2, height: 6 },
-        shadowOpacity: 0.16,
-        shadowRadius: 8,
-        elevation: 3,
-        borderTopWidth: 2,
-        borderTopColor: 'rgba(251, 246, 236, 0.9)',
-        borderBottomWidth: 4,
-        borderBottomColor: '#DDD4C7',
-      }
-    : undefined;
+    : 'border border-transparent';
+  const clay = soft ? clayCard : undefined;
   return (
     <View className="mb-1">
       <Text className="mb-2 font-sans text-sm font-medium text-text-medium">{label}</Text>

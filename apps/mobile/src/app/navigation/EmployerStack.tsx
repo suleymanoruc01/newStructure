@@ -3,20 +3,33 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { DockTabBar, useDockItems } from '../../components/ui/RoleDock';
+import { EmployerApplicantDetailScreen } from '../../features/employer/screens/EmployerApplicantDetailScreen';
 import { EmployerApplicantsScreen } from '../../features/employer/screens/EmployerApplicantsScreen';
+import { EmployerBranchDetailScreen } from '../../features/employer/screens/EmployerBranchDetailScreen';
+import { EmployerBranchFormScreen } from '../../features/employer/screens/EmployerBranchFormScreen';
 import { EmployerBranchesScreen } from '../../features/employer/screens/EmployerBranchesScreen';
+import { EmployerBusinessScreen } from '../../features/employer/screens/EmployerBusinessScreen';
+import { EmployerCalendarScreen } from '../../features/employer/screens/EmployerCalendarScreen';
+import { EmployerChecklistScreen } from '../../features/employer/screens/EmployerChecklistScreen';
 import { EmployerCreateJobScreen } from '../../features/employer/screens/EmployerCreateJobScreen';
+import { EmployerDashboardScreen } from '../../features/employer/screens/EmployerDashboardScreen';
 import { EmployerFavoriteWorkersScreen } from '../../features/employer/screens/EmployerFavoriteWorkersScreen';
 import { EmployerHomeScreen } from '../../features/employer/screens/EmployerHomeScreen';
+import { EmployerIndustryScreen } from '../../features/employer/screens/EmployerIndustryScreen';
 import { EmployerJobDetailScreen } from '../../features/employer/screens/EmployerJobDetailScreen';
 import { EmployerJobsListScreen } from '../../features/employer/screens/EmployerJobsListScreen';
 import { EmployerOpenDisputesScreen } from '../../features/employer/screens/EmployerOpenDisputesScreen';
+import { EmployerOpsSettingsScreen } from '../../features/employer/screens/EmployerOpsSettingsScreen';
 import { EmployerProfileRootScreen } from '../../features/employer/screens/EmployerProfileRootScreen';
 import { EmployerShiftManualConfirmScreen } from '../../features/employer/screens/EmployerShiftManualConfirmScreen';
 import { EmployerTokenTopUpScreen } from '../../features/employer/screens/EmployerTokenTopUpScreen';
 import { EmployerTokensRootScreen } from '../../features/employer/screens/EmployerTokensRootScreen';
 import { EmployerVerificationStatusScreen } from '../../features/employer/screens/EmployerVerificationStatusScreen';
 import { SharedAbuseReportScreen } from '../../features/shared/screens/SharedAbuseReportScreen';
+import { SharedAccountEmailScreen } from '../../features/shared/screens/SharedAccountEmailScreen';
+import { SharedJobProcessScreen } from '../../features/shared/screens/SharedJobProcessScreen';
+import { SharedSettingsScreen } from '../../features/shared/screens/SharedSettingsScreen';
+import { SharedSupportRequestScreen } from '../../features/shared/screens/SharedSupportRequestScreen';
 import { SharedNotificationDetailScreen } from '../../features/shared/screens/SharedNotificationDetailScreen';
 import { SharedNotificationPrefsScreen } from '../../features/shared/screens/SharedNotificationPrefsScreen';
 import { SharedNotificationsListScreen } from '../../features/shared/screens/SharedNotificationsListScreen';
@@ -41,6 +54,68 @@ const tabBarStyle = {
   borderTopWidth: 0,
   elevation: 0,
 };
+
+function AccountScreens({ stack: Stack }: { stack: typeof HomeStack }) {
+  return (
+    <>
+      <Stack.Screen
+        component={EmployerDashboardScreen}
+        name="EmployerDashboard"
+        options={{ title: 'Özet' }}
+      />
+      <Stack.Screen
+        component={EmployerCalendarScreen}
+        name="EmployerCalendar"
+        options={{ title: 'Takvim' }}
+      />
+      <Stack.Screen
+        component={EmployerBusinessScreen}
+        name="EmployerBusiness"
+        options={{ title: 'İşletme' }}
+      />
+      <Stack.Screen
+        component={EmployerIndustryScreen}
+        name="EmployerIndustry"
+        options={{ title: 'Sektör' }}
+      />
+      <Stack.Screen
+        component={EmployerChecklistScreen}
+        name="EmployerChecklist"
+        options={{ title: 'Kurulum' }}
+      />
+      <Stack.Screen
+        component={EmployerOpsSettingsScreen}
+        name="EmployerOpsSettings"
+        options={{ title: 'Ayarlar' }}
+      />
+      <Stack.Screen
+        component={EmployerBranchFormScreen}
+        name="EmployerBranchForm"
+        options={{ title: 'Şube' }}
+      />
+      <Stack.Screen
+        component={EmployerBranchDetailScreen}
+        name="EmployerBranchDetail"
+        options={{ title: 'Şube' }}
+      />
+      <Stack.Screen
+        component={SharedSettingsScreen}
+        name="SharedSettings"
+        options={{ title: 'Hesap' }}
+      />
+      <Stack.Screen
+        component={SharedAccountEmailScreen}
+        name="SharedAccountEmail"
+        options={{ title: 'E-posta' }}
+      />
+      <Stack.Screen
+        component={SharedJobProcessScreen}
+        name="SharedJobProcess"
+        options={{ title: 'Süreç' }}
+      />
+    </>
+  );
+}
 
 function OpsScreens({ stack: Stack }: { stack: typeof HomeStack }) {
   return (
@@ -98,6 +173,7 @@ function EmployerHomeNavigator({ screenId }: { screenId?: string }) {
         name="EmployerBranches"
         options={{ title: 'Şubeler' }}
       />
+      <AccountScreens stack={HomeStack} />
       <OpsScreens stack={HomeStack} />
     </HomeStack.Navigator>
   );
@@ -127,6 +203,16 @@ function EmployerJobsNavigator() {
         options={{ title: 'Başvurular' }}
       />
       <JobsStack.Screen
+        component={EmployerApplicantDetailScreen}
+        name="EmployerApplicantDetail"
+        options={{ title: 'Başvuran' }}
+      />
+      <JobsStack.Screen
+        component={SharedJobProcessScreen}
+        name="SharedJobProcess"
+        options={{ title: 'Süreç' }}
+      />
+      <JobsStack.Screen
         component={EmployerVerificationStatusScreen}
         name="EmployerVerificationStatus"
         options={{ title: 'Firma doğrulama' }}
@@ -146,6 +232,16 @@ function EmployerBranchesNavigator() {
       <BranchStack.Screen
         component={EmployerBranchesScreen}
         name="EmployerBranches"
+      />
+      <BranchStack.Screen
+        component={EmployerBranchDetailScreen}
+        name="EmployerBranchDetail"
+        options={{ title: 'Şube' }}
+      />
+      <BranchStack.Screen
+        component={EmployerBranchFormScreen}
+        name="EmployerBranchForm"
+        options={{ title: 'Şube' }}
       />
     </BranchStack.Navigator>
   );
@@ -185,6 +281,12 @@ function EmployerProfileNavigator({ screenId }: { screenId?: string }) {
         name="SharedAbuseReport"
         options={{ title: 'Şikayet' }}
       />
+      <ProfileStack.Screen
+        component={SharedSupportRequestScreen}
+        name="SharedSupportRequest"
+        options={{ title: 'Destek' }}
+      />
+      <AccountScreens stack={ProfileStack} />
       <OpsScreens stack={ProfileStack} />
     </ProfileStack.Navigator>
   );

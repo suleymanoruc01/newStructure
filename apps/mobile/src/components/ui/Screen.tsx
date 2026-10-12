@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ScreenProps = {
@@ -8,6 +8,8 @@ type ScreenProps = {
   testID?: string;
   dock?: boolean;
   bleed?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 };
 
 export function Screen({
@@ -16,6 +18,8 @@ export function Screen({
   testID,
   dock = false,
   bleed = false,
+  refreshing = false,
+  onRefresh,
 }: ScreenProps) {
   const edges = bleed
     ? (['left', 'right'] as const)
@@ -36,6 +40,16 @@ export function Screen({
           className="flex-1"
           contentContainerClassName={`grow ${pad}`}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                colors={['#E97A3D']}
+                refreshing={refreshing}
+                tintColor="#E97A3D"
+                onRefresh={onRefresh}
+              />
+            ) : undefined
+          }
         >
           {children}
         </ScrollView>

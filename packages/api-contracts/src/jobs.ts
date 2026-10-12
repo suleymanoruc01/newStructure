@@ -23,8 +23,13 @@ export const jobSchema = z.object({
   minAge: z.number().int().nullable().optional(),
   maxAge: z.number().int().nullable().optional(),
   requiredDocumentTypes: z.array(z.string()),
+  amenities: z.array(z.string()).optional(),
+  instantAutoApprove: z.boolean().optional(),
   notes: z.string().nullable().optional(),
   publishedAt: z.string().datetime().nullable().optional(),
+  branchName: z.string().optional(),
+  branchLatitude: z.number().optional(),
+  branchLongitude: z.number().optional(),
 });
 
 export type Job = z.infer<typeof jobSchema>;
@@ -44,6 +49,8 @@ export const jobCreateBodySchema = z.object({
   minAge: z.number().int().min(0).max(120).optional(),
   maxAge: z.number().int().min(0).max(120).optional(),
   requiredDocumentTypes: z.array(z.string().min(1).max(64)).optional(),
+  amenities: z.array(z.string().trim().min(1).max(64)).max(20).optional(),
+  instantAutoApprove: z.boolean().optional(),
   notes: z.string().max(2000).optional(),
   publish: z.boolean().optional(),
 });
@@ -69,6 +76,8 @@ export const jobDetailSchema = jobSchema.extend({
   matchReasons: z.array(z.string()).optional(),
   branchName: z.string().optional(),
   branchCity: z.string().nullable().optional(),
+  branchLatitude: z.number().optional(),
+  branchLongitude: z.number().optional(),
   distanceKm: z.number().nullable().optional(),
 });
 
@@ -94,15 +103,30 @@ export type BranchJobCreateBody = z.infer<typeof branchJobCreateBodySchema>;
 
 export const jobFeedResponseSchema = successEnvelopeSchema(jobFeedDataSchema);
 
+export const jobCatalogOccupationPublicSchema = z.object({
+  id: z.string().uuid(),
+  code: z.string(),
+  title: z.string(),
+});
+
+export const jobCatalogSectorPublicSchema = z.object({
+  code: z.string(),
+  displayName: z.string(),
+  icon: z.string(),
+  occupations: z.array(jobCatalogOccupationPublicSchema),
+});
+
+/** Flat row for job create / matching (sector + occupation codes). */
 export const jobCatalogItemSchema = z.object({
   id: z.string().uuid(),
   sectorCode: z.string(),
-  occupationCode: z.string().nullable().optional(),
+  occupationCode: z.string(),
   title: z.string(),
 });
 
 export const jobCatalogDataSchema = z.object({
   items: z.array(jobCatalogItemSchema),
+  sectors: z.array(jobCatalogSectorPublicSchema),
 });
 
 export const jobCatalogResponseSchema =

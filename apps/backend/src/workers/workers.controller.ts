@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import type { Request } from 'express';
 import { RequireRoles, RoleContextGuard } from '../common/role-context.guard.js';
 import { successResponse } from '../common/response.util.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { ShiftsService } from '../shifts/shifts.service.js';
 import { WorkerDocumentsService } from './worker-documents.service.js';
 import { WorkersService } from './workers.service.js';
 
@@ -29,6 +31,7 @@ export class WorkersController {
   constructor(
     private readonly workers: WorkersService,
     private readonly documents: WorkerDocumentsService,
+    private readonly shifts: ShiftsService,
   ) {}
 
   @Get()
@@ -45,6 +48,22 @@ export class WorkersController {
     const parsed = workerProfilePatchSchema.parse(body);
     const data = await this.workers.patchMe(req.userId!, parsed);
     return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get('calendar')
+  async calendar(
+    @Req() req: Request,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const [shifts, availability] = await Promise.all([
+      this.shifts.listMine(req.userId!, from, to),
+      this.workers.getAvailability(req.userId!),
+    ]);
+    return successResponse(req.requestId ?? '', {
+      items: shifts.items,
+      windows: availability.windows,
+    });
   }
 
   @Get('availability')

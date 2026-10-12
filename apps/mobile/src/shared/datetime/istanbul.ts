@@ -61,3 +61,36 @@ export function weekDayKeys(anchor: Date, zone = timeZone): string[] {
     return istanbulDayKey(next, zone);
   });
 }
+
+export function monthGridKeys(anchor: Date, zone = timeZone): string[] {
+  const key = istanbulDayKey(anchor, zone);
+  const [year, month] = key.split('-').map(Number);
+  const first = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, 1, 12));
+  const start = weekDayKeys(first, zone)[0] ?? istanbulDayKey(first, zone);
+  const [startYear, startMonth, startDay] = start.split('-').map(Number);
+  const noon = new Date(
+    Date.UTC(startYear ?? 1970, (startMonth ?? 1) - 1, startDay ?? 1, 12),
+  );
+  return Array.from({ length: 42 }, (_, offset) => {
+    const next = new Date(noon);
+    next.setUTCDate(noon.getUTCDate() + offset);
+    return istanbulDayKey(next, zone);
+  });
+}
+
+export function shiftMonthKey(dayKey: string, delta: number, zone = timeZone): string {
+  const [year, month] = dayKey.split('-').map(Number);
+  const noon = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1 + delta, 1, 12));
+  return istanbulDayKey(noon, zone);
+}
+
+const WEEKDAY_SUN0 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+export function weekdaySun0(now = new Date(), zone = timeZone): number {
+  const label = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    timeZone: zone,
+  }).format(now);
+  const index = WEEKDAY_SUN0.findIndex((day) => day === label.slice(0, 3));
+  return index >= 0 ? index : now.getUTCDay();
+}

@@ -1,0 +1,34 @@
+import type { ViewStyle } from 'react-native';
+
+const CHARCOAL = '#252823';
+const CREAM_EDGE = 'rgba(251, 246, 236, 0.9)';
+const SHELF_EDGE = '#DDD4C7';
+const PRIMARY_EDGE = '#B94E32';
+
+/** Soft raised tile — login legal card / fields. */
+export const clayCard: ViewStyle = {
+  shadowColor: CHARCOAL,
+  shadowOffset: { width: 2, height: 6 },
+  shadowOpacity: 0.12,
+  shadowRadius: 8,
+  elevation: 3,
+  borderTopWidth: 2,
+  borderTopColor: CREAM_EDGE,
+  borderBottomWidth: 4,
+  borderBottomColor: SHELF_EDGE,
+};
+
+/** Pressed-clay CTA — login primary / forest secondary. */
+export function clayButton(variant: 'primary' | 'forest'): ViewStyle {
+  return {
+    shadowColor: CHARCOAL,
+    shadowOffset: { width: 4, height: 10 },
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    elevation: 8,
+    borderTopWidth: 2,
+    borderTopColor: 'rgba(243, 232, 207, 0.7)',
+    borderBottomWidth: 6,
+    borderBottomColor: variant === 'primary' ? PRIMARY_EDGE : CHARCOAL,
+  };
+}

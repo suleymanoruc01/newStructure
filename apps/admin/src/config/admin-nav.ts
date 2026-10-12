@@ -13,6 +13,13 @@ export const adminNavSections: { title: string; items: AdminNavItem[] }[] = [
     ],
   },
   {
+    title: "Abonelik ve destek",
+    items: [
+      { path: "/subscriptions", label: "Abonelik planları", screenId: "w.admin.subscriptions.plans" },
+      { path: "/support", label: "Destek talepleri", screenId: "w.admin.support.list" },
+    ],
+  },
+  {
     title: "Kimlik ve uyum",
     items: [
       { path: "/users", label: "Kullanıcılar", screenId: "w.admin.users.list" },
@@ -46,6 +53,7 @@ export const adminNavSections: { title: string; items: AdminNavItem[] }[] = [
       { path: "/shifts", label: "Vardiyalar", screenId: "w.admin.shifts.list" },
       { path: "/disputes", label: "Uyuşmazlıklar", screenId: "w.admin.disputes.queue" },
       { path: "/tokens/ledger", label: "Jeton defteri", screenId: "w.admin.tokens.ledger" },
+      { path: "/tokens/packages", label: "Jeton paketleri", screenId: "w.admin.tokens.packages" },
       { path: "/ratings", label: "Puan moderasyonu", screenId: "w.admin.ratings.queue" },
     ],
   },

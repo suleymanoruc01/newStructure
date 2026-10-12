@@ -10,7 +10,7 @@ import { ApiExceptionFilter } from '../src/common/api-exception.filter.js';
 import { TokenService } from '../src/auth/token.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
-describe('Favorites-only job publish (e2e) CASE-JOB-POSTING T-056', () => {
+describe('Favorites-only job publish (e2e) T-056 T-168 T-216', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let tokens: TokenService;

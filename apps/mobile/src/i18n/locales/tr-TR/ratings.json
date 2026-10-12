@@ -3,11 +3,25 @@
     "title": "Bekleyen değerlendirmeler",
     "lead": "Tamamlanan vardiyalar için karşı tarafa puan verin.",
     "empty": "Bekleyen değerlendirme yok.",
-    "untitled": "Vardiya"
+    "untitled": "Vardiya",
+    "opens": "Pencere: {{time}}",
+    "search": "İlan veya kişi ara",
+    "searchEmpty": "Bu aramaya uyan değerlendirme yok.",
+    "statPending": "Bekleyen"
   },
   "compose": {
     "title": "Değerlendirme yaz",
     "comment": "Yorum (isteğe bağlı)",
-    "submit": "Gönder"
+    "score": {
+      "1": "Zayıf",
+      "2": "Orta",
+      "3": "İyi",
+      "4": "Çok iyi",
+      "5": "Mükemmel"
+    },
+    "submit": "Gönder",
+    "chipOnTime": "Zamanında ve ilgiliydi",
+    "chipClear": "İletişim netti, sorunsuz geçti",
+    "chipAgain": "Tekrar çalışırım"
   }
 }

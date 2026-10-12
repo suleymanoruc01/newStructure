@@ -47,7 +47,7 @@ flowchart TB
 | Topic | Guidance | Cases |
 | --- | --- | --- |
 | iOS vs Android | Document permission strings & accuracy APIs separately | T-147 |
-| Wi-Fi assist | Optional fused location; never sole trust | T-144 |
+| Wi-Fi assist | **GPS-only** hard pass/fail; `locationSource=network` is `OUTSIDE_GEOFENCE` | T-144 |
 | Moving check-in | Require stable sample or short dwell | T-145 |
 | No background loc | Foreground only for v1 check-in | T-146 |
 

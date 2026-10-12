@@ -63,7 +63,7 @@ Missing IDs in source JSON (not inventable): `T-095`, `T-120`, `T-208`, `T-224` 
   /users · /users/:id
   /workers · /workers/:id
   /employers · /employers/:id
-  /branches
+  /branches · /branches/:id
   /verification
   /jobs · /jobs/:id
   /catalog
@@ -72,6 +72,7 @@ Missing IDs in source JSON (not inventable): `T-095`, `T-120`, `T-208`, `T-224` 
   /disputes
   /matching/diagnostics
   /tokens/ledger
+  /tokens/packages
   /ratings · /ratings/:id
   /notifications/outbox
   /notifications/broadcast
@@ -85,6 +86,8 @@ Missing IDs in source JSON (not inventable): `T-095`, `T-120`, `T-208`, `T-224` 
   /devops
   /devops/errors · /devops/errors/:fingerprint
   /devops/releases · /devops/services · /devops/clients
+  /subscriptions
+  /support · /support/:id
 ```
 
 DevOps detail: [`09-admin-devops.md`](09-admin-devops.md) · ADR-0035.

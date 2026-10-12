@@ -22,6 +22,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { PlatformService } from '../platform/platform.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
 import { WorkerDocumentsService } from '../workers/worker-documents.service.js';
+import { JobCatalogService } from '../job-catalog/job-catalog.service.js';
 
 @Injectable()
 export class JobsService {
@@ -33,6 +34,7 @@ export class JobsService {
     private readonly workerDocuments: WorkerDocumentsService,
     private readonly notifications: NotificationsService,
     private readonly platform: PlatformService,
+    private readonly catalog: JobCatalogService,
   ) {}
 
   private favoriteAudienceJobInput(
@@ -424,11 +426,17 @@ export class JobsService {
     minAge: number | null;
     maxAge: number | null;
     requiredDocumentTypes: unknown;
+    amenities?: unknown;
+    instantAutoApprove?: boolean;
     notes: string | null;
     publishedAt: Date | null;
+    branch?: { name: string; latitude: unknown; longitude: unknown } | null;
   }) {
     const docs = Array.isArray(job.requiredDocumentTypes)
       ? (job.requiredDocumentTypes as string[])
+      : [];
+    const amenities = Array.isArray(job.amenities)
+      ? (job.amenities as string[])
       : [];
     return {
       id: job.id,
@@ -449,8 +457,13 @@ export class JobsService {
       minAge: job.minAge,
       maxAge: job.maxAge,
       requiredDocumentTypes: docs,
+      amenities,
+      instantAutoApprove: job.instantAutoApprove ?? false,
       notes: job.notes,
       publishedAt: job.publishedAt?.toISOString() ?? null,
+      branchName: job.branch?.name,
+      branchLatitude: job.branch ? Number(job.branch.latitude) : undefined,
+      branchLongitude: job.branch ? Number(job.branch.longitude) : undefined,
     };
   }
 
@@ -563,6 +576,7 @@ export class JobsService {
     this.validateSchedule(startsAt, endsAt);
 
     this.assertAgeBounds(body.minAge, body.maxAge);
+    await this.catalog.assertActivePair(body.sectorCode, body.occupationCode);
     const publish = body.publish === true;
     const favoritesOnly = body.favoritesOnly ?? false;
     const requiredDocumentTypes = body.requiredDocumentTypes ?? [];
@@ -611,6 +625,8 @@ export class JobsService {
         minAge: body.minAge,
         maxAge: body.maxAge,
         requiredDocumentTypes,
+        amenities: body.amenities ?? [],
+        instantAutoApprove: body.instantAutoApprove ?? false,
         notes: body.notes,
         publishedAt: publish ? new Date() : null,
       },
@@ -659,6 +675,7 @@ export class JobsService {
     const jobs = await this.prisma.job.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      include: { branch: true },
     });
     return { items: jobs.map((j) => this.mapJob(j)) };
   }
@@ -681,6 +698,8 @@ export class JobsService {
       ...base,
       branchName: job.branch.name,
       branchCity: job.branch.city,
+      branchLatitude: Number(job.branch.latitude),
+      branchLongitude: Number(job.branch.longitude),
     };
 
     if (ctx?.role === 'employer' || ctx?.role === 'manager') {
@@ -713,6 +732,13 @@ export class JobsService {
     const employerIds = [job.employerId];
     const favoredEmployerIds =
       await this.favorites.favoredEmployerIdsForWorker(userId, employerIds);
+    if (job.favoritesOnly && !favoredEmployerIds.has(job.employerId)) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İlan bulunamadı.',
+      );
+    }
     const uploadedDocumentTypes =
       await this.workerDocuments.uploadedTypesForUser(userId);
     const timeZone = await this.platform.timeZone();
@@ -762,6 +788,12 @@ export class JobsService {
     }
 
     this.assertAgeBounds(body.minAge ?? job.minAge, body.maxAge ?? job.maxAge);
+    if (body.sectorCode || body.occupationCode) {
+      await this.catalog.assertActivePair(
+        body.sectorCode ?? job.sectorCode,
+        body.occupationCode ?? job.occupationCode,
+      );
+    }
     const startsAt = body.startsAt ? new Date(body.startsAt) : job.startsAt;
     const endsAt = body.endsAt ? new Date(body.endsAt) : job.endsAt;
     if (body.startsAt || body.endsAt) {
@@ -870,6 +902,8 @@ export class JobsService {
         minAge: body.minAge,
         maxAge: body.maxAge,
         requiredDocumentTypes: body.requiredDocumentTypes,
+        amenities: body.amenities,
+        instantAutoApprove: body.instantAutoApprove,
         notes: body.notes,
         status,
         publishedAt,
@@ -893,7 +927,17 @@ export class JobsService {
     return this.mapJob(updated);
   }
 
-  async workerFeed(userId: string, limit: number, cursorRaw?: string) {
+  async workerFeed(
+    userId: string,
+    limit: number,
+    cursorRaw?: string,
+    filters?: {
+      sectorCode?: string;
+      occupationCode?: string;
+      onlyFavorites?: boolean;
+      onlyInstantApproval?: boolean;
+    },
+  ) {
     const worker = await this.prisma.workerProfile.findUnique({
       where: { userId },
       include: {
@@ -965,6 +1009,17 @@ export class JobsService {
     const uploadedDocumentTypes =
       await this.workerDocuments.uploadedTypesForUser(userId);
 
+    const workerFavoredEmployerIds = filters?.onlyFavorites
+      ? new Set(
+          (
+            await this.prisma.favorite.findMany({
+              where: { ownerUserId: userId, targetKind: 'employer' },
+              select: { targetId: true },
+            })
+          ).map((row) => row.targetId),
+        )
+      : null;
+
     type JobWithBranch = Prisma.JobGetPayload<{
       include: { branch: true };
     }>;
@@ -992,7 +1047,15 @@ export class JobsService {
           status: 'published',
           remainingHeadcount: { gt: 0 },
           startsAt: { gt: new Date() },
-          sectorCode: { in: sectorCodes },
+          sectorCode: filters?.sectorCode
+            ? filters.sectorCode
+            : { in: sectorCodes },
+          ...(filters?.occupationCode
+            ? { occupationCode: filters.occupationCode }
+            : {}),
+          ...(filters?.onlyInstantApproval
+            ? { instantAutoApprove: true }
+            : {}),
           AND: [favoritesVisibility, keysetFilter],
         },
         include: { branch: true },
@@ -1030,6 +1093,12 @@ export class JobsService {
           matchingContext,
         );
         if (eligibility.eligible) {
+          if (
+            workerFavoredEmployerIds &&
+            !workerFavoredEmployerIds.has(job.employerId)
+          ) {
+            continue;
+          }
           scored.push({ job, eligibility });
         }
       }
@@ -1059,6 +1128,8 @@ export class JobsService {
         ...this.mapJob(job),
         branchName: job.branch.name,
         branchCity: job.branch.city,
+        branchLatitude: Number(job.branch.latitude),
+        branchLongitude: Number(job.branch.longitude),
         distanceKm: eligibility.distanceKm,
         matchReasons: eligibility.matchReasons,
         eligibility: {

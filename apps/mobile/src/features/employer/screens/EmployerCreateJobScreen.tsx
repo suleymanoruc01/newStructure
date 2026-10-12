@@ -5,16 +5,44 @@ import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
+import { TokenCostPreview } from '../../../components/tokens/TokenCostPreview';
 import { Button } from '../../../components/ui/Button';
+import { WizardSteps } from '../../../components/ui/WizardSteps';
+import { clayCard } from '../../../components/ui/clay';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
 import { listBranches } from '../../../api/branches-api';
 import { fetchEmployerMe } from '../../../api/employers-api';
-import { createBranchJob } from '../../../api/jobs-api';
+import { createBranchJob, fetchJobCatalog } from '../../../api/jobs-api';
+import { fetchTokenBalance } from '../../../api/tokens-api';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { useAuth } from '../../../shared/auth/AuthProvider';
+import { formatPayTry, tryMajorToMinor } from '../../../shared/format/pay';
+import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
+import {
+  SHIFT_DURATIONS_H,
+  SHIFT_START_HOURS,
+  dayChipLabel,
+  nextIstanbulDayKeys,
+  wallToIso,
+} from '../../../shared/datetime/shift-when';
+import { JobCard } from '../../../components/job/JobCard';
+import { JobFacts } from '../../../components/job/JobFacts';
+import { LocationMap } from '../../../components/map/LocationMap';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { StatStrip } from '../../../components/ui/StatStrip';
+
+const AMENITIES = ['meal', 'transport', 'parking', 'lodging'] as const;
+const DOC_TYPES = [
+  'id_card',
+  'criminal_record',
+  'health_report',
+  'food_hygiene',
+  'drivers_license',
+  'other',
+] as const;
 
 function parseOptionalAge(raw: string, message: string): number | undefined {
   const trimmed = raw.trim();
@@ -33,60 +61,114 @@ function parseOptionalAge(raw: string, message: string): number | undefined {
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerCreateJob'>;
 
+type CatalogSector = Awaited<ReturnType<typeof fetchJobCatalog>>['sectors'][number];
+type BranchItem = Awaited<ReturnType<typeof listBranches>>['items'][number];
+
 export function EmployerCreateJobScreen({ navigation }: Props) {
-  const { t } = useTranslation(['employer', 'common', 'errors']);
+  const { t } = useTranslation(['employer', 'worker', 'common', 'errors']);
   const { contexts } = useAuth();
+  const timeZone = useDisplayTimeZone();
+  const days = nextIstanbulDayKeys(7, new Date(), timeZone);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [branches, setBranches] = useState<BranchItem[]>([]);
+  const [sectors, setSectors] = useState<CatalogSector[]>([]);
   const [branchId, setBranchId] = useState('');
-  const [sectorCode, setSectorCode] = useState('hospitality');
-  const [occupationCode, setOccupationCode] = useState('waiter');
+  const [sectorCode, setSectorCode] = useState('');
+  const [occupationCode, setOccupationCode] = useState('');
   const [headcount, setHeadcount] = useState('1');
-  const [startsAt, setStartsAt] = useState('');
-  const [endsAt, setEndsAt] = useState('');
+  const [payTry, setPayTry] = useState('');
+  const [tokenAvailable, setTokenAvailable] = useState<number | null>(null);
+  const [dayKey, setDayKey] = useState(() => nextIstanbulDayKeys(2)[1] ?? nextIstanbulDayKeys(1)[0]!);
+  const [startHour, setStartHour] = useState<(typeof SHIFT_START_HOURS)[number]>(9);
+  const [durationH, setDurationH] = useState<(typeof SHIFT_DURATIONS_H)[number]>(8);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [instantAutoApprove, setInstantAutoApprove] = useState(false);
+  const [amenities, setAmenities] = useState<string[]>([]);
   const [genderFilter, setGenderFilter] = useState<'none' | 'female' | 'male'>(
     'none',
   );
-  const [requiredDocumentTypes, setRequiredDocumentTypes] = useState('');
+  const [requiredDocumentTypes, setRequiredDocumentTypes] = useState<string[]>(
+    [],
+  );
   const [minAge, setMinAge] = useState('');
   const [maxAge, setMaxAge] = useState('');
   const [verificationStatus, setVerificationStatus] = useState<string | null>(
     null,
   );
+  const [notes, setNotes] = useState('');
+  const [sectorQuery, setSectorQuery] = useState('');
+  const [occupationQuery, setOccupationQuery] = useState('');
+  const [branchQuery, setBranchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const employerCtx = contexts.find((c) => c.role === 'employer');
-    const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    start.setMinutes(0, 0, 0);
-    const end = new Date(start.getTime() + 8 * 60 * 60 * 1000);
-    setStartsAt(start.toISOString());
-    setEndsAt(end.toISOString());
     void (async () => {
       const token = getAccessToken();
       if (!token) {
         return;
       }
       try {
-        const [branches, employer] = await Promise.all([
+        const [branchList, employer, catalog] = await Promise.all([
           listBranches(token),
           fetchEmployerMe(token),
+          fetchJobCatalog(),
         ]);
-        const first = branches.items[0]?.id;
-        if (first) {
-          setBranchId(first);
+        setBranches(branchList.items);
+        if (branchList.items.length === 1) {
+          setBranchId(branchList.items[0]!.id);
+        }
+        setSectors(catalog.sectors);
+        if (catalog.sectors.length === 1) {
+          const only = catalog.sectors[0]!;
+          setSectorCode(only.code);
+          if (only.occupations.length === 1) {
+            setOccupationCode(only.occupations[0]!.code);
+          }
         }
         setVerificationStatus(employer.verificationStatus);
-      } catch {
-        setBranchId('');
+        try {
+          const tokens = await fetchTokenBalance(token);
+          setTokenAvailable(tokens.available);
+        } catch {
+          setTokenAvailable(null);
+        }
+      } catch (err) {
+        setError(formErrorMessage(err, t));
       }
     })();
-  }, [contexts]);
+  }, [contexts, t]);
 
+  const occupations =
+    sectors.find((sector) => sector.code === sectorCode)?.occupations ?? [];
+  const sectorNeedle = sectorQuery.trim().toLocaleLowerCase('tr-TR');
+  const shownSectors = sectorNeedle
+    ? sectors.filter((sector) =>
+        sector.displayName.toLocaleLowerCase('tr-TR').includes(sectorNeedle),
+      )
+    : sectors;
+  const occupationNeedle = occupationQuery.trim().toLocaleLowerCase('tr-TR');
+  const shownOccupations = occupationNeedle
+    ? occupations.filter((row) =>
+        row.title.toLocaleLowerCase('tr-TR').includes(occupationNeedle),
+      )
+    : occupations;
+  const branchNeedle = branchQuery.trim().toLocaleLowerCase('tr-TR');
+  const shownBranches = branchNeedle
+    ? branches.filter((branch) =>
+        branch.name.toLocaleLowerCase('tr-TR').includes(branchNeedle),
+      )
+    : branches;
   const canPublish =
     verificationStatus === 'verified' || verificationStatus === 'bypass';
+  const testID =
+    step === 1
+      ? 'm.employer.jobs.create.step1'
+      : step === 2
+        ? 'm.employer.jobs.create.step2'
+        : 'm.employer.jobs.create.step3';
 
-  const onSubmit = async () => {
+  const submit = async (publish: boolean) => {
     setSubmitting(true);
     setError(null);
     try {
@@ -101,7 +183,14 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           'VALIDATION_FAILED',
         );
       }
-      if (!canPublish) {
+      if (!sectorCode) {
+        throw new ApiClientError(
+          t('employer:jobs.sectorRequired'),
+          400,
+          'VALIDATION_FAILED',
+        );
+      }
+      if (publish && !canPublish) {
         throw new ApiClientError(
           t('employer:verification.publishBlocked'),
           422,
@@ -121,26 +210,39 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           'VALIDATION_FAILED',
         );
       }
-      const docTypes = requiredDocumentTypes
-        .split(',')
-        .map((v) => v.trim())
-        .filter((v) => v.length > 0);
+      const docTypes = requiredDocumentTypes;
+      const payAmountMinor = tryMajorToMinor(payTry);
+      if (payTry.trim() && payAmountMinor == null) {
+        throw new ApiClientError(
+          t('employer:jobs.payInvalid'),
+          400,
+          'VALIDATION_FAILED',
+        );
+      }
+      const { startsAt, endsAt } = wallToIso(
+        dayKey,
+        startHour,
+        durationH,
+        timeZone,
+      );
       await createBranchJob(
         branchId,
         {
           sectorCode,
-          occupationCode,
+          occupationCode: occupationCode || undefined,
           headcount: Number.parseInt(headcount, 10),
           startsAt,
           endsAt,
-          publish: true,
+          publish,
           favoritesOnly,
-          genderFilter:
-            genderFilter === 'none' ? undefined : genderFilter,
+          instantAutoApprove,
+          amenities: amenities.length > 0 ? amenities : undefined,
+          genderFilter: genderFilter === 'none' ? undefined : genderFilter,
           minAge: parsedMinAge,
           maxAge: parsedMaxAge,
-          requiredDocumentTypes:
-            docTypes.length > 0 ? docTypes : undefined,
+          requiredDocumentTypes: docTypes.length > 0 ? docTypes : undefined,
+          payAmountMinor,
+          notes: notes.trim() || undefined,
         },
         token,
       );
@@ -152,9 +254,16 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
     }
   };
 
+  const selectedBranch = branches.find((branch) => branch.id === branchId);
+  const branchName = selectedBranch?.name;
+  const sectorName = sectors.find((sector) => sector.code === sectorCode)?.displayName;
+  const occupationName = occupations.find((row) => row.code === occupationCode)?.title;
+  const when = wallToIso(dayKey, startHour, durationH, timeZone);
+  const payAmountMinor = tryMajorToMinor(payTry);
+
   return (
-    <ModulePage title={t('employer:jobs.createTitle')} testID="m.employer.jobs.create.step1" scroll>
-      
+    <ModulePage title={t('employer:jobs.createTitle')} testID={testID} scroll>
+      <WizardSteps step={step} total={3} />
       {error ? (
         <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
       ) : null}
@@ -163,105 +272,478 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           {t('employer:verification.publishBlocked')}
         </Text>
       ) : null}
-      <View className="mt-6 gap-3">
-        <TextField
-          label={t('employer:jobs.branchId')}
-          value={branchId}
-          onChangeText={setBranchId}
-          error={error === t('employer:jobs.branchRequired') ? error : undefined}
-        />
-        <TextField
-          label={t('employer:jobs.sector')}
-          value={sectorCode}
-          onChangeText={setSectorCode}
-        />
-        <TextField
-          label={t('employer:jobs.occupation')}
-          value={occupationCode}
-          onChangeText={setOccupationCode}
-        />
-        <TextField
-          label={t('employer:jobs.headcount')}
-          value={headcount}
-          onChangeText={setHeadcount}
-          keyboardType="number-pad"
-        />
-        <TextField
-          label={t('employer:jobs.startsAt')}
-          value={startsAt}
-          onChangeText={setStartsAt}
-        />
-        <TextField
-          label={t('employer:jobs.endsAt')}
-          value={endsAt}
-          onChangeText={setEndsAt}
-        />
-        <Pressable
-          accessibilityRole="switch"
-          accessibilityState={{ checked: favoritesOnly }}
-          className="flex-row items-center justify-between rounded-xl bg-surface-1 px-4 py-3"
-          onPress={() => setFavoritesOnly((v) => !v)}
-        >
-          <Text className="font-sans text-base text-text-high">
-            {t('employer:jobs.favoritesOnly')}
-          </Text>
+      {step === 1 ? (
+        <View className="mt-6 gap-3">
           <Text className="font-sans text-sm font-semibold text-text-high">
-            {favoritesOnly ? t('common:yes') : t('common:no')}
+            {t('employer:jobs.branchId')}
           </Text>
-        </Pressable>
-        <View className="flex-row flex-wrap gap-2">
-          {(['none', 'female', 'male'] as const).map((value) => (
+          {branches.length > 4 ? (
+            <TextField
+              inset
+              shape="capsule"
+              label={t('employer:jobs.branchSearch')}
+              onChangeText={setBranchQuery}
+              value={branchQuery}
+            />
+          ) : null}
+          <View className="flex-row flex-wrap gap-2">
+            {shownBranches.map((branch) => (
+              <Pressable
+                key={branch.id}
+                className={`rounded-full px-3 py-2 ${
+                  branchId === branch.id ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setBranchId(branch.id)}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    branchId === branch.id ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {branch.name}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.sector')}
+          </Text>
+          {sectors.length > 6 ? (
+            <TextField
+              inset
+              shape="capsule"
+              label={t('employer:jobs.sectorSearch')}
+              onChangeText={setSectorQuery}
+              value={sectorQuery}
+            />
+          ) : null}
+          <View className="flex-row flex-wrap gap-2">
+            {shownSectors.map((sector) => (
+              <Pressable
+                key={sector.code}
+                className={`rounded-full px-3 py-2 ${
+                  sectorCode === sector.code ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => {
+                  setSectorCode(sector.code);
+                  setOccupationCode(sector.occupations[0]?.code ?? '');
+                }}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    sectorCode === sector.code ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {sector.displayName}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.occupation')}
+          </Text>
+          {occupations.length > 6 ? (
+            <TextField
+              inset
+              shape="capsule"
+              label={t('employer:jobs.occupationSearch')}
+              onChangeText={setOccupationQuery}
+              value={occupationQuery}
+            />
+          ) : null}
+          <View className="flex-row flex-wrap gap-2">
+            {shownOccupations.map((occupation) => (
+              <Pressable
+                key={occupation.code}
+                className={`rounded-full px-3 py-2 ${
+                  occupationCode === occupation.code
+                    ? 'bg-action-primary'
+                    : 'bg-surface-1'
+                }`}
+                onPress={() => setOccupationCode(occupation.code)}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    occupationCode === occupation.code
+                      ? 'text-text-on'
+                      : 'text-text-high'
+                  }`}
+                >
+                  {occupation.title}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.headcount')}
+          </Text>
+          <View className="flex-row items-center gap-3">
             <Pressable
-              key={value}
-              accessibilityRole="button"
-              className={`rounded-full px-3 py-2 ${
-                genderFilter === value ? 'bg-accent-mustard' : 'bg-surface-1'
-              }`}
-              onPress={() => setGenderFilter(value)}
+              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              onPress={() =>
+                setHeadcount(String(Math.max(1, (Number.parseInt(headcount, 10) || 1) - 1)))
+              }
             >
-              <Text className="font-sans text-sm text-text-high">
-                {t(`employer:jobs.genderFilter.${value}`)}
+              <Text className="font-sans text-lg text-text-high">−</Text>
+            </Pressable>
+            <Text className="font-display text-xl font-semibold text-text-high">
+              {Number.parseInt(headcount, 10) || 1}
+            </Text>
+            <Pressable
+              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              onPress={() =>
+                setHeadcount(String((Number.parseInt(headcount, 10) || 1) + 1))
+              }
+            >
+              <Text className="font-sans text-lg text-text-high">+</Text>
+            </Pressable>
+          </View>
+          <TextField
+            label={t('employer:jobs.pay')}
+            value={payTry}
+            onChangeText={setPayTry}
+            keyboardType="decimal-pad"
+          />
+          <Button label={t('common:continue')} onPress={() => setStep(2)} />
+        </View>
+      ) : null}
+      {step === 2 ? (
+        <View className="mt-6 gap-3">
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.whenDay')}
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {days.map((key) => (
+              <Pressable
+                key={key}
+                className={`rounded-full px-3 py-2 ${
+                  dayKey === key ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setDayKey(key)}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    dayKey === key ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {dayChipLabel(key, timeZone)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.whenStart')}
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {SHIFT_START_HOURS.map((hour) => (
+              <Pressable
+                key={hour}
+                className={`rounded-full px-3 py-2 ${
+                  startHour === hour ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setStartHour(hour)}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    startHour === hour ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {t('employer:jobs.hour', { hour })}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.whenHours')}
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {SHIFT_DURATIONS_H.map((hours) => (
+              <Pressable
+                key={hours}
+                className={`rounded-full px-3 py-2 ${
+                  durationH === hours ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setDurationH(hours)}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    durationH === hours ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {t('employer:jobs.hours', { hours })}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm text-text-medium">
+            {formatIstanbul(when.startsAt, timeZone)} –{' '}
+            {formatIstanbul(when.endsAt, timeZone)}
+          </Text>
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: favoritesOnly }}
+            style={clayCard}
+            className="flex-row items-center justify-between rounded-[22px] bg-surface-1 px-4 py-3"
+            onPress={() => setFavoritesOnly((v) => !v)}
+          >
+            <Text className="font-sans text-base text-text-high">
+              {t('employer:jobs.favoritesOnly')}
+            </Text>
+            <StatusBadge
+              label={favoritesOnly ? t('common:yes') : t('common:no')}
+              tone={favoritesOnly ? 'strong' : 'neutral'}
+            />
+          </Pressable>
+          {favoritesOnly ? (
+            <Text className="font-sans text-sm text-text-medium">
+              {t('employer:jobs.favoritesOnlyHint')}
+            </Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: instantAutoApprove }}
+            style={clayCard}
+            className="flex-row items-center justify-between rounded-[22px] bg-surface-1 px-4 py-3"
+            onPress={() => setInstantAutoApprove((v) => !v)}
+          >
+            <Text className="font-sans text-base text-text-high">
+              {t('employer:jobs.instantAutoApprove')}
+            </Text>
+            <StatusBadge
+              label={instantAutoApprove ? t('common:yes') : t('common:no')}
+              tone={instantAutoApprove ? 'strong' : 'neutral'}
+            />
+          </Pressable>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.amenities')}
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {AMENITIES.map((value) => {
+              const on = amenities.includes(value);
+              return (
+                <Pressable
+                  key={value}
+                  className={`rounded-full px-3 py-2 ${
+                    on ? 'bg-accent-mustard' : 'bg-surface-1'
+                  }`}
+                  onPress={() =>
+                    setAmenities((current) =>
+                      current.includes(value)
+                        ? current.filter((item) => item !== value)
+                        : [...current, value],
+                    )
+                  }
+                >
+                  <Text className="font-sans text-sm text-text-high">
+                    {t(`employer:jobs.amenity.${value}`)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <View className="flex-row flex-wrap gap-2">
+            {(['none', 'female', 'male'] as const).map((value) => (
+              <Pressable
+                key={value}
+                className={`rounded-full px-3 py-2 ${
+                  genderFilter === value ? 'bg-accent-mustard' : 'bg-surface-1'
+                }`}
+                onPress={() => setGenderFilter(value)}
+              >
+                <Text className="font-sans text-sm text-text-high">
+                  {t(`employer:jobs.genderFilter.${value}`)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.minAge')}
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            <Pressable
+              className={`rounded-full px-3 py-2 ${
+                minAge === '' ? 'bg-action-primary' : 'bg-surface-1'
+              }`}
+              onPress={() => setMinAge('')}
+            >
+              <Text
+                className={`font-sans text-sm ${
+                  minAge === '' ? 'text-text-on' : 'text-text-high'
+                }`}
+              >
+                {t('employer:jobs.ageAny')}
               </Text>
             </Pressable>
-          ))}
+            {([18, 21, 25, 30] as const).map((age) => (
+              <Pressable
+                key={`min-${age}`}
+                className={`rounded-full px-3 py-2 ${
+                  minAge === String(age) ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setMinAge(String(age))}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    minAge === String(age) ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {age}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.maxAge')}
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            <Pressable
+              className={`rounded-full px-3 py-2 ${
+                maxAge === '' ? 'bg-action-primary' : 'bg-surface-1'
+              }`}
+              onPress={() => setMaxAge('')}
+            >
+              <Text
+                className={`font-sans text-sm ${
+                  maxAge === '' ? 'text-text-on' : 'text-text-high'
+                }`}
+              >
+                {t('employer:jobs.ageAny')}
+              </Text>
+            </Pressable>
+            {([35, 45, 55, 65] as const).map((age) => (
+              <Pressable
+                key={`max-${age}`}
+                className={`rounded-full px-3 py-2 ${
+                  maxAge === String(age) ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() => setMaxAge(String(age))}
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    maxAge === String(age) ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {age}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="font-sans text-sm font-semibold text-text-high">
+            {t('employer:jobs.requiredDocuments')}
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {DOC_TYPES.map((type) => {
+              const on = requiredDocumentTypes.includes(type);
+              return (
+                <Pressable
+                  key={type}
+                  className={`rounded-full px-3 py-2 ${
+                    on ? 'bg-accent-mustard' : 'bg-surface-1'
+                  }`}
+                  onPress={() =>
+                    setRequiredDocumentTypes((current) =>
+                      current.includes(type)
+                        ? current.filter((item) => item !== type)
+                        : [...current, type],
+                    )
+                  }
+                >
+                  <Text className="font-sans text-sm text-text-high">
+                    {t(`worker:documents.types.${type}`)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <TextField
+            label={t('employer:jobs.notes')}
+            multiline
+            numberOfLines={3}
+            onChangeText={setNotes}
+            value={notes}
+          />
+          <Button label={t('common:continue')} onPress={() => setStep(3)} />
+          <Button
+            label={t('common:back')}
+            variant="secondary"
+            onPress={() => setStep(1)}
+          />
         </View>
-        <TextField
-          label={t('employer:jobs.minAge')}
-          value={minAge}
-          onChangeText={setMinAge}
-          keyboardType="number-pad"
-          error={
-            error === t('employer:jobs.ageInvalid') ||
-            error === t('employer:jobs.ageRangeInvalid')
-              ? error
-              : undefined
-          }
-        />
-        <TextField
-          label={t('employer:jobs.maxAge')}
-          value={maxAge}
-          onChangeText={setMaxAge}
-          keyboardType="number-pad"
-          error={
-            error === t('employer:jobs.ageInvalid') ||
-            error === t('employer:jobs.ageRangeInvalid')
-              ? error
-              : undefined
-          }
-        />
-        <TextField
-          label={t('employer:jobs.requiredDocuments')}
-          value={requiredDocumentTypes}
-          onChangeText={setRequiredDocumentTypes}
-        />
-      </View>
-      <View className="mt-6">
-        <Button
-          disabled={submitting || !canPublish}
-          label={t('employer:jobs.publish')}
-          onPress={() => void onSubmit()}
-        />
-      </View>
+      ) : null}
+      {step === 3 ? (
+        <View className="mt-6 gap-3">
+          <StatStrip
+            items={[
+              {
+                label: t('employer:jobs.headcount'),
+                value: String(Number.parseInt(headcount, 10) || 1),
+              },
+              ...(formatPayTry(payAmountMinor)
+                ? [
+                    {
+                      label: t('employer:jobs.pay'),
+                      value: formatPayTry(payAmountMinor)!,
+                    },
+                  ]
+                : []),
+              {
+                label: t('employer:jobs.genderFilter.none'),
+                value: t(`employer:jobs.genderFilter.${genderFilter}`),
+              },
+            ]}
+          />
+          <JobCard
+            title={
+              [branchName, sectorName, occupationName]
+                .filter(Boolean)
+                .join(' · ') || t('employer:jobs.createTitle')
+            }
+          >
+            <JobFacts
+              branchName={branchName}
+              startsAt={when.startsAt}
+              endsAt={when.endsAt}
+              payAmountMinor={payAmountMinor}
+              headcount={Number.parseInt(headcount, 10) || undefined}
+              remainingHeadcount={Number.parseInt(headcount, 10) || undefined}
+              favoritesOnly={favoritesOnly}
+              instantAutoApprove={instantAutoApprove}
+              amenities={amenities}
+              requiredDocumentTypes={requiredDocumentTypes}
+              notes={notes.trim() || undefined}
+            />
+          </JobCard>
+          {selectedBranch ? (
+            <LocationMap
+              pin={{
+                latitude: selectedBranch.latitude,
+                longitude: selectedBranch.longitude,
+              }}
+              pinLabel={selectedBranch.name}
+            />
+          ) : null}
+          <TokenCostPreview
+            available={tokenAvailable}
+            need={Number.parseInt(headcount, 10) || 0}
+          />
+          <Button
+            disabled={submitting || !canPublish}
+            label={t('employer:jobs.publish')}
+            onPress={() => void submit(true)}
+          />
+          <Button
+            disabled={submitting}
+            label={t('employer:jobs.saveDraft')}
+            variant="secondary"
+            onPress={() => void submit(false)}
+          />
+          <Button
+            label={t('common:back')}
+            variant="ghost"
+            onPress={() => setStep(2)}
+          />
+        </View>
+      ) : null}
     </ModulePage>
   );
 }

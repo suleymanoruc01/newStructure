@@ -13,6 +13,7 @@ export type GeofenceInput = {
   accuracyM: number;
   mockLocation?: boolean;
   locationPermissionGranted: boolean;
+  locationSource?: 'gps' | 'network';
 };
 
 export type GeofenceResult = {
@@ -41,6 +42,14 @@ export class GeofenceService {
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorCode.MOCK_LOCATION_DETECTED,
         'Sahte konum algılandı.',
+      );
+    }
+    // agent-default: gap-wifi-location — GPS-only hard pass/fail
+    if (input.locationSource === 'network') {
+      throw new ApiException(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        ErrorCode.OUTSIDE_GEOFENCE,
+        'Check-in yalnızca GPS konumu ile yapılır.',
       );
     }
 

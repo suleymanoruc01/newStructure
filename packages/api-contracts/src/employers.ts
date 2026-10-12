@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { meUserSchema } from './auth/schemas.js';
 import { successEnvelopeSchema } from './envelope.js';
+import { shiftSchema } from './shifts.js';
 
 export const employerVerificationStatusSchema = z.enum([
   'pending',
@@ -59,4 +60,14 @@ export const employerCreateDataSchema = z.object({
 
 export const employerCreateResponseSchema = successEnvelopeSchema(
   employerCreateDataSchema,
+);
+
+export const employerCalendarDataSchema = z.object({
+  items: z.array(shiftSchema),
+});
+
+export type EmployerCalendarData = z.infer<typeof employerCalendarDataSchema>;
+
+export const employerCalendarResponseSchema = successEnvelopeSchema(
+  employerCalendarDataSchema,
 );

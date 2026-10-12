@@ -1,11 +1,13 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   ErrorCode,
+  type AdminBranchCreateBody,
+  type AdminBranchPatchBody,
+  type AuthContext,
   type BranchCreateBody,
   type BranchPatchBody,
 } from '@parton/api-contracts';
 import { Prisma } from '../generated/prisma/client.js';
-import type { AuthContext } from '@parton/api-contracts';
 
 import {
   generateManagerJoinCode,
@@ -17,10 +19,12 @@ import {
 import { MembershipService } from '../auth/membership.service.js';
 import { SessionService } from '../auth/session.service.js';
 import { TokenService } from '../auth/token.service.js';
+import { LegalAuditLogger } from '../audit/legal-audit.logger.js';
 import { ApiException } from '../common/api.exception.js';
 import { assertValidCoordinates } from '../common/geo.util.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service.js';
 
 @Injectable()
 export class BranchesService {
@@ -30,6 +34,8 @@ export class BranchesService {
     private readonly tokens: TokenService,
     private readonly membership: MembershipService,
     private readonly config: AppConfigService,
+    private readonly subscriptions: SubscriptionsService,
+    private readonly audit: LegalAuditLogger,
   ) {}
 
   private mapBranch(branch: {
@@ -150,6 +156,7 @@ export class BranchesService {
   ) {
     assertValidCoordinates(body.latitude, body.longitude);
     const employerId = await this.resolveEmployerId(userId, ctx);
+    await this.subscriptions.assertCanAddBranch(employerId);
     const joinCode = generateManagerJoinCode();
     const codeHash = hashManagerJoinCode(joinCode, this.config.env.OTP_PEPPER);
     const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
@@ -305,6 +312,144 @@ export class BranchesService {
             ? new Prisma.Decimal(body.longitude)
             : undefined,
       },
+    });
+    return this.mapBranch(updated);
+  }
+
+  async adminGetBranch(branchId: string) {
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: branchId },
+      include: {
+        employer: {
+          select: { id: true, legalName: true, tradingName: true, taxId: true },
+        },
+      },
+    });
+    if (!branch) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Şube bulunamadı.',
+      );
+    }
+    return {
+      ...this.mapBranch(branch),
+      employer: branch.employer,
+    };
+  }
+
+  async adminCreateBranch(
+    body: AdminBranchCreateBody,
+    actorUserId: string,
+    requestId: string,
+  ) {
+    assertValidCoordinates(body.latitude, body.longitude);
+    const employer = await this.prisma.employer.findUnique({
+      where: { id: body.employerId },
+    });
+    if (!employer) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İşveren bulunamadı.',
+      );
+    }
+    const owner = await this.prisma.employerMembership.findFirst({
+      where: { employerId: body.employerId, role: 'owner', status: 'active' },
+    });
+    const invitedByUserId = owner?.userId ?? actorUserId;
+    const joinCode = generateManagerJoinCode();
+    const codeHash = hashManagerJoinCode(joinCode, this.config.env.OTP_PEPPER);
+    const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    const branch = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.branch.create({
+        data: {
+          employerId: body.employerId,
+          name: body.name,
+          addressLine1: body.addressLine1,
+          city: body.city,
+          latitude: new Prisma.Decimal(body.latitude),
+          longitude: new Prisma.Decimal(body.longitude),
+        },
+      });
+      await tx.branchManagerInvite.create({
+        data: {
+          branchId: created.id,
+          joinCode,
+          codeHash,
+          expiresAt,
+          invitedByUserId,
+        },
+      });
+      return created;
+    });
+    await this.audit.append({
+      category: 'admin',
+      action: 'branch_created',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'branch',
+      resourceId: branch.id,
+      requestId,
+      metadata: { employerId: body.employerId, adminOverrideLimits: true },
+    });
+    return {
+      ...this.mapBranch(branch),
+      managerInviteCode: joinCode,
+    };
+  }
+
+  async adminPatchBranch(
+    branchId: string,
+    body: AdminBranchPatchBody,
+    actorUserId: string,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.branch.findUnique({
+      where: { id: branchId },
+    });
+    if (!existing) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Şube bulunamadı.',
+      );
+    }
+    if (body.latitude !== undefined && body.longitude !== undefined) {
+      assertValidCoordinates(body.latitude, body.longitude);
+    } else if (body.latitude !== undefined || body.longitude !== undefined) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Enlem ve boylam birlikte güncellenmelidir.',
+      );
+    }
+    const updated = await this.prisma.branch.update({
+      where: { id: branchId },
+      data: {
+        name: body.name,
+        addressLine1: body.addressLine1,
+        city: body.city,
+        status: body.status,
+        latitude:
+          body.latitude !== undefined
+            ? new Prisma.Decimal(body.latitude)
+            : undefined,
+        longitude:
+          body.longitude !== undefined
+            ? new Prisma.Decimal(body.longitude)
+            : undefined,
+      },
+    });
+    await this.audit.append({
+      category: 'admin',
+      action: 'branch_updated',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'branch',
+      resourceId: branchId,
+      requestId,
+      metadata: body,
     });
     return this.mapBranch(updated);
   }

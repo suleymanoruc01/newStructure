@@ -1,11 +1,23 @@
 import {
   adminDashboardResponseSchema,
+  adminJobCatalogOccupationCreateSchema,
+  adminJobCatalogOccupationPatchSchema,
+  adminJobCatalogOccupationResponseSchema,
+  adminJobCatalogSectorCreateSchema,
+  adminJobCatalogSectorPatchSchema,
+  adminJobCatalogSectorResponseSchema,
+  adminJobCatalogDeleteResponseSchema,
+  adminJobCatalogTreeResponseSchema,
   auditEventsListResponseSchema,
   auditReportCreateResponseSchema,
   auditReportCreateSchema,
   devopsErrorDetailResponseSchema,
   devopsErrorsListResponseSchema,
   devopsErrorPatchSchema,
+  type AdminJobCatalogOccupationCreateBody,
+  type AdminJobCatalogOccupationPatchBody,
+  type AdminJobCatalogSectorCreateBody,
+  type AdminJobCatalogSectorPatchBody,
   type AuditReportCreateBody,
   type DevopsErrorPatchBody,
 } from "@parton/api-contracts";
@@ -27,12 +39,13 @@ export async function fetchAdminDashboard() {
   return adminDashboardResponseSchema.parse(json).data;
 }
 
-export async function fetchAdminList(path: string) {
+export async function fetchAdminList(path: string): Promise<unknown[]> {
   const data = await adminGetLoose(path);
   if (data && typeof data === "object" && "items" in data) {
-    return (data as { items: unknown[] }).items;
+    const items = (data as { items: unknown }).items;
+    return Array.isArray(items) ? items : [];
   }
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchAdminResource(path: string) {
@@ -109,4 +122,75 @@ export async function adminPatch(path: string, body: unknown) {
 
 export async function adminPost(path: string, body: unknown) {
   return apiRequest<unknown>(path, { method: "POST", body, auth: true });
+}
+
+export async function fetchAdminJobCatalogTree() {
+  const json = await apiRequest<unknown>("/admin/catalog", { auth: true });
+  return adminJobCatalogTreeResponseSchema.parse(json).data;
+}
+
+export async function createAdminJobCatalogSector(
+  body: AdminJobCatalogSectorCreateBody,
+) {
+  const payload = adminJobCatalogSectorCreateSchema.parse(body);
+  const json = await apiRequest<unknown>("/admin/catalog/sectors", {
+    method: "POST",
+    body: payload,
+    auth: true,
+  });
+  return adminJobCatalogSectorResponseSchema.parse(json).data;
+}
+
+export async function patchAdminJobCatalogSector(
+  id: string,
+  body: AdminJobCatalogSectorPatchBody,
+) {
+  const payload = adminJobCatalogSectorPatchSchema.parse(body);
+  const json = await apiRequest<unknown>(`/admin/catalog/sectors/${id}`, {
+    method: "PATCH",
+    body: payload,
+    auth: true,
+  });
+  return adminJobCatalogSectorResponseSchema.parse(json).data;
+}
+
+export async function createAdminJobCatalogOccupation(
+  sectorId: string,
+  body: AdminJobCatalogOccupationCreateBody,
+) {
+  const payload = adminJobCatalogOccupationCreateSchema.parse(body);
+  const json = await apiRequest<unknown>(
+    `/admin/catalog/sectors/${sectorId}/occupations`,
+    { method: "POST", body: payload, auth: true },
+  );
+  return adminJobCatalogOccupationResponseSchema.parse(json).data;
+}
+
+export async function patchAdminJobCatalogOccupation(
+  id: string,
+  body: AdminJobCatalogOccupationPatchBody,
+) {
+  const payload = adminJobCatalogOccupationPatchSchema.parse(body);
+  const json = await apiRequest<unknown>(`/admin/catalog/occupations/${id}`, {
+    method: "PATCH",
+    body: payload,
+    auth: true,
+  });
+  return adminJobCatalogOccupationResponseSchema.parse(json).data;
+}
+
+export async function deleteAdminJobCatalogSector(id: string) {
+  const json = await apiRequest<unknown>(`/admin/catalog/sectors/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+  return adminJobCatalogDeleteResponseSchema.parse(json).data;
+}
+
+export async function deleteAdminJobCatalogOccupation(id: string) {
+  const json = await apiRequest<unknown>(`/admin/catalog/occupations/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+  return adminJobCatalogDeleteResponseSchema.parse(json).data;
 }

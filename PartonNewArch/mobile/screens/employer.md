@@ -284,6 +284,22 @@ Steps are **controlled** views of the shared draft. Do not keep job fields only 
 
 ---
 
+## `m.employer.calendar.root` — Shift calendar
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/employer/calendar` |
+| **Role** | Employer, Manager |
+| **Purpose** | See scheduled shifts for the org (manager: assigned branches) |
+| **MVP** | P1 |
+| **Entry** | Home; Profile |
+| **Layout** | Month grid; day list with worker name; overlap; upcoming |
+| **Actions** | Open job; Add to device calendar |
+| **API** | `GET /api/v1/employers/me/calendar` |
+| **Cases** | `CASE-CHECKIN`, `CASE-EMPLOYER-REVIEW` |
+
+---
+
 ## `m.employer.profile.root` — Profile tab
 
 | Field | Detail |

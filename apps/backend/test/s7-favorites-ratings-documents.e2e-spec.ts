@@ -11,7 +11,7 @@ import { TokenService } from '../src/auth/token.service.js';
 import { ObjectStorageService } from '../src/storage/object-storage.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
-describe('S7 favorites, ratings, documents (e2e)', () => {
+describe('S7 favorites, ratings, documents (e2e) @T-022 @T-023 @T-024 @T-176', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let tokens: TokenService;
@@ -224,6 +224,20 @@ describe('S7 favorites, ratings, documents (e2e)', () => {
     expect(res.body.error.code).toBe('INVALID_DOCUMENT');
   });
 
+  it('rejects oversized documents before storage', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/workers/me/documents')
+      .set('Authorization', `Bearer ${workerBearer()}`)
+      .send({
+        documentType: 'id_card',
+        fileName: 'huge.pdf',
+        contentType: 'application/pdf',
+        sizeBytes: 20_000_000,
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('DOCUMENT_TOO_LARGE');
+  });
+
   it('uploads a document via presigned PUT and completes', async () => {
     const createRes = await request(app.getHttpServer())
       .post('/api/v1/workers/me/documents')
@@ -251,6 +265,17 @@ describe('S7 favorites, ratings, documents (e2e)', () => {
       .set('Authorization', `Bearer ${workerBearer()}`);
     expect(completeRes.status).toBe(201);
     expect(completeRes.body.data.status).toBe('uploaded');
+
+    const listRes = await request(app.getHttpServer())
+      .get('/api/v1/workers/me/documents')
+      .set('Authorization', `Bearer ${workerBearer()}`);
+    expect(listRes.status).toBe(200);
+    expect(
+      (listRes.body.data.items as { documentType: string; status: string }[]).some(
+        (row) =>
+          row.documentType === 'health_report' && row.status === 'uploaded',
+      ),
+    ).toBe(true);
   });
 
   it('creates a rating and blocks duplicate with 409', async () => {

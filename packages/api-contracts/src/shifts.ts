@@ -39,11 +39,16 @@ export const shiftSchema = z.object({
   branchName: z.string().nullable().optional(),
   branchLatitude: z.number().optional(),
   branchLongitude: z.number().optional(),
+  payAmountMinor: z.number().int().nonnegative().nullable().optional(),
+  payCurrency: z.string().optional(),
+  amenities: z.array(z.string()).optional(),
+  requiredDocumentTypes: z.array(z.string()).optional(),
   confirmWindow: shiftConfirmWindowSchema.optional(),
   availabilityDecision: availabilityDecisionSchema.nullable().optional(),
   availabilityRespondedAt: z.string().datetime().nullable().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
+  workerDisplayName: z.string().nullable().optional(),
 });
 
 export type Shift = z.infer<typeof shiftSchema>;
@@ -65,12 +70,16 @@ export type AvailabilityConfirmBody = z.infer<
   typeof availabilityConfirmBodySchema
 >;
 
+export const checkInLocationSourceSchema = z.enum(['gps', 'network']);
+
 export const checkInBodySchema = z.object({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   accuracyM: z.number().positive().max(5000),
   mockLocation: z.boolean().optional(),
   locationPermissionGranted: z.boolean(),
+  /** agent-default: gap-wifi-location — network/Wi-Fi cannot pass geofence */
+  locationSource: checkInLocationSourceSchema.optional(),
 });
 
 export type CheckInBody = z.infer<typeof checkInBodySchema>;
@@ -123,3 +132,39 @@ export const employerOpenDisputesDataSchema = z.object({
 export const employerOpenDisputesResponseSchema = successEnvelopeSchema(
   employerOpenDisputesDataSchema,
 );
+
+export const shiftIncidentTypeSchema = z.enum([
+  'job_description_mismatch',
+  'workplace_closed',
+  'pay_dispute',
+  'harassment',
+  'emergency_help',
+]);
+
+export const shiftIncidentSeveritySchema = z.enum([
+  'normal',
+  'high',
+  'critical',
+]);
+
+export const shiftIncidentCreateBodySchema = z.object({
+  type: shiftIncidentTypeSchema,
+  severity: shiftIncidentSeveritySchema,
+  note: z.string().max(2000).optional(),
+});
+
+export type ShiftIncidentCreateBody = z.infer<
+  typeof shiftIncidentCreateBodySchema
+>;
+
+export const shiftIncidentSchema = z.object({
+  id: z.string().uuid(),
+  shiftId: z.string().uuid(),
+  type: shiftIncidentTypeSchema,
+  severity: shiftIncidentSeveritySchema,
+  note: z.string().nullable().optional(),
+  createdAt: z.string().datetime(),
+});
+
+export const shiftIncidentResponseSchema =
+  successEnvelopeSchema(shiftIncidentSchema);

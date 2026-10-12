@@ -1,5 +1,6 @@
 import {
   branchJobCreateBodySchema,
+  jobCatalogResponseSchema,
   jobCreateBodySchema,
   jobFeedResponseSchema,
   jobListResponseSchema,
@@ -14,7 +15,14 @@ import { apiRequest } from './client';
 
 export async function fetchJobFeed(
   accessToken: string,
-  options: { limit?: number; cursor?: string | null } = {},
+  options: {
+    limit?: number;
+    cursor?: string | null;
+    sectorCode?: string;
+    occupationCode?: string;
+    onlyFavorites?: boolean;
+    onlyInstantApproval?: boolean;
+  } = {},
 ) {
   const params = new URLSearchParams();
   if (options.limit) {
@@ -23,12 +31,28 @@ export async function fetchJobFeed(
   if (options.cursor) {
     params.set('cursor', options.cursor);
   }
+  if (options.sectorCode) {
+    params.set('sectorCode', options.sectorCode);
+  }
+  if (options.occupationCode) {
+    params.set('occupationCode', options.occupationCode);
+  }
+  if (options.onlyFavorites) {
+    params.set('onlyFavorites', '1');
+  }
+  if (options.onlyInstantApproval) {
+    params.set('onlyInstantApproval', '1');
+  }
   const qs = params.toString();
   return apiRequest(
     `/jobs/feed${qs ? `?${qs}` : ''}`,
     jobFeedResponseSchema,
     { accessToken },
   );
+}
+
+export async function fetchJobCatalog() {
+  return apiRequest('/job-catalog', jobCatalogResponseSchema);
 }
 
 export async function fetchJobDetail(jobId: string, accessToken: string) {

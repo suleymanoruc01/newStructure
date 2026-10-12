@@ -1,6 +1,7 @@
 import React from 'react';
-import { Text, type ViewStyle } from 'react-native';
+import { Text } from 'react-native';
 
+import { clayButton } from './clay';
 import { Pressable } from './Pressable';
 
 type ButtonProps = {
@@ -18,7 +19,7 @@ export function Button({
   onPress,
   disabled = false,
   variant = 'primary',
-  shape = 'rect',
+  shape = 'capsule',
   testID,
   className,
 }: ButtonProps) {
@@ -39,18 +40,8 @@ export function Button({
         : 'border border-action-secondary bg-transparent';
   const onColor = filled || forest;
   const clay = capsule && !ghost && (filled || forest);
-  const clayStyle: ViewStyle | undefined = clay
-    ? {
-        shadowColor: '#252823',
-        shadowOffset: { width: 4, height: 10 },
-        shadowOpacity: 0.32,
-        shadowRadius: 12,
-        elevation: 8,
-        borderTopWidth: 2,
-        borderTopColor: 'rgba(243, 232, 207, 0.7)',
-        borderBottomWidth: 6,
-        borderBottomColor: variant === 'primary' ? '#B94E32' : '#252823',
-      }
+  const clayStyle = clay
+    ? clayButton(variant === 'primary' || variant === 'destructive' ? 'primary' : 'forest')
     : undefined;
 
   return (

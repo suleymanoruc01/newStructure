@@ -1,11 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -139,6 +140,16 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
       }
       title={title}
     >
+      <View className="mb-3">
+        <StatusBadge
+          label={
+            password.length >= 8
+              ? t('auth:password.ready')
+              : t('auth:password.needChars')
+          }
+          tone={password.length >= 8 ? 'strong' : 'warn'}
+        />
+      </View>
       <TextField
         autoCapitalize="none"
         error={error}

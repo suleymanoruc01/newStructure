@@ -13,6 +13,7 @@ import {
   checkInBodySchema,
   checkOutBodySchema,
   disputeCreateBodySchema,
+  shiftIncidentCreateBodySchema,
 } from '@parton/api-contracts';
 import type { Request } from 'express';
 
@@ -98,6 +99,19 @@ export class ShiftsController {
   ) {
     const parsed = checkOutBodySchema.parse(body);
     const data = await this.shifts.checkOut(req.userId!, id, parsed);
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post(':id/incidents')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('worker')
+  async incident(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(shiftIncidentCreateBodySchema)) body: unknown,
+  ) {
+    const parsed = shiftIncidentCreateBodySchema.parse(body);
+    const data = await this.shifts.createIncident(req.userId!, id, parsed);
     return successResponse(req.requestId ?? '', data);
   }
 

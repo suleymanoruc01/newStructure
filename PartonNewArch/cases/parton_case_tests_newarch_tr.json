@@ -18,7 +18,7 @@
       "success": "{data, meta}",
       "error": "{error: {code, message, details?}, meta}"
     },
-    "generated_utc": "2026-10-10T23:23:23Z",
+    "generated_utc": "2026-10-12T07:01:28Z",
     "grounding_docs": [
       "backend/04-domain-modules.md",
       "shared/12-api-contracts.md",
@@ -1055,7 +1055,7 @@
           ],
           "mimari": {
             "uygulama": "skip",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-password",
             "agent_default": "gap-password",
             "nest_modulleri": [
@@ -1722,7 +1722,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-tax-verification",
             "agent_default": "gap-firm-verification",
             "nest_modulleri": [
@@ -2525,7 +2525,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-night-shift",
             "agent_default": "gap-night-shift",
             "nest_modulleri": [
@@ -2879,7 +2879,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-documents",
             "agent_default": null,
             "nest_modulleri": [
@@ -2997,7 +2997,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-documents",
             "agent_default": null,
             "nest_modulleri": [
@@ -3116,7 +3116,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-documents",
             "agent_default": "gap-documents",
             "nest_modulleri": [
@@ -3481,7 +3481,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-age-filter",
             "agent_default": null,
             "nest_modulleri": [
@@ -3602,7 +3602,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-gender-filter",
             "agent_default": null,
             "nest_modulleri": [
@@ -5542,7 +5542,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-gender-filter",
             "agent_default": null,
             "nest_modulleri": [
@@ -5648,7 +5648,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-documents",
             "agent_default": null,
             "nest_modulleri": [
@@ -6840,7 +6840,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modulleri": [
@@ -6952,7 +6952,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modulleri": [
@@ -7831,7 +7831,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-documents",
             "agent_default": null,
             "nest_modulleri": [
@@ -7924,7 +7924,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-documents",
             "agent_default": null,
             "nest_modulleri": [
@@ -8473,7 +8473,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-night-shift",
             "agent_default": "gap-night-shift",
             "nest_modulleri": [
@@ -8665,7 +8665,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modulleri": [
@@ -14367,7 +14367,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-mock-gps",
             "agent_default": "gap-mock-gps",
             "nest_modulleri": [
@@ -14690,7 +14690,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-checkin-dispute",
             "agent_default": "gap-checkin-dispute",
             "nest_modulleri": [
@@ -14797,7 +14797,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-checkin-dispute",
             "agent_default": "gap-checkin-dispute",
             "nest_modulleri": [
@@ -15704,7 +15704,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-wifi-location",
             "agent_default": "gap-wifi-location",
             "nest_modulleri": [
@@ -16093,7 +16093,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-mock-gps",
             "agent_default": "gap-mock-gps",
             "nest_modulleri": [
@@ -16765,7 +16765,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "partial",
+            "arch_durum": "covered",
             "gap_etiketi": "tokens-module",
             "agent_default": null,
             "nest_modulleri": [
@@ -16872,7 +16872,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "partial",
+            "arch_durum": "covered",
             "gap_etiketi": "tokens-module",
             "agent_default": "gap-3h-no-response",
             "nest_modulleri": [
@@ -17083,7 +17083,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "partial",
+            "arch_durum": "covered",
             "gap_etiketi": "tokens-module",
             "agent_default": null,
             "nest_modulleri": [
@@ -17506,7 +17506,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-payments",
             "agent_default": "gap-payments",
             "nest_modulleri": [
@@ -17714,7 +17714,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "partial",
+            "arch_durum": "covered",
             "gap_etiketi": "tokens-module",
             "agent_default": null,
             "nest_modulleri": [
@@ -18252,7 +18252,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modulleri": [
@@ -18355,7 +18355,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modulleri": [
@@ -19056,7 +19056,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-profanity-filter",
             "agent_default": "gap-profanity-filter",
             "nest_modulleri": [
@@ -19857,7 +19857,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-device-fingerprint",
             "agent_default": "gap-device-fingerprint",
             "nest_modulleri": [
@@ -20072,7 +20072,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-bot-protection",
             "agent_default": "gap-bot-protection",
             "nest_modulleri": [
@@ -20288,7 +20288,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-mock-gps",
             "agent_default": "gap-mock-gps",
             "nest_modulleri": [
@@ -20591,7 +20591,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-age-filter",
             "agent_default": "gap-profile-demographics",
             "nest_modulleri": [
@@ -20696,7 +20696,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-ban-reentry",
             "agent_default": "gap-ban-reentry",
             "nest_modulleri": [
@@ -23067,7 +23067,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-checkin-dispute",
             "agent_default": null,
             "nest_modulleri": [
@@ -23569,7 +23569,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modulleri": [
@@ -27106,7 +27106,7 @@
           ],
           "mimari": {
             "uygulama": "skip",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-password",
             "agent_default": "gap-password",
             "nest_modulleri": [
@@ -27219,7 +27219,7 @@
           ],
           "mimari": {
             "uygulama": "implement",
-            "arch_durum": "gap",
+            "arch_durum": "covered",
             "gap_etiketi": "gap-documents",
             "agent_default": "gap-documents",
             "nest_modulleri": [

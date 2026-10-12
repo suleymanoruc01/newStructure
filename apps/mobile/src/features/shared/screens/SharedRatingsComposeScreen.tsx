@@ -6,6 +6,10 @@ import { useTranslation } from 'react-i18next';
 
 import { ApiClientError } from '../../../api/client';
 import { submitRating } from '../../../api/ratings-api';
+import { JobCard } from '../../../components/job/JobCard';
+import { Button } from '../../../components/ui/Button';
+import { clayCard } from '../../../components/ui/clay';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
@@ -54,22 +58,57 @@ export function SharedRatingsComposeScreen({ route, navigation }: Props) {
   return (
     <ModulePage title={t('ratings:compose.title')} testID="m.shared.ratings.compose" scroll>
       
-      {jobTitle ? (
-        <Text className="font-sans mt-2 text-base text-text-high">{jobTitle}</Text>
-      ) : null}
-      <Text className="font-sans mt-1 text-sm text-text-medium">{counterpartLabel}</Text>
-      <View className="mt-6 flex-row justify-between gap-2">
+      <View className="mt-2">
+        <JobCard title={jobTitle ?? t('ratings:pending.untitled')}>
+          <Text className="font-sans text-sm text-text-medium">
+            {counterpartLabel}
+          </Text>
+        </JobCard>
+      </View>
+      <View className="mt-4">
+        <StatusBadge
+          label={t(`ratings:compose.score.${score}`)}
+          tone="strong"
+        />
+      </View>
+      <View className="mt-3 flex-row justify-between gap-2">
         {SCORES.map((value) => (
           <Pressable
             key={value}
             accessibilityRole="button"
-            className={`flex-1 rounded-xl py-3 ${
+            style={clayCard}
+            className={`flex-1 rounded-[22px] py-3 ${
               score === value ? 'bg-accent-mustard' : 'bg-surface-1'
             }`}
             onPress={() => setScore(value)}
           >
             <Text className="font-sans text-center font-semibold text-text-high">
               {value}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <View className="mt-3 flex-row flex-wrap gap-2">
+        {(
+          [
+            t('ratings:compose.chipOnTime'),
+            t('ratings:compose.chipClear'),
+            t('ratings:compose.chipAgain'),
+          ] as const
+        ).map((label) => (
+          <Pressable
+            key={label}
+            className={`rounded-full px-3 py-2 ${
+              comment === label ? 'bg-action-primary' : 'bg-surface-1'
+            }`}
+            onPress={() => setComment(label)}
+          >
+            <Text
+              className={`font-sans text-sm ${
+                comment === label ? 'text-text-on' : 'text-text-high'
+              }`}
+            >
+              {label}
             </Text>
           </Pressable>
         ))}
@@ -84,15 +123,12 @@ export function SharedRatingsComposeScreen({ route, navigation }: Props) {
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
-      <Pressable
-        className="mt-8 rounded-lg bg-action-primary px-4 py-3"
+      <Button
+        className="mt-8"
         disabled={submitting}
+        label={submitting ? t('common:loading') : t('ratings:compose.submit')}
         onPress={() => void onSubmit()}
-      >
-        <Text className="font-sans text-center text-base font-semibold text-text-on">
-          {submitting ? t('common:loading') : t('ratings:compose.submit')}
-        </Text>
-      </Pressable>
+      />
     </ModulePage>
   );
 }

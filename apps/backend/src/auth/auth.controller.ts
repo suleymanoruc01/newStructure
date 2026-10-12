@@ -16,6 +16,7 @@ import {
   contextSwitchBodySchema,
   identityLinkBodySchema,
   identityLoginBodySchema,
+  meDeletionRequestBodySchema,
   mePatchBodySchema,
   otpRequestBodySchema,
   otpVerifyBodySchema,
@@ -325,7 +326,18 @@ export class MeController {
     @Body(new ZodValidationPipe(mePatchBodySchema)) body: unknown,
   ) {
     const parsed = mePatchBodySchema.parse(body);
-    const user = await this.auth.patchMe(req.userId!, parsed.locale);
+    const user = await this.auth.patchMe(req.userId!, parsed);
+    return successResponse(req.requestId ?? '', user);
+  }
+
+  @Post('me/deletion-request')
+  @UseGuards(JwtAuthGuard, CsrfGuard)
+  async deletionRequest(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(meDeletionRequestBodySchema)) body: unknown,
+  ) {
+    const parsed = meDeletionRequestBodySchema.parse(body);
+    const user = await this.auth.requestDeletion(req.userId!, parsed.reason);
     return successResponse(req.requestId ?? '', user);
   }
 }

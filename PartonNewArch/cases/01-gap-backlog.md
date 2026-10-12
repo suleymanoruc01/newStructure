@@ -1,7 +1,7 @@
 # 01 — Gap backlog (from case catalog)
 
 **Status:** `accepted` (gaps → agent defaults; production coding ready) · [agents/10](../agents/10-production-ready.md)
-**Last updated:** 2026-10-11  
+**Last updated:** 2026-10-12  
 **Derived from:** all 248 cases in `parton_case_tests_tr.json`  
 **UI mandate:** [`03-ui-coverage-mandate.md`](03-ui-coverage-mandate.md)
 
@@ -14,10 +14,10 @@ Items below were under-specified or missing in the first PartonNewArch pass. Clo
 | `gap-tokens-module` | T-149–T-163, T-203, T-209, T-214, T-220, T-225 | First-class token ledger (hold/capture/release) | **Partial (2026-10-11):** Nest `tokens` module + hold/capture/release e2e (T-154–T-157, T-163); top-up provider T-161 / perf T-225 still open |
 | `gap-matching-rules-engine` | T-058–T-079 | Server hard filters + ranking | Add [`../backend/12-matching-rules.md`](../backend/12-matching-rules.md) |
 | `gap-checkin-dispute` | T-134, T-135, T-210–T-214 | Manual confirm + worker dispute after GPS fail | **Done (2026-10-11):** dispute row and `shift.dispute_update` share one transaction; manual confirm captures and writes `shift.manual_confirmed`. Admin open queue lists the dispute. |
-| `gap-favorites-only-job` | T-056–T-057, T-075, T-168–T-171, T-215–T-218 | Job visibility = favorites audience | **Partial (2026-10-11):** REST publish + feed filter + `job.favorites_only` inbox on publish; mobile employer toggle + T-168–T-171 UI still open |
+| `gap-favorites-only-job` | T-056–T-057, T-075, T-168–T-171, T-215–T-218 | Job visibility = favorites audience | **Done (2026-10-12):** publish + feed omit + GET/apply 404 + T-216 e2e journey |
 | `gap-geofence-policy` | T-125–T-127, T-136–T-148 | Radii 50/100m, indoor softness, mock GPS | [`../backend/13-location-policy.md`](../backend/13-location-policy.md) |
-| `gap-firm-verification` | T-013, T-015 | Tax ID uniqueness; block publish until verified | `employers.verification_status` gate on `jobs.publish` |
-| `gap-documents` | T-022–T-024, T-045, T-066–T-067, T-249 | Worker docs + job-required docs + secure download | **Partial (2026-10-11):** required types persist on the job; feed hides workers missing them and apply returns `JOB_NOT_APPLICABLE`; uploaded type makes the job eligible. Signed download ACL is in place. T-022–T-024 upload screens remain |
+| `gap-firm-verification` | T-013, T-015 | Tax ID uniqueness; block publish until verified | **Done (2026-10-12):** unique `tax_id` → 409 CONFLICT; publish blocked unless verified/bypass |
+| `gap-documents` | T-022–T-024, T-045, T-066–T-067, T-249 | Worker docs + job-required docs + secure download | **Done (2026-10-12):** typed list/upload, MIME + size reject before store, matching hide, signed GET ACL |
 | `gap-profile-demographics` | T-027, T-028, T-044, T-191 | Age/gender on profile; optional job filters; abuse | **Done (2026-10-11):** birth date is the age source (`age_mismatch`). `POST /api/v1/moderation/reports` queues `T-191` on `w.admin.abuse.queue`. |
 
 ## P1 — product forks
@@ -26,12 +26,12 @@ Items below were under-specified or missing in the first PartonNewArch pass. Clo
 | --- | --- | --- |
 | `gap-email-auth` | T-002 | Is email registration in v1 or phone-only? |
 | `gap-password` | T-008, T-248 | **Done (2026-10-11):** OTP only on first registration and password reset. Password needs a letter and a digit, minimum 8. Reset OTP is limited to two per Istanbul day. |
-| `gap-night-shift` | T-019, T-073 | Midnight-crossing availability & job windows |
+| `gap-night-shift` | T-019, T-073 | Midnight-crossing availability & job windows | **Done (2026-10-12):** overnight windows + `nightShiftAvailable`; matching omits overnight jobs when the flag is off |
 | `gap-3h-no-response` | T-117 | Timeout policy: alert only vs auto-release seat |
 | `gap-application-snapshot` | T-087, T-088 | Freeze applicant profile at apply vs live |
 | `gap-overlap-apply` | T-085, T-181 | Soft warn vs hard block overlapping applications/accepts |
 | `gap-payments` | T-161 | Top-up provider; failed payment leaves draft |
-| `gap-wifi-location` | T-144 | Use Wi-Fi / network location as assist? |
+| `gap-wifi-location` | T-144 | Use Wi-Fi / network location as assist? | **Done (2026-10-12):** GPS-only hard geofence; `locationSource=network` → `OUTSIDE_GEOFENCE` |
 
 ## P1 — abuse & security hardening
 
@@ -41,7 +41,7 @@ Items below were under-specified or missing in the first PartonNewArch pass. Clo
 | `gap-device-fingerprint` | T-184 | **Done (2026-10-11):** OTP verify hashes `deviceId`, stores `device_fingerprints`, writes `multi_account_device` risk event |
 | `gap-bot-protection` | T-186 | **Partial (2026-10-11):** apply window is 10 per 60s in Postgres (`429 RATE_LIMITED` + `bot_apply` risk). CAPTCHA stays Hold per agents/02 |
 | `gap-ban-reentry` | T-192 | **Done (2026-10-11):** `auth_bans` phone, tax id, and device hash block OTP verify and later requests; admin ban revokes sessions |
-| `gap-profanity-filter` | T-176 | Rating comment moderation |
+| `gap-profanity-filter` | T-176 | Rating comment moderation | **Done (2026-10-12):** word-list hit → `moderationStatus=queued` on `w.admin.ratings.queue` |
 | `gap-attendance-fraud` | T-182, T-183, T-189, T-190 | Risk counters; admin queue |
 
 ## P2 — performance / UX acceptance

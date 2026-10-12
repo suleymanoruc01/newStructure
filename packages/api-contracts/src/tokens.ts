@@ -34,17 +34,24 @@ export const tokenTopUpPaymentOutcomeSchema = z.enum([
   'cancel',
 ]);
 
-export const tokenTopUpBodySchema = z.object({
-  amount: z.number().int().min(1).max(100_000),
-  /** Required when `TOKEN_TOPUP_LEDGER_CREDIT` is false (sandbox PSP). */
-  paymentOutcome: tokenTopUpPaymentOutcomeSchema.optional(),
-});
+export const tokenTopUpBodySchema = z
+  .object({
+    packageId: z.string().uuid().optional(),
+    amount: z.number().int().min(1).max(100_000).optional(),
+    /** Required when `TOKEN_TOPUP_LEDGER_CREDIT` is false (sandbox PSP). */
+    paymentOutcome: tokenTopUpPaymentOutcomeSchema.optional(),
+  })
+  .refine((body) => body.packageId != null || body.amount != null, {
+    message: 'packageId veya amount gerekli',
+  });
 
 export type TokenTopUpBody = z.infer<typeof tokenTopUpBodySchema>;
 
 export const tokenTopUpDataSchema = z.object({
   balance: z.number().int().nonnegative(),
   credited: z.number().int().positive(),
+  packageId: z.string().uuid().nullable().optional(),
+  bonusCredited: z.number().int().nonnegative().optional(),
 });
 
 export const tokenTopUpResponseSchema =

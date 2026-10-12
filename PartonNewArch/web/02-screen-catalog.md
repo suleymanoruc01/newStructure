@@ -64,6 +64,7 @@ Detail under [`screens/`](screens/). Employer console remains optional for v1 pr
 | `w.admin.employers.list` | Employers | P0 | `CASE-EMPLOYER-BRANCH` |
 | `w.admin.employers.detail` | Employer detail | P0 | `CASE-EMPLOYER-BRANCH`, `CASE-TOKEN`, `CASE-FAVORITES` |
 | `w.admin.branches.list` | Branches oversight | P0 | `CASE-EMPLOYER-BRANCH`, `CASE-LOCATION` |
+| `w.admin.branches.detail` | Branch edit / geofence coords | P0 | `CASE-EMPLOYER-BRANCH`, `CASE-LOCATION` |
 | `w.admin.verification.queue` | Firm verification | P0 | `CASE-AUTH` (T-015) |
 | `w.admin.jobs.list` | Jobs oversight | P0 | `CASE-JOB-POSTING` |
 | `w.admin.jobs.detail` | Job detail / force-close | P0 | `CASE-JOB-POSTING`, `CASE-FAVORITES`, `CASE-TOKEN` |
@@ -75,6 +76,7 @@ Detail under [`screens/`](screens/). Employer console remains optional for v1 pr
 | `w.admin.shifts.detail` | Shift detail | P0 | `CASE-AVAILABILITY-3H`, `CASE-CHECKIN`, `CASE-E2E` |
 | `w.admin.disputes.queue` | Check-in disputes | P0 | `CASE-CHECKIN` (T-134–135) |
 | `w.admin.tokens.ledger` | Platform token ledger | P0 | `CASE-TOKEN` |
+| `w.admin.tokens.packages` | Token top-up packages (CMS) | P1 | `CASE-TOKEN` |
 | `w.admin.ratings.queue` | Ratings moderation | P0 | `CASE-RATINGS` |
 | `w.admin.ratings.detail` | Rating detail | P0 | `CASE-RATINGS`, `CASE-ABUSE` |
 | `w.admin.documents.queue` | Document review | P0 | `CASE-WORKER-PROFILE`, `CASE-SECURITY` (T-249) |
@@ -94,6 +96,9 @@ Detail under [`screens/`](screens/). Employer console remains optional for v1 pr
 | `w.admin.devops.releases` | Releases / git SHA | P0 | deploy ops · ADR-0035 |
 | `w.admin.devops.services` | Service health | P0 | `CASE-PERF` |
 | `w.admin.devops.clients` | Client builds / versions | P0 | AO-12 · ADR-0035 |
+| `w.admin.subscriptions.plans` | Employer subscription plan CMS | P1 | Ops billing tiers |
+| `w.admin.support.list` | Support ticket queue | P1 | User helpdesk |
+| `w.admin.support.detail` | Support ticket thread | P1 | User helpdesk |
 
 ## Counts (case-complete inventory)
 

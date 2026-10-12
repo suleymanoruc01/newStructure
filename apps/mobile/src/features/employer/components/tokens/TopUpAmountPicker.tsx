@@ -1,32 +1,49 @@
 import React from 'react';
 import { Text, View } from 'react-native';
+import { clayCard } from '../../../../components/ui/clay';
 import { Pressable } from '../../../../components/ui/Pressable';
 
-const PACKAGES = [10, 25, 50, 100, 250] as const;
-
-type Props = {
-  selected: number | null;
-  onSelect: (amount: number) => void;
-  labelFor: (amount: number) => string;
+export type TopUpPackageOption = {
+  id: string;
+  label: string;
+  tokenCount: number;
+  priceTry: number;
+  isPopular?: boolean;
 };
 
-export function TopUpAmountPicker({ selected, onSelect, labelFor }: Props) {
+type Props = {
+  packages: TopUpPackageOption[];
+  selectedId: string | null;
+  onSelect: (pkg: TopUpPackageOption) => void;
+  priceLabelFor: (priceTry: number) => string;
+};
+
+export function TopUpAmountPicker({
+  packages,
+  selectedId,
+  onSelect,
+  priceLabelFor,
+}: Props) {
   return (
     <View className="flex-row flex-wrap gap-2">
-      {PACKAGES.map((amount) => {
-        const active = selected === amount;
+      {packages.map((pkg) => {
+        const active = selectedId === pkg.id;
         return (
           <Pressable
-            key={amount}
+            key={pkg.id}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
-            className={`rounded-2xl px-4 py-3 ${
+            style={clayCard}
+            className={`rounded-[22px] px-4 py-3 ${
               active ? 'bg-accent-mustard' : 'bg-surface-1'
             }`}
-            onPress={() => onSelect(amount)}
+            onPress={() => onSelect(pkg)}
           >
             <Text className="font-sans text-base font-semibold text-text-high">
-              {labelFor(amount)}
+              {pkg.label}
+            </Text>
+            <Text className="font-sans text-xs text-text-medium">
+              {priceLabelFor(pkg.priceTry)}
             </Text>
           </Pressable>
         );

@@ -41,6 +41,14 @@ export async function listMyApplications(
   );
 }
 
+export async function getApplication(applicationId: string, accessToken: string) {
+  return apiRequest(
+    `/applications/${applicationId}`,
+    applicationResponseSchema,
+    { accessToken },
+  );
+}
+
 export async function listJobApplications(
   jobId: string,
   accessToken: string,
@@ -71,5 +79,61 @@ export async function acceptApplication(
       accessToken,
       idempotencyKey,
     },
+  );
+}
+
+export async function rejectApplication(
+  applicationId: string,
+  accessToken: string,
+): Promise<Application> {
+  return apiRequest(
+    `/applications/${applicationId}/reject`,
+    applicationResponseSchema,
+    { method: 'POST', accessToken },
+  );
+}
+
+export async function withdrawApplication(
+  applicationId: string,
+  accessToken: string,
+): Promise<Application> {
+  return apiRequest(
+    `/applications/${applicationId}/withdraw`,
+    applicationResponseSchema,
+    { method: 'POST', accessToken },
+  );
+}
+
+export async function revokeAcceptApplication(
+  applicationId: string,
+  accessToken: string,
+  idempotencyKey?: string,
+): Promise<Application> {
+  return apiRequest(
+    `/applications/${applicationId}/accept-revoke`,
+    applicationResponseSchema,
+    { method: 'POST', accessToken, idempotencyKey },
+  );
+}
+
+export async function moveApplicationToSubstitute(
+  applicationId: string,
+  accessToken: string,
+): Promise<Application> {
+  return apiRequest(
+    `/applications/${applicationId}/substitute`,
+    applicationResponseSchema,
+    { method: 'POST', accessToken },
+  );
+}
+
+export async function removeApplicationSubstitute(
+  applicationId: string,
+  accessToken: string,
+): Promise<Application> {
+  return apiRequest(
+    `/applications/${applicationId}/substitute-remove`,
+    applicationResponseSchema,
+    { method: 'POST', accessToken },
   );
 }

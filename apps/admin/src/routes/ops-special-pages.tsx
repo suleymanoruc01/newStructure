@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldGrid, asRecord, asRows } from "@/components/field-grid";
+import { JsonDataTable } from "@/components/json-data-table";
 import { RecordView } from "@/components/record-view";
 import { PageShell } from "@/components/page-shell";
 import {
@@ -31,7 +33,7 @@ export function PerfMetricsPage() {
 export function MatchingDiagnosticsPage() {
   const [jobId, setJobId] = useState("");
   const [workerUserId, setWorkerUserId] = useState("");
-  const [result, setResult] = useState<unknown>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function run() {
@@ -40,9 +42,10 @@ export function MatchingDiagnosticsPage() {
       const data = await fetchAdminResource(
         `/admin/matching/diagnostics?jobId=${encodeURIComponent(jobId)}&workerUserId=${encodeURIComponent(workerUserId)}`,
       );
-      setResult(data);
+      setResult(asRecord(data));
     } catch (err) {
       setError(isApiClientError(err) ? err.message : "Teşhis başarısız.");
+      setResult(null);
     }
   }
 
@@ -63,7 +66,19 @@ export function MatchingDiagnosticsPage() {
         </div>
         <Button type="button" onClick={() => void run()}>Çalıştır</Button>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {result ? <RecordView value={result} /> : null}
+        {result ? (
+          <FieldGrid
+            fields={[
+              { label: "Uygun", value: result.eligible },
+              { label: "Nedenler", value: result.reasons },
+              { label: "Eşleşme nedenleri", value: result.matchReasons },
+              { label: "Mesafe (km)", value: result.distanceKm },
+              { label: "Yalnızca favoriler ilanı", value: result.jobFavoritesOnly },
+              { label: "İşçi gece vardiyası", value: result.workerNightShiftAvailable },
+              { label: "Yüklü belgeler", value: result.workerUploadedDocumentTypes },
+            ]}
+          />
+        ) : null}
       </div>
     </PageShell>
   );
@@ -283,6 +298,116 @@ export function DevopsOverviewPage() {
   return (
     <PageShell title="DevOps özet" screenId="w.admin.devops.overview">
       <RecordView value={data} />
+    </PageShell>
+  );
+}
+
+export function SupportTicketDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [data, setData] = useState<Record<string, unknown> | null>(null);
+  const [reply, setReply] = useState("");
+  const [status, setStatus] = useState("open");
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function reload() {
+    if (!id) {
+      return;
+    }
+    const fresh = await fetchAdminResource(`/admin/support/tickets/${id}`);
+    if (fresh && typeof fresh === "object") {
+      const row = fresh as Record<string, unknown>;
+      setData(row);
+      if (typeof row.status === "string") {
+        setStatus(row.status);
+      }
+    }
+  }
+
+  useEffect(() => {
+    void reload();
+  }, [id]);
+
+  async function sendReply() {
+    if (!id || reply.trim().length === 0) {
+      return;
+    }
+    setMessage(null);
+    try {
+      await adminPost(`/admin/support/tickets/${id}/messages`, { body: reply.trim() });
+      setReply("");
+      await reload();
+      setMessage("Yanıt gönderildi.");
+    } catch (err) {
+      setMessage(isApiClientError(err) ? err.message : "Yanıt gönderilemedi.");
+    }
+  }
+
+  async function saveStatus() {
+    if (!id) {
+      return;
+    }
+    setMessage(null);
+    try {
+      await adminPatch(`/admin/support/tickets/${id}`, { status });
+      await reload();
+      setMessage("Durum güncellendi.");
+    } catch (err) {
+      setMessage(isApiClientError(err) ? err.message : "Durum güncellenemedi.");
+    }
+  }
+
+  return (
+    <PageShell title="Destek talebi" screenId="w.admin.support.detail">
+      {message ? <p className="mb-2 text-sm text-muted-foreground">{message}</p> : null}
+      {data ? (
+        <>
+          <FieldGrid
+            fields={[
+              { label: "Konu", value: data.subject },
+              { label: "Durum", value: data.status },
+              { label: "Öncelik", value: data.priority },
+              {
+                label: "Talep eden",
+                value: data.requesterUserId,
+                href:
+                  typeof data.requesterUserId === "string"
+                    ? `/users/${data.requesterUserId}`
+                    : undefined,
+              },
+              { label: "Oluşturma", value: data.createdAt },
+              { label: "Metin", value: data.body },
+            ]}
+          />
+          <div className="mt-6">
+            <h2 className="mb-2 text-sm font-semibold">Mesajlar</h2>
+            <JsonDataTable rows={asRows(data.messages)} />
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">Yükleniyor…</p>
+      )}
+      <div className="mt-6 grid max-w-lg gap-3">
+        <Label htmlFor="support-status">Durum</Label>
+        <select
+          id="support-status"
+          className="flex h-11 w-full rounded-[0.5rem] border border-border bg-card px-3 text-sm"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          <option value="open">Açık</option>
+          <option value="in_progress">İşlemde</option>
+          <option value="resolved">Çözüldü</option>
+          <option value="closed">Kapalı</option>
+        </select>
+        <Button type="button" size="sm" onClick={() => void saveStatus()}>Durumu kaydet</Button>
+        <Label htmlFor="support-reply">Yanıt</Label>
+        <Input
+          id="support-reply"
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
+        />
+        <Button type="button" onClick={() => void sendReply()}>Yanıt gönder</Button>
+      </div>
     </PageShell>
   );
 }

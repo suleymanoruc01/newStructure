@@ -1,12 +1,16 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
+import { fetchJobCatalog } from '../../../api/jobs-api';
 import { Button } from '../../../components/ui/Button';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
+import { WizardSteps } from '../../../components/ui/WizardSteps';
 import { ApiClientError } from '../../../api/client';
 import { createEmployer, patchEmployerMe } from '../../../api/employers-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -20,24 +24,40 @@ type Props = NativeStackScreenProps<
 >;
 
 export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
-  const { t } = useTranslation(['onboarding', 'common', 'errors']);
+  const { t } = useTranslation(['onboarding', 'employer', 'common', 'errors']);
   const { applyEmployerCreate, completeOnboarding, contexts } = useAuth();
   const employerId = contexts.find((item) => item.role === 'employer')?.employerId;
   const [legalName, setLegalName] = useState('');
   const [tradingName, setTradingName] = useState('');
   const [taxId, setTaxId] = useState('');
-  const [industryCodes, setIndustryCodes] = useState('hospitality');
+  const [industryCodes, setIndustryCodes] = useState<string[]>([]);
+  const [sectors, setSectors] = useState<
+    Awaited<ReturnType<typeof fetchJobCatalog>>['sectors']
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    void fetchJobCatalog()
+      .then((catalog) => setSectors(catalog.sectors))
+      .catch(() => setError(t('common:networkError')));
+  }, [t]);
+
+  const needle = query.trim().toLocaleLowerCase('tr-TR');
+  const shownSectors = needle
+    ? sectors.filter(
+        (sector) =>
+          sector.displayName.toLocaleLowerCase('tr-TR').includes(needle) ||
+          sector.code.toLocaleLowerCase('tr-TR').includes(needle),
+      )
+    : sectors;
 
   const onSubmit = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      const industries = industryCodes
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
+      const industries = industryCodes;
       const token = getAccessToken();
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
@@ -80,7 +100,7 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
 
   return (
     <ModulePage title={t('onboarding:employer.businessTitle')} testID={ONBOARDING_SCREEN_IDS.employerBusiness} scroll>
-      
+      <WizardSteps step={1} total={2} />
       {employerId ? null : (
         <Text className="font-sans mt-2 text-base text-text-medium">
           {t('onboarding:employer.businessSubtitle')}
@@ -107,11 +127,47 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
             />
           </>
         )}
-        <TextField
-          label={t('onboarding:employer.industries')}
-          value={industryCodes}
-          onChangeText={setIndustryCodes}
-        />
+        <Text className="font-sans text-sm font-semibold text-text-high">
+          {t('onboarding:employer.industries')}
+        </Text>
+        {sectors.length > 6 ? (
+          <TextField
+            label={t('employer:industry.search')}
+            value={query}
+            onChangeText={setQuery}
+          />
+        ) : null}
+        <View className="flex-row flex-wrap gap-2">
+          {shownSectors.map((sector) => {
+            const on = industryCodes.includes(sector.code);
+            return (
+              <Pressable
+                key={sector.code}
+                className={`rounded-full px-3 py-2 ${
+                  on ? 'bg-action-primary' : 'bg-surface-1'
+                }`}
+                onPress={() =>
+                  setIndustryCodes((current) =>
+                    current.includes(sector.code)
+                      ? current.filter((code) => code !== sector.code)
+                      : [...current, sector.code],
+                  )
+                }
+              >
+                <Text
+                  className={`font-sans text-sm ${
+                    on ? 'text-text-on' : 'text-text-high'
+                  }`}
+                >
+                  {sector.displayName}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {needle && shownSectors.length === 0 ? (
+          <EmptyState title={t('employer:industry.searchEmpty')} />
+        ) : null}
       </View>
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>

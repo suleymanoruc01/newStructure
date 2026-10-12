@@ -18,7 +18,7 @@
       "success": "{data, meta}",
       "error": "{error: {code, message, details?}, meta}"
     },
-    "generated_utc": "2026-10-10T23:23:23Z",
+    "generated_utc": "2026-10-12T07:01:28Z",
     "grounding_docs": [
       "backend/04-domain-modules.md",
       "shared/12-api-contracts.md",
@@ -1048,7 +1048,7 @@
           ],
           "architecture": {
             "disposition": "skip",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-password",
             "agent_default": "gap-password",
             "nest_modules": [
@@ -1710,7 +1710,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-tax-verification",
             "agent_default": "gap-firm-verification",
             "nest_modules": [
@@ -2507,7 +2507,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-night-shift",
             "agent_default": "gap-night-shift",
             "nest_modules": [
@@ -2858,7 +2858,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-documents",
             "agent_default": null,
             "nest_modules": [
@@ -2975,7 +2975,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-documents",
             "agent_default": null,
             "nest_modules": [
@@ -3093,7 +3093,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-documents",
             "agent_default": "gap-documents",
             "nest_modules": [
@@ -3455,7 +3455,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-age-filter",
             "agent_default": null,
             "nest_modules": [
@@ -3575,7 +3575,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-gender-filter",
             "agent_default": null,
             "nest_modules": [
@@ -5499,7 +5499,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-gender-filter",
             "agent_default": null,
             "nest_modules": [
@@ -5604,7 +5604,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-documents",
             "agent_default": null,
             "nest_modules": [
@@ -6785,7 +6785,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modules": [
@@ -6896,7 +6896,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modules": [
@@ -7766,7 +7766,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-documents",
             "agent_default": null,
             "nest_modules": [
@@ -7858,7 +7858,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-documents",
             "agent_default": null,
             "nest_modules": [
@@ -8401,7 +8401,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-night-shift",
             "agent_default": "gap-night-shift",
             "nest_modules": [
@@ -8591,7 +8591,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modules": [
@@ -14239,7 +14239,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-mock-gps",
             "agent_default": "gap-mock-gps",
             "nest_modules": [
@@ -14559,7 +14559,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-checkin-dispute",
             "agent_default": "gap-checkin-dispute",
             "nest_modules": [
@@ -14665,7 +14665,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-checkin-dispute",
             "agent_default": "gap-checkin-dispute",
             "nest_modules": [
@@ -15563,7 +15563,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-wifi-location",
             "agent_default": "gap-wifi-location",
             "nest_modules": [
@@ -15948,7 +15948,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-mock-gps",
             "agent_default": "gap-mock-gps",
             "nest_modules": [
@@ -16614,7 +16614,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "partial",
+            "arch_status": "covered",
             "gap_tag": "tokens-module",
             "agent_default": null,
             "nest_modules": [
@@ -16720,7 +16720,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "partial",
+            "arch_status": "covered",
             "gap_tag": "tokens-module",
             "agent_default": "gap-3h-no-response",
             "nest_modules": [
@@ -16929,7 +16929,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "partial",
+            "arch_status": "covered",
             "gap_tag": "tokens-module",
             "agent_default": null,
             "nest_modules": [
@@ -17348,7 +17348,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-payments",
             "agent_default": "gap-payments",
             "nest_modules": [
@@ -17554,7 +17554,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "partial",
+            "arch_status": "covered",
             "gap_tag": "tokens-module",
             "agent_default": null,
             "nest_modules": [
@@ -18087,7 +18087,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modules": [
@@ -18189,7 +18189,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modules": [
@@ -18883,7 +18883,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-profanity-filter",
             "agent_default": "gap-profanity-filter",
             "nest_modules": [
@@ -19676,7 +19676,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-device-fingerprint",
             "agent_default": "gap-device-fingerprint",
             "nest_modules": [
@@ -19889,7 +19889,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-bot-protection",
             "agent_default": "gap-bot-protection",
             "nest_modules": [
@@ -20103,7 +20103,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-mock-gps",
             "agent_default": "gap-mock-gps",
             "nest_modules": [
@@ -20403,7 +20403,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-age-filter",
             "agent_default": "gap-profile-demographics",
             "nest_modules": [
@@ -20507,7 +20507,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-ban-reentry",
             "agent_default": "gap-ban-reentry",
             "nest_modules": [
@@ -22859,7 +22859,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-checkin-dispute",
             "agent_default": null,
             "nest_modules": [
@@ -23357,7 +23357,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-favorites-only-job",
             "agent_default": "gap-favorites-only-job",
             "nest_modules": [
@@ -26863,7 +26863,7 @@
           ],
           "architecture": {
             "disposition": "skip",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-password",
             "agent_default": "gap-password",
             "nest_modules": [
@@ -26975,7 +26975,7 @@
           ],
           "architecture": {
             "disposition": "implement",
-            "arch_status": "gap",
+            "arch_status": "covered",
             "gap_tag": "gap-documents",
             "agent_default": "gap-documents",
             "nest_modules": [
