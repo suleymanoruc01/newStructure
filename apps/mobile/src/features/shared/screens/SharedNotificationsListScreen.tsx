@@ -89,7 +89,7 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listNotifications(token);
-      setItems(data.items);
+      setItems(data.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -154,8 +154,8 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
       return true;
     }
     return (
-      item.title.toLocaleLowerCase('tr-TR').includes(needle) ||
-      item.body.toLocaleLowerCase('tr-TR').includes(needle) ||
+      (item.title ?? '').toLocaleLowerCase('tr-TR').includes(needle) ||
+      (item.body ?? '').toLocaleLowerCase('tr-TR').includes(needle) ||
       notificationTypeLabel(item.type).toLocaleLowerCase('tr-TR').includes(needle)
     );
   });
@@ -270,7 +270,7 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
       ) : null}
       {groups.map((group) => {
         const rows = visible.filter(
-          (item) => bucketOf(item.createdAt, zone, now) === group,
+          (item) => bucketOf(item.createdAt ?? '', zone, now) === group,
         );
         if (rows.length === 0) {
           return null;
@@ -285,7 +285,7 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
                 <JobCard
                   title={item.title}
                   onPress={() => {
-                    const names = navigation.getState().routeNames as string[];
+                    const names = navigation.getState()?.routeNames ?? [];
                     const target = notificationTarget(item.type, item.data);
                     const chosen = target ? pickRoute(target, names) : null;
                     if (!chosen) {

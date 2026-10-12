@@ -6,7 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../ui/Button';
 import { clayCard, claySheet } from '../ui/clay';
-import { ISTANBUL_PIN, mapRegion } from '../../shared/location/geofence';
+import { ISTANBUL_PIN, finitePin, mapRegion } from '../../shared/location/geofence';
+import { nativeMapsEnabled } from '../../shared/location/maps-enabled';
 
 const FOREST = '#344A32';
 const ORANGE = '#E97A3D';
@@ -51,8 +52,15 @@ export function JobsMap({
 }) {
   const { t } = useTranslation('common');
   const [expanded, setExpanded] = useState(false);
-  const region = useMemo(() => regionForPins(pins), [pins]);
-  const mapKey = `${region.latitude.toFixed(4)}-${region.longitude.toFixed(4)}-${pins.length}`;
+  const placed = (pins ?? []).flatMap((pin) => {
+    const at = finitePin(pin);
+    return at ? [{ ...pin, ...at }] : [];
+  });
+  const region = useMemo(() => regionForPins(placed), [placed]);
+  const mapKey = `${region.latitude.toFixed(4)}-${region.longitude.toFixed(4)}-${placed.length}`;
+  if (!nativeMapsEnabled()) {
+    return null;
+  }
 
   const map = (fill: 'frame' | 'full') => (
     <MapView
@@ -65,7 +73,7 @@ export function JobsMap({
       pitchEnabled={false}
       toolbarEnabled={false}
     >
-      {pins.map((pin) => (
+      {placed.map((pin) => (
         <Marker
           key={pin.id}
           coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}

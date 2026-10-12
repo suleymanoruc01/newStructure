@@ -19,7 +19,7 @@ import { getAccessToken } from '../../../shared/auth/session-memory';
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerShiftDispute'>;
 
 export function WorkerShiftDisputeScreen({ route, navigation }: Props) {
-  const { shiftId } = route.params;
+  const { shiftId } = route.params ?? { shiftId: '' };
   const { t } = useTranslation(['worker', 'common', 'errors']);
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);

@@ -37,7 +37,7 @@ type ProcessRoute = {
 type Props = NativeStackScreenProps<ProcessRoute, 'SharedJobProcess'>;
 
 export function SharedJobProcessScreen({ route, navigation }: Props) {
-  const { applicationId } = route.params;
+  const { applicationId } = route.params ?? { applicationId: '' };
   const { t } = useTranslation(['system', 'common', 'errors']);
   const { contexts } = useAuth();
   const timeZone = useDisplayTimeZone();
@@ -74,10 +74,10 @@ export function SharedJobProcessScreen({ route, navigation }: Props) {
       setCreatedAt(data.createdAt);
       setJobId(data.jobId);
       const catalog = await fetchJobCatalog();
-      setSectors(catalog.sectors);
+      setSectors(catalog.sectors ?? []);
       if (isWorker) {
         const shifts = await listMyShifts(token);
-        const shift = shifts.items.find(
+        const shift = (shifts.items ?? []).find(
           (item) => item.applicationId === applicationId,
         );
         setShiftStatus(shift?.status ?? null);

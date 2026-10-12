@@ -36,7 +36,10 @@ type Props = NativeStackScreenProps<
 >;
 
 export function EmployerApplicantDetailScreen({ route, navigation }: Props) {
-  const { applicationId, jobTitle } = route.params;
+  const { applicationId, jobTitle } = route.params ?? {
+    applicationId: '',
+    jobTitle: null,
+  };
   const { t } = useTranslation(['employer', 'common', 'errors']);
   const timeZone = useDisplayTimeZone();
   const [item, setItem] = useState<
@@ -47,7 +50,7 @@ export function EmployerApplicantDetailScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     void fetchJobCatalog()
-      .then((catalog) => setSectors(catalog.sectors))
+      .then((catalog) => setSectors(catalog.sectors ?? []))
       .catch(() => setError(t('common:networkError')));
   }, [t]);
 
@@ -93,7 +96,7 @@ export function EmployerApplicantDetailScreen({ route, navigation }: Props) {
 
   const name =
     item?.workerDisplayName ??
-    `${item?.profileSnapshot.firstName ?? ''} ${item?.profileSnapshot.lastName ?? ''}`.trim();
+    `${item?.profileSnapshot?.firstName ?? ''} ${item?.profileSnapshot?.lastName ?? ''}`.trim();
   const status = item?.status;
 
   return (

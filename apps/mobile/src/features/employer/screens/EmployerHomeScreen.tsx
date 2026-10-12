@@ -20,7 +20,7 @@ import { NavRow } from '../../../components/ui/NavRow';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
-import { useDisplayTimeZone } from '../../../shared/datetime/istanbul';
+import { formatTr, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerHome'>;
 
@@ -69,18 +69,18 @@ export function EmployerHomeScreen({ navigation, route }: Props) {
     setSummary({
       available: balance.status === 'fulfilled' ? balance.value.available : null,
       held: balance.status === 'fulfilled' ? balance.value.held : null,
-      branches: branches.status === 'fulfilled' ? branches.value.items.length : null,
-      disputes: disputes.status === 'fulfilled' ? disputes.value.items.length : null,
+      branches: branches.status === 'fulfilled' ? (branches.value.items ?? []).length : null,
+      disputes: disputes.status === 'fulfilled' ? (disputes.value.items ?? []).length : null,
       openSeats:
         jobList.status === 'fulfilled'
-          ? jobList.value.items
+          ? (jobList.value.items ?? [])
               .filter((job) => job.status === 'published')
               .reduce((sum, job) => sum + job.remainingHeadcount, 0)
           : null,
     });
     if (jobList.status === 'fulfilled') {
       setJobs(
-        jobList.value.items.filter((job) => job.status === 'published'),
+        (jobList.value.items ?? []).filter((job) => job.status === 'published'),
       );
     }
     if (
@@ -107,11 +107,10 @@ export function EmployerHomeScreen({ navigation, route }: Props) {
       })
     : jobs;
 
-  const eyebrow = new Intl.DateTimeFormat('tr-TR', {
-    timeZone,
+  const eyebrow = formatTr(new Date(), timeZone, {
     day: 'numeric',
     month: 'long',
-  }).format(new Date());
+  });
 
   return (
     <ModulePage

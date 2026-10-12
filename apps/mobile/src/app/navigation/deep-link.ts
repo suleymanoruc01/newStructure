@@ -64,10 +64,11 @@ function route(name: string, params?: Record<string, string>): DeepLinkTarget {
 
 export function notificationTarget(
   type: string,
-  data: Record<string, string>,
+  data: Record<string, string> | null | undefined,
 ): DeepLinkTarget | null {
-  const jobId = data.jobId;
-  const shiftId = data.shiftId;
+  const payload = data ?? {};
+  const jobId = payload.jobId;
+  const shiftId = payload.shiftId;
   switch (type) {
     case 'job.matched':
     case 'job.favorite_employer':
@@ -113,7 +114,7 @@ export function notificationTarget(
       return shiftId
         ? route('SharedRatingsCompose', {
             shiftId,
-            counterpartLabel: data.counterpartLabel ?? '—',
+            counterpartLabel: payload.counterpartLabel ?? '—',
           })
         : null;
     case 'job.audience_empty':
@@ -121,9 +122,9 @@ export function notificationTarget(
         ? route('EmployerJobDetail', { jobId })
         : route('EmployerFavoriteWorkers');
     case 'generic':
-      return data.notificationId
+      return payload.notificationId
         ? route('SharedNotificationDetail', {
-            notificationId: data.notificationId,
+            notificationId: payload.notificationId,
           })
         : null;
     default:

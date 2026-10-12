@@ -50,7 +50,7 @@ export function EmployerTokensRootScreen({ navigation }: Props) {
       setAvailable(bal.available);
       setHeld(bal.held);
       setBalance(bal.balance);
-      setLedger(led.items);
+      setLedger(led.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));

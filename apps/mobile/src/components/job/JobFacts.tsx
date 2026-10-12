@@ -60,7 +60,7 @@ export function JobFacts({
       <Text className="font-sans mt-1 text-sm text-text-medium">
         {formatIstanbul(startsAt, timeZone)} – {formatIstanbul(endsAt, timeZone)}
       </Text>
-      {distanceKm != null ? (
+      {typeof distanceKm === 'number' && Number.isFinite(distanceKm) ? (
         <Text className="font-sans mt-1 text-sm text-text-low">
           {t('worker:jobs.distance', { km: distanceKm.toFixed(1) })}
         </Text>

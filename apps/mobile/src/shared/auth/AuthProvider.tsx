@@ -27,7 +27,7 @@ import {
 import type { EmployerCreateData } from '../../api/employers-api-types';
 import type { ManagerJoinData } from '../../api/manager-api-types';
 import { unregisterPushToken } from '../../notifications/push-registration';
-import { ApiClientError } from '../../api/client';
+import { ApiClientError, refreshCredentialRejected } from '../../api/client';
 import { clearSystemRoute } from '../system/system-route-store';
 import {
   clearSessionMemory,
@@ -87,8 +87,8 @@ type AuthContextValue = {
   ) => Promise<PolicyRow[]>;
   continueAfterPolicies: (policiesClear?: boolean) => Promise<AuthPhase>;
   loadPendingPolicies: () => Promise<PolicyRow[]>;
-  applyEmployerCreate: (data: EmployerCreateData) => void;
-  applyManagerJoin: (data: ManagerJoinData) => void;
+  applyEmployerCreate: (data: EmployerCreateData) => Promise<void>;
+  applyManagerJoin: (data: ManagerJoinData) => Promise<void>;
   completeOnboarding: () => Promise<{
     phase: AuthPhase;
     onboardingKind: OnboardingKind | null;
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id]);
 
   const applySession = useCallback(
-    (
+    async (
       nextUser: MeUser,
       nextContexts: AuthContext[],
       access: string,
@@ -143,11 +143,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ) => {
       setAccessToken(access);
       setSessionUser(nextUser);
-      setSessionContexts(nextContexts);
-      setActiveContext(pickDefaultActiveContext(nextContexts));
+      setSessionContexts(nextContexts ?? []);
+      setActiveContext(pickDefaultActiveContext(nextContexts ?? []));
       setUser(nextUser);
-      setContexts(nextContexts);
-      void saveRefreshToken(refresh);
+      setContexts(nextContexts ?? []);
+      await saveRefreshToken(refresh);
     },
     [],
   );
@@ -202,10 +202,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const ctx = await fetchContexts(tokens.accessToken);
         if (!cancelled) {
           setSessionUser(me);
-          setSessionContexts(ctx.items);
+          setSessionContexts(ctx.items ?? []);
           setUser(me);
-          setContexts(ctx.items);
-          await syncGate(tokens.accessToken, me, ctx.items);
+          setContexts(ctx.items ?? []);
+          await syncGate(tokens.accessToken, me, ctx.items ?? []);
         }
       } catch (err) {
         if (
@@ -217,7 +217,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           return;
         }
-        await clearRefreshToken();
+        if (refreshCredentialRejected(err)) {
+          await clearRefreshToken();
+        }
         clearSessionMemory();
         if (!cancelled) {
           setBootError(null);
@@ -261,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           'INTERNAL_ERROR',
         );
       }
-      applySession(
+      await applySession(
         data.user,
         data.contexts ?? [],
         data.accessToken,
@@ -305,7 +307,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           'INTERNAL_ERROR',
         );
       }
-      applySession(
+      await applySession(
         data.user,
         data.contexts ?? [],
         data.accessToken,
@@ -350,7 +352,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         'INTERNAL_ERROR',
       );
     }
-    applySession(
+    await applySession(
       data.user,
       data.contexts ?? [],
       data.accessToken,
@@ -367,7 +369,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await assignRole({ role }, token);
-      applySession(
+      await applySession(
         data.user,
         data.contexts,
         data.accessToken,
@@ -384,7 +386,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return [];
     }
     const data = await listPolicies(token);
-    return data.items.map((p) => ({
+    return (data.items ?? []).map((p) => ({
       id: p.id,
       title: p.title,
       body: p.body,
@@ -401,7 +403,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const me = user ?? (await fetchMe(token));
       const ctx =
-        contexts.length > 0 ? contexts : (await fetchContexts(token)).items;
+        contexts.length > 0 ? contexts : ((await fetchContexts(token)).items ?? []);
       setUser(me);
       setContexts(ctx);
       const resolved = await resolveAuthPhase(token, me, ctx, {
@@ -429,7 +431,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       await acceptPolicies({ policyId, version }, token);
       const pending = await listPolicies(token);
-      const rows = pending.items.map((p) => ({
+      const rows = (pending.items ?? []).map((p) => ({
         id: p.id,
         title: p.title,
         body: p.body,
@@ -445,8 +447,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const applyEmployerCreate = useCallback(
-    (data: EmployerCreateData) => {
-      applySession(
+    async (data: EmployerCreateData) => {
+      await applySession(
         data.user,
         [{ role: 'employer', employerId: data.employer.id }],
         data.accessToken,
@@ -458,8 +460,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const applyManagerJoin = useCallback(
-    (data: ManagerJoinData) => {
-      applySession(
+    async (data: ManagerJoinData) => {
+      await applySession(
         data.user,
         [
           {
@@ -484,7 +486,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const ctx =
       contexts.length > 0
         ? contexts
-        : (await fetchContexts(token)).items;
+        : ((await fetchContexts(token)).items ?? []);
     setUser(me);
     setContexts(ctx);
     setSessionUser(me);
@@ -501,11 +503,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await switchAuthContext(context, token);
       setAccessToken(data.accessToken);
       setSessionUser(data.user);
-      setSessionContexts(data.contexts);
+      setSessionContexts(data.contexts ?? []);
       setActiveContext(context);
       setUser(data.user);
-      setContexts(data.contexts);
-      await syncGate(data.accessToken, data.user, data.contexts);
+      setContexts(data.contexts ?? []);
+      await syncGate(data.accessToken, data.user, data.contexts ?? []);
     },
     [syncGate],
   );

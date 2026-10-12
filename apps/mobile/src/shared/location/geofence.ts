@@ -70,7 +70,11 @@ export function mapRegion(
   longitude: number,
   radiusM = DEFAULT_GEOFENCE_RADII.softRadiusM,
 ) {
-  const meters = Math.max(radiusM * 3, 250);
+  const span =
+    Number.isFinite(radiusM) && radiusM > 0
+      ? radiusM
+      : DEFAULT_GEOFENCE_RADII.softRadiusM;
+  const meters = Math.max(span * 3, 250);
   const latitudeDelta = meters / 111_000;
   return {
     latitude,
@@ -81,3 +85,17 @@ export function mapRegion(
 }
 
 export const ISTANBUL_PIN = { latitude: 41.0082, longitude: 28.9784 };
+
+export function finitePin(
+  pin: { latitude?: number | null; longitude?: number | null } | null | undefined,
+): { latitude: number; longitude: number } | null {
+  const latitude = pin?.latitude;
+  const longitude = pin?.longitude;
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    return null;
+  }
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null;
+  }
+  return { latitude, longitude };
+}

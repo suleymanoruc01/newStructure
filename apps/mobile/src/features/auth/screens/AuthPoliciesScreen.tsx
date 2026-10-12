@@ -62,11 +62,11 @@ export function AuthPoliciesScreen({ navigation }: Props) {
     setError(null);
     try {
       const items = browsing
-        ? (await listPublishedPolicies()).items
+        ? ((await listPublishedPolicies()).items ?? [])
         : await loadPendingPolicies();
-      setPolicies(items);
+      setPolicies(items ?? []);
       setBrowseIndex(0);
-      setTotal(items.length);
+      setTotal((items ?? []).length);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -280,7 +280,7 @@ export function AuthPoliciesScreen({ navigation }: Props) {
             scrollEventThrottle={16}
           >
             <View className="gap-4 pb-2">
-              {readingBlocks(current.body).map((block, index) => (
+              {readingBlocks(current.body ?? '').map((block, index) => (
                 <Text
                   key={`${policyKey}-${index}`}
                   className={

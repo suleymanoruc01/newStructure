@@ -24,7 +24,11 @@ type Props = NativeStackScreenProps<
 const SCORES = [1, 2, 3, 4, 5] as const;
 
 export function SharedRatingsComposeScreen({ route, navigation }: Props) {
-  const { shiftId, counterpartLabel, jobTitle } = route.params;
+  const { shiftId, counterpartLabel, jobTitle } = route.params ?? {
+    shiftId: '',
+    counterpartLabel: '',
+    jobTitle: null,
+  };
   const { t } = useTranslation(['ratings', 'common', 'errors']);
   const [score, setScore] = useState<number>(5);
   const [comment, setComment] = useState('');

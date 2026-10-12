@@ -1,31 +1,14 @@
 import {
   errorEnvelopeSchema,
-  type ApiErrorBody,
   type SuccessEnvelope,
 } from '@parton/api-contracts';
 import type { z } from 'zod';
 
 import { API_BASE_URL, API_REQUEST_TIMEOUT_MS } from './config';
 import { openSystemRoute } from '../shared/system/system-route-store';
+import { ApiClientError } from './api-error';
 
-export class ApiClientError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly details?: ApiErrorBody['details'];
-
-  constructor(
-    message: string,
-    status: number,
-    code: string,
-    details?: ApiErrorBody['details'],
-  ) {
-    super(message);
-    this.name = 'ApiClientError';
-    this.status = status;
-    this.code = code;
-    this.details = details;
-  }
-}
+export { ApiClientError, refreshCredentialRejected } from './api-error';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
@@ -69,6 +52,9 @@ export async function apiRequest<T>(
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
+      // RN keeps Set-Cookie in the WebView jar. A stored refresh cookie without
+      // x-csrf-token makes the next cold start fail CSRF and drop the session.
+      credentials: 'omit',
     });
     json = await response.json();
   } finally {

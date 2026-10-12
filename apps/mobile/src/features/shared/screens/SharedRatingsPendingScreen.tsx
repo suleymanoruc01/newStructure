@@ -39,7 +39,7 @@ export function SharedRatingsPendingScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listPendingRatings(token);
-      setItems(data.items);
+      setItems(data.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));

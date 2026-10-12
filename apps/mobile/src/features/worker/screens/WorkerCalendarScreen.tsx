@@ -28,6 +28,7 @@ import {
   upcomingItems,
 } from '../../../shared/calendar/shift-overlap';
 import {
+  formatTr,
   istanbulDayKey,
   monthGridKeys,
   shiftMonthKey,
@@ -58,8 +59,8 @@ export function WorkerCalendarScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await fetchWorkerCalendar(token);
-      setItems(data.items);
-      setWindows(data.windows);
+      setItems(data.items ?? []);
+      setWindows(data.windows ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -86,7 +87,7 @@ export function WorkerCalendarScreen({ navigation }: Props) {
       const branch = (shift.branchName ?? '').toLocaleLowerCase('tr-TR');
       return title.includes(needle) || branch.includes(needle);
     })
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    .sort((a, b) => (a.startsAt ?? '').localeCompare(b.startsAt ?? ''));
   const monthKey = day.slice(0, 7);
   const monthShifts = items.filter(
     (shift) => istanbulDayKey(shift.startsAt, timeZone).startsWith(monthKey),
@@ -114,11 +115,10 @@ export function WorkerCalendarScreen({ navigation }: Props) {
       softMarks[key] = true;
     }
   }
-  const eyebrow = new Intl.DateTimeFormat('tr-TR', {
-    timeZone,
+  const eyebrow = formatTr(`${day}T12:00:00.000Z`, timeZone, {
     day: 'numeric',
     month: 'long',
-  }).format(new Date(`${day}T12:00:00.000Z`));
+  });
 
   return (
     <ModulePage

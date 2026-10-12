@@ -63,27 +63,27 @@ export function EmployerProfileRootScreen({ navigation, route }: Props) {
       setLegalName(employer.value.legalName);
       setVerificationStatus(employer.value.verificationStatus);
       setTaxId(employer.value.taxId);
-      setIndustryCodes(employer.value.industryCodes);
+      setIndustryCodes(employer.value.industryCodes ?? []);
     }
     if (tokens.status === 'fulfilled') {
       setAvailable(tokens.value.available);
       setHeld(tokens.value.held);
     }
     if (branches.status === 'fulfilled') {
-      setBranchCount(branches.value.items.length);
-      setBranchPreview(branches.value.items);
+      setBranchCount((branches.value.items ?? []).length);
+      setBranchPreview(branches.value.items ?? []);
     }
     if (catalog.status === 'fulfilled') {
-      setSectors(catalog.value.sectors);
+      setSectors(catalog.value.sectors ?? []);
     }
     if (jobs.status === 'fulfilled') {
       setPublishedCount(
-        jobs.value.items.filter((job) => job.status === 'published').length,
+        (jobs.value.items ?? []).filter((job) => job.status === 'published').length,
       );
     }
     if (favs.status === 'fulfilled') {
       setFavoriteCount(
-        favs.value.items.filter((fav) => fav.type === 'worker').length,
+        (favs.value.items ?? []).filter((fav) => fav.type === 'worker').length,
       );
     }
   }, []);

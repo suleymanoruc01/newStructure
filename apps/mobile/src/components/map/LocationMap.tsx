@@ -10,8 +10,10 @@ import { clayCard, claySheet } from '../ui/clay';
 import { readDeviceCoordinates } from '../../shared/location/device-coordinates';
 import {
   ISTANBUL_PIN,
+  finitePin,
   mapRegion,
 } from '../../shared/location/geofence';
+import { nativeMapsEnabled } from '../../shared/location/maps-enabled';
 import type { PermissionMoment } from '../../shared/privacy/permission-moment';
 
 const FOREST = '#344A32';
@@ -45,9 +47,19 @@ export function LocationMap({
   const [locating, setLocating] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [camera, setCamera] = useState<Pin | null>(null);
-  const center = pin ?? user ?? camera ?? ISTANBUL_PIN;
+  const safePin = finitePin(pin);
+  const safeUser = finitePin(user);
+  const center = safePin ?? safeUser ?? finitePin(camera) ?? ISTANBUL_PIN;
   const region = mapRegion(center.latitude, center.longitude, softRadiusM);
   const mapKey = `${center.latitude.toFixed(5)}-${center.longitude.toFixed(5)}`;
+  const softRing =
+    typeof softRadiusM === 'number' && Number.isFinite(softRadiusM) && softRadiusM > 0
+      ? softRadiusM
+      : null;
+  const hardRing =
+    typeof radiusM === 'number' && Number.isFinite(radiusM) && radiusM > 0
+      ? radiusM
+      : null;
 
   const locate = async () => {
     if (!locateMoment) {
@@ -93,6 +105,10 @@ export function LocationMap({
     };
   }, [expanded, locateMoment, pin, user]);
 
+  if (!nativeMapsEnabled()) {
+    return null;
+  }
+
   const map = (fill: 'frame' | 'full') => (
     <MapView
       key={mapKey}
@@ -116,29 +132,29 @@ export function LocationMap({
           : undefined
       }
     >
-      {softRadiusM && pin ? (
+      {softRing && safePin ? (
         <Circle
-          center={pin}
-          radius={softRadiusM}
+          center={safePin}
+          radius={softRing}
           strokeColor="rgba(233, 122, 61, 0.7)"
           fillColor="rgba(233, 122, 61, 0.08)"
           strokeWidth={1}
         />
       ) : null}
-      {radiusM && pin ? (
+      {hardRing && safePin ? (
         <Circle
-          center={pin}
-          radius={radiusM}
+          center={safePin}
+          radius={hardRing}
           strokeColor={FOREST}
           fillColor="rgba(52, 74, 50, 0.18)"
           strokeWidth={2}
         />
       ) : null}
-      {pin ? (
-        <Marker coordinate={pin} title={pinLabel} pinColor={FOREST} />
+      {safePin ? (
+        <Marker coordinate={safePin} title={pinLabel} pinColor={FOREST} />
       ) : null}
-      {user ? (
-        <Marker coordinate={user} pinColor={ORANGE} title="GPS" />
+      {safeUser ? (
+        <Marker coordinate={safeUser} pinColor={ORANGE} title="GPS" />
       ) : null}
     </MapView>
   );

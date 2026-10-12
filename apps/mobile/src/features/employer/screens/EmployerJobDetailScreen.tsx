@@ -28,7 +28,7 @@ import { confirmDestructive } from '../../../shared/ui/confirm-destructive';
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerJobDetail'>;
 
 export function EmployerJobDetailScreen({ navigation, route }: Props) {
-  const { jobId } = route.params;
+  const { jobId } = route.params ?? { jobId: '' };
   const { t } = useTranslation(['employer', 'common', 'errors']);
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState('');
@@ -71,13 +71,13 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
         }
       }
       setApplicantCounts({
-        pending: apps.items.filter((row) => row.status === 'pending').length,
-        accepted: apps.items.filter((row) => row.status === 'accepted').length,
-        substitute: apps.items.filter((row) => row.status === 'substitute')
+        pending: (apps.items ?? []).filter((row) => row.status === 'pending').length,
+        accepted: (apps.items ?? []).filter((row) => row.status === 'accepted').length,
+        substitute: (apps.items ?? []).filter((row) => row.status === 'substitute')
           .length,
       });
       setPendingPreview(
-        apps.items.filter((row) => row.status === 'pending'),
+        (apps.items ?? []).filter((row) => row.status === 'pending'),
       );
     } catch (err) {
       setError(formErrorMessage(err, t));
@@ -250,7 +250,7 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
           {pendingPreview.map((item) => {
             const name =
               item.workerDisplayName ??
-              `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`.trim();
+              `${item.profileSnapshot?.firstName ?? ''} ${item.profileSnapshot?.lastName ?? ''}`.trim();
             return (
               <JobCard
                 key={item.id}

@@ -36,7 +36,7 @@ function conflictsFromError(err: ApiClientError): OverlapConflict[] {
 }
 
 export function WorkerJobApplyScreen({ route, navigation }: Props) {
-  const { jobId } = route.params;
+  const { jobId } = route.params ?? { jobId: '' };
   const { t } = useTranslation(['worker', 'common', 'errors']);
   const [error, setError] = useState<string | null>(null);
   const [overlapAck, setOverlapAck] = useState(false);

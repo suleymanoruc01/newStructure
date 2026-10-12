@@ -52,11 +52,11 @@ export function EmployerFavoriteWorkersScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listFavorites(token);
-      const workers = data.items.filter((fav) => fav.type === 'worker');
+      const workers = (data.items ?? []).filter((fav) => fav.type === 'worker');
       setItems(workers);
       const jobs = await listEmployerJobs(token);
       const lists = await Promise.all(
-        jobs.items.map(async (job) => {
+        (jobs.items ?? []).map(async (job) => {
           try {
             return await listJobApplications(job.id, token, 'accepted');
           } catch (err) {
@@ -73,7 +73,7 @@ export function EmployerFavoriteWorkersScreen({ navigation }: Props) {
       );
       setCandidates(
         uniqueWorkerCandidates(
-          lists.flatMap((list) => list.items),
+          lists.flatMap((list) => list.items ?? []),
           workers.map((fav) => fav.targetId),
           t('employer:favorites.workerLabel'),
         ),
@@ -109,7 +109,7 @@ export function EmployerFavoriteWorkersScreen({ navigation }: Props) {
     () =>
       needle
         ? candidates.filter((row) =>
-            row.label.toLocaleLowerCase('tr-TR').includes(needle),
+            (row.label ?? '').toLocaleLowerCase('tr-TR').includes(needle),
           )
         : candidates,
     [candidates, needle],

@@ -47,7 +47,7 @@ export function WorkerRevenueScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listMyShifts(token);
-      setItems(data.items.filter((shift) => shift.status === 'completed'));
+      setItems((data.items ?? []).filter((shift) => shift.status === 'completed'));
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));

@@ -57,12 +57,12 @@ export function EmployerDashboardScreen({ navigation }: Props) {
       setHeld(balance.value.held);
     }
     if (branchList.status === 'fulfilled') {
-      setBranches(branchList.value.items.length);
+      setBranches((branchList.value.items ?? []).length);
     }
     if (jobs.status === 'fulfilled') {
       const counts: Record<string, number> = {};
       let seats = 0;
-      for (const job of jobs.value.items) {
+      for (const job of jobs.value.items ?? []) {
         counts[job.status] = (counts[job.status] ?? 0) + 1;
         if (job.status === 'published') {
           seats += job.remainingHeadcount;
@@ -71,11 +71,11 @@ export function EmployerDashboardScreen({ navigation }: Props) {
       setByStatus(counts);
       setOpenSeats(seats);
       setPublished(
-        jobs.value.items.filter((job) => job.status === 'published'),
+        (jobs.value.items ?? []).filter((job) => job.status === 'published'),
       );
     }
     if (disputeList.status === 'fulfilled') {
-      setDisputes(disputeList.value.items.length);
+      setDisputes((disputeList.value.items ?? []).length);
     }
     if (
       balance.status === 'rejected' &&

@@ -27,7 +27,11 @@ function maskTrPhone(e164: string): string {
 }
 
 export function AuthOtpScreen({ navigation, route }: Props) {
-  const { challengeId, phone, purpose } = route.params;
+  const { challengeId, phone, purpose } = route.params ?? {
+    challengeId: '',
+    phone: '',
+    purpose: 'register',
+  };
   const { t } = useTranslation(['auth', 'common', 'errors']);
   const { requestPhoneOtp, verifyPhoneOtp } = useAuth();
   const inputRef = useRef<TextInput>(null);

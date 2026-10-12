@@ -20,7 +20,11 @@ type Props = NativeStackScreenProps<
 >;
 
 export function EmployerShiftManualConfirmScreen({ route, navigation }: Props) {
-  const { shiftId, jobTitle, workerDisplayName, disputeNote } = route.params;
+  const { shiftId, jobTitle, workerDisplayName, disputeNote } = route.params ?? {
+    shiftId: '',
+    jobTitle: null,
+    workerDisplayName: null,
+  };
   const { t } = useTranslation(['employer', 'common', 'errors']);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

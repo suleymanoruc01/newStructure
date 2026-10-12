@@ -43,7 +43,7 @@ const INCIDENT_SEVERITIES: ShiftIncidentCreateBody['severity'][] = [
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerShiftInShift'>;
 
 export function WorkerShiftInShiftScreen({ route, navigation }: Props) {
-  const { shiftId } = route.params;
+  const { shiftId } = route.params ?? { shiftId: '' };
   const { t } = useTranslation(['worker', 'common', 'errors']);
   const timeZone = useDisplayTimeZone();
   const [shift, setShift] = useState<Awaited<

@@ -28,7 +28,7 @@ type Props = NativeStackScreenProps<
 >;
 
 export function WorkerShiftAvailabilityScreen({ route, navigation }: Props) {
-  const { shiftId } = route.params;
+  const { shiftId } = route.params ?? { shiftId: '' };
   const { t } = useTranslation(['worker', 'common', 'errors']);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

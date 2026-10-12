@@ -10,7 +10,14 @@ export function nextIstanbulDayKeys(
 ): string[] {
   const today = istanbulDayKey(from, zone);
   const [year, month, day] = today.split('-').map(Number);
-  const noon = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1, 12));
+  const noon = new Date(
+    Date.UTC(
+      Number.isFinite(year) ? year : 1970,
+      (Number.isFinite(month) ? month : 1) - 1,
+      Number.isFinite(day) ? day : 1,
+      12,
+    ),
+  );
   return Array.from({ length: count }, (_, offset) => {
     const next = new Date(noon);
     next.setUTCDate(noon.getUTCDate() + offset);
@@ -25,7 +32,12 @@ function zonedWallToUtcMs(
 ): number {
   const hh = String(hour).padStart(2, '0');
   const utcGuess = new Date(`${dayKey}T${hh}:00:00.000Z`);
-  const parts = new Intl.DateTimeFormat('en-US', {
+  if (!Number.isFinite(utcGuess.getTime())) {
+    return Number.NaN;
+  }
+  let parts: Intl.DateTimeFormatPart[];
+  try {
+    parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
     year: 'numeric',
     month: '2-digit',
@@ -35,6 +47,9 @@ function zonedWallToUtcMs(
     second: '2-digit',
     hourCycle: 'h23',
   }).formatToParts(utcGuess);
+  } catch {
+    return Number.NaN;
+  }
   const pick = (type: Intl.DateTimeFormatPartTypes) =>
     Number(parts.find((part) => part.type === type)?.value);
   const asIfUtc = Date.UTC(
@@ -55,6 +70,9 @@ export function wallToIso(
   timeZone = 'Europe/Istanbul',
 ): { startsAt: string; endsAt: string } {
   const starts = zonedWallToUtcMs(dayKey, hour, timeZone);
+  if (!Number.isFinite(starts)) {
+    return { startsAt: '', endsAt: '' };
+  }
   return {
     startsAt: new Date(starts).toISOString(),
     endsAt: new Date(starts + durationHours * 3_600_000).toISOString(),
@@ -63,11 +81,22 @@ export function wallToIso(
 
 export function dayChipLabel(dayKey: string, zone?: string): string {
   const [year, month, day] = dayKey.split('-').map(Number);
-  const noon = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1, 12));
-  return noon.toLocaleDateString('tr-TR', {
-    timeZone: zone,
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+  const noon = new Date(
+    Date.UTC(
+      Number.isFinite(year) ? year : 1970,
+      (Number.isFinite(month) ? month : 1) - 1,
+      Number.isFinite(day) ? day : 1,
+      12,
+    ),
+  );
+  try {
+    return noon.toLocaleDateString('tr-TR', {
+      timeZone: zone,
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+  } catch {
+    return '';
+  }
 }

@@ -25,6 +25,7 @@ import { getAccessToken } from '../../../shared/auth/session-memory';
 import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
 import { type GeofenceRadii } from '../../../shared/location/geofence';
 import {
+  formatTr,
   istanbulDayKey,
   useDisplayTimeZone,
   weekDayKeys,
@@ -61,12 +62,12 @@ export function WorkerHomeScreen({ navigation }: Props) {
         fetchJobFeed(token),
       ]);
       if (shifts.status === 'fulfilled') {
-        setItems(shifts.value.items);
+        setItems(shifts.value.items ?? []);
       } else {
         throw shifts.reason;
       }
       if (jobs.status === 'fulfilled') {
-        setFeed(jobs.value.items);
+        setFeed(jobs.value.items ?? []);
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -120,11 +121,10 @@ export function WorkerHomeScreen({ navigation }: Props) {
   const openPins = openJobs.filter(
     (job) => job.branchLatitude != null && job.branchLongitude != null,
   );
-  const eyebrow = new Intl.DateTimeFormat('tr-TR', {
-    timeZone,
+  const eyebrow = formatTr(`${day}T12:00:00.000Z`, timeZone, {
     day: 'numeric',
     month: 'long',
-  }).format(new Date(`${day}T12:00:00.000Z`));
+  });
 
   return (
     <ModulePage

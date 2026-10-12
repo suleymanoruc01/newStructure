@@ -14,6 +14,6 @@ export function partitionHomeShifts<T extends { status: string; startsAt: string
     upcoming: items
       .filter((item) => UPCOMING.has(item.status))
       .slice()
-      .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+      .sort((a, b) => (a.startsAt ?? '').localeCompare(b.startsAt ?? '')),
   };
 }

@@ -46,7 +46,7 @@ export function EmployerJobsListScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const jobs = await listEmployerJobs(token);
-      setItems(jobs.items);
+      setItems(jobs.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));

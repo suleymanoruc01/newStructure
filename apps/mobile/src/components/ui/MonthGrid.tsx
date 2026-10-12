@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { formatTr } from '../../shared/datetime/istanbul';
 import { clayChip } from './clay';
 import { ClayCard } from './ClayCard';
 import { Pressable } from './Pressable';
@@ -41,10 +42,7 @@ export function MonthGrid({
           const inMonth = day.startsWith(monthKey);
           const active = day === selected;
           const count = marks[day] ?? 0;
-          const number = new Intl.DateTimeFormat('tr-TR', {
-            timeZone: zone,
-            day: 'numeric',
-          }).format(new Date(`${day}T12:00:00.000Z`));
+          const number = formatTr(`${day}T12:00:00.000Z`, zone, { day: 'numeric' });
           return (
             <Pressable
               key={day}

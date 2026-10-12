@@ -49,13 +49,10 @@ const tabBarStyle = {
   backgroundColor: 'transparent',
   borderTopWidth: 0,
   elevation: 0,
+  overflow: 'visible' as const,
 };
 
-function WorkerShiftScreens({
-  stack: Stack,
-}: {
-  stack: typeof HomeStack;
-}) {
+function workerShiftScreens(Stack: typeof HomeStack) {
   return (
     <>
       <Stack.Screen
@@ -102,7 +99,7 @@ function WorkerShiftScreens({
   );
 }
 
-function WorkerInboxScreens({ stack: Stack }: { stack: typeof HomeStack }) {
+function workerInboxScreens(Stack: typeof HomeStack) {
   return (
     <>
       <Stack.Screen
@@ -132,8 +129,8 @@ function WorkerHomeNavigator() {
         name="WorkerHome"
         options={{ headerShown: false }}
       />
-      <WorkerShiftScreens stack={HomeStack} />
-      <WorkerInboxScreens stack={HomeStack} />
+      {workerShiftScreens(HomeStack)}
+      {workerInboxScreens(HomeStack)}
     </HomeStack.Navigator>
   );
 }
@@ -250,7 +247,7 @@ function WorkerProfileNavigator() {
         name="SharedRatingsCompose"
         options={{ title: 'Puan ver' }}
       />
-      <WorkerInboxScreens stack={ProfileStack} />
+      {workerInboxScreens(ProfileStack)}
     </ProfileStack.Navigator>
   );
 }

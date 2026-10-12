@@ -65,7 +65,7 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
               : 'google'
             : 'sandbox_card',
         );
-        const mapped = list.items.map((item) => ({
+        const mapped = (list.items ?? []).map((item) => ({
           id: item.id,
           label: item.label,
           tokenCount: item.tokenCount,

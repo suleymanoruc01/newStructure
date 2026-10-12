@@ -45,7 +45,7 @@ export function WorkerFavoritesListScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listFavorites(token);
-      setItems(data.items);
+      setItems(data.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));

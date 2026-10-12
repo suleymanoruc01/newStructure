@@ -36,6 +36,6 @@ export function upcomingItems<T extends { id: string; startsAt: string }>(
 ): T[] {
   return items
     .filter((item) => item.startsAt >= nowIso && !skipIds.has(item.id))
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+    .sort((a, b) => (a.startsAt ?? '').localeCompare(b.startsAt ?? ''))
     .slice(0, limit);
 }

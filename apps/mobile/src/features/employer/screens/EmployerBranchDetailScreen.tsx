@@ -24,7 +24,7 @@ type Props = NativeStackScreenProps<
 >;
 
 export function EmployerBranchDetailScreen({ route, navigation }: Props) {
-  const { branchId } = route.params;
+  const { branchId } = route.params ?? { branchId: '' };
   const { t } = useTranslation(['employer', 'common', 'errors']);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');

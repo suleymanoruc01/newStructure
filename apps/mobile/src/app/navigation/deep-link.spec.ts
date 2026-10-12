@@ -48,6 +48,10 @@ describe('notificationTarget', () => {
   it('leaves unknown types on the inbox', () => {
     expect(notificationTarget('admin.broadcast', { jobId: 'j1' })).toBeNull();
   });
+
+  it('does not throw when the payload is missing', () => {
+    expect(notificationTarget('job.matched', undefined)).toBeNull();
+  });
 });
 
 describe('parseAppPath', () => {

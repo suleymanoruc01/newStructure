@@ -62,7 +62,7 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await fetchWorkerAvailability(token);
-      setWindows(data.windows.map(toEditable));
+      setWindows((data.windows ?? []).map(toEditable));
     } catch (err) {
       setError(formErrorMessage(err, t));
     } finally {

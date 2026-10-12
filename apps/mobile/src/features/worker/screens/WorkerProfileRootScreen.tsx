@@ -87,26 +87,26 @@ export function WorkerProfileRootScreen({ navigation }: Props) {
           fetchWorkerAvailability(token),
         ]);
       if (catalog.status === 'fulfilled') {
-        setSectors(catalog.value.sectors);
+        setSectors(catalog.value.sectors ?? []);
       }
       if (shifts.status === 'fulfilled') {
         setCompletedShifts(
-          shifts.value.items.filter((shift) => shift.status === 'completed')
+          (shifts.value.items ?? []).filter((shift) => shift.status === 'completed')
             .length,
         );
       }
       if (applications.status === 'fulfilled') {
-        setApplicationCount(applications.value.items.length);
+        setApplicationCount((applications.value.items ?? []).length);
       }
       if (docs.status === 'fulfilled') {
-        setDocumentCount(docs.value.items.length);
-        setDocuments(docs.value.items);
+        setDocumentCount((docs.value.items ?? []).length);
+        setDocuments(docs.value.items ?? []);
       }
       if (favs.status === 'fulfilled') {
-        setFavorites(favs.value.items);
+        setFavorites(favs.value.items ?? []);
       }
       if (availability.status === 'fulfilled') {
-        setWindows(availability.value.windows);
+        setWindows(availability.value.windows ?? []);
       }
     } catch (err) {
       if (err instanceof ApiClientError) {

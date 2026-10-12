@@ -36,7 +36,7 @@ export function EmployerBranchesScreen({ route, navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listBranches(token);
-      setItems(data.items);
+      setItems(data.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -58,7 +58,7 @@ export function EmployerBranchesScreen({ route, navigation }: Props) {
       return items;
     }
     return items.filter((branch) => {
-      const name = branch.name.toLocaleLowerCase('tr-TR');
+      const name = (branch.name ?? '').toLocaleLowerCase('tr-TR');
       const city = (branch.city ?? '').toLocaleLowerCase('tr-TR');
       const address = (branch.addressLine1 ?? '').toLocaleLowerCase('tr-TR');
       return name.includes(needle) || city.includes(needle) || address.includes(needle);

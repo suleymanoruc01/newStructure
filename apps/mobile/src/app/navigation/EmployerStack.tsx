@@ -53,9 +53,10 @@ const tabBarStyle = {
   backgroundColor: 'transparent',
   borderTopWidth: 0,
   elevation: 0,
+  overflow: 'visible' as const,
 };
 
-function AccountScreens({ stack: Stack }: { stack: typeof HomeStack }) {
+function accountScreens(Stack: typeof HomeStack) {
   return (
     <>
       <Stack.Screen
@@ -117,7 +118,7 @@ function AccountScreens({ stack: Stack }: { stack: typeof HomeStack }) {
   );
 }
 
-function OpsScreens({ stack: Stack }: { stack: typeof HomeStack }) {
+function opsScreens(Stack: typeof HomeStack) {
   return (
     <>
       <Stack.Screen
@@ -173,8 +174,8 @@ function EmployerHomeNavigator({ screenId }: { screenId?: string }) {
         name="EmployerBranches"
         options={{ title: 'Şubeler' }}
       />
-      <AccountScreens stack={HomeStack} />
-      <OpsScreens stack={HomeStack} />
+      {accountScreens(HomeStack)}
+      {opsScreens(HomeStack)}
     </HomeStack.Navigator>
   );
 }
@@ -286,8 +287,8 @@ function EmployerProfileNavigator({ screenId }: { screenId?: string }) {
         name="SharedSupportRequest"
         options={{ title: 'Destek' }}
       />
-      <AccountScreens stack={ProfileStack} />
-      <OpsScreens stack={ProfileStack} />
+      {accountScreens(ProfileStack)}
+      {opsScreens(ProfileStack)}
     </ProfileStack.Navigator>
   );
 }

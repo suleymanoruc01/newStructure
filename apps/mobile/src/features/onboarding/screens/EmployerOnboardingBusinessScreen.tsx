@@ -40,7 +40,7 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
 
   useEffect(() => {
     void fetchJobCatalog()
-      .then((catalog) => setSectors(catalog.sectors))
+      .then((catalog) => setSectors(catalog.sectors ?? []))
       .catch(() => setError(t('common:networkError')));
   }, [t]);
 
@@ -48,8 +48,8 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
   const shownSectors = needle
     ? sectors.filter(
         (sector) =>
-          sector.displayName.toLocaleLowerCase('tr-TR').includes(needle) ||
-          sector.code.toLocaleLowerCase('tr-TR').includes(needle),
+          (sector.displayName ?? '').toLocaleLowerCase('tr-TR').includes(needle) ||
+          (sector.code ?? '').toLocaleLowerCase('tr-TR').includes(needle),
       )
     : sectors;
 
@@ -94,7 +94,7 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
         },
         token,
       );
-      applyEmployerCreate(result);
+      await applyEmployerCreate(result);
       navigation.replace('EmployerOnboardingBranch');
     } catch (err) {
       if (err instanceof ApiClientError) {

@@ -32,7 +32,7 @@ export function AccountLinkSection() {
       return;
     }
     const data = await listLinkedIdentities(token);
-    setLinked(data.items.some((item) => item.provider === provider));
+    setLinked((data.items ?? []).some((item) => item.provider === provider));
   }, [provider]);
 
   useEffect(() => {

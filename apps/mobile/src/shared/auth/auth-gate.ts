@@ -15,7 +15,7 @@ export function primaryRole(
     return shell;
   }
   return (
-    user.roles.find(
+    (user.roles ?? []).find(
       (role) => role === 'worker' || role === 'employer' || role === 'manager',
     ) ?? null
   );
@@ -89,7 +89,7 @@ export async function resolveAuthPhase(
 }> {
   if (!options?.policiesClear) {
     const policies = await listPolicies(accessToken);
-    if (policies.items.length > 0) {
+    if ((policies.items ?? []).length > 0) {
       return {
         phase: 'needs_policies',
         onboardingKind: null,
@@ -122,7 +122,7 @@ export async function resolveAuthPhase(
   } else if (role === 'employer') {
     const status = await fetchEmployerSetupStatus(accessToken);
     if (!status.complete) {
-      const employerStep = employerSetupStep(status.missing);
+      const employerStep = employerSetupStep(status.missing ?? []);
       return {
         phase: 'needs_onboarding',
         onboardingKind: 'employer',

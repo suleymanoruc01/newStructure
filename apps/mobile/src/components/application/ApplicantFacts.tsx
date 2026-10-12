@@ -36,24 +36,30 @@ export function ApplicantFacts({
   snapshot,
   sectors,
 }: {
-  snapshot: ProfileFacts;
+  snapshot: ProfileFacts | null | undefined;
   sectors: Catalog;
 }) {
   const { t } = useTranslation(['worker', 'employer']);
+  const sectorCodes = snapshot?.sectorCodes ?? [];
+  const occupationCodes = snapshot?.occupationCodes ?? [];
   const sectorNames = useMemo(
     () =>
-      snapshot.sectorCodes.map(
+      sectorCodes.map(
         (code) =>
-          sectors.find((sector) => sector.code === code)?.displayName ?? code,
+          (sectors ?? []).find((sector) => sector.code === code)?.displayName ??
+          code,
       ),
-    [snapshot.sectorCodes, sectors],
+    [sectorCodes, sectors],
   );
   const occupationNames = useMemo(() => {
-    const rows = sectors.flatMap((sector) => sector.occupations);
-    return snapshot.occupationCodes.map(
+    const rows = (sectors ?? []).flatMap((sector) => sector.occupations ?? []);
+    return occupationCodes.map(
       (code) => rows.find((row) => row.code === code)?.title ?? code,
     );
-  }, [snapshot.occupationCodes, sectors]);
+  }, [occupationCodes, sectors]);
+  if (!snapshot) {
+    return null;
+  }
   const age = ageYears(snapshot.birthDate);
   const gender =
     snapshot.gender && snapshot.gender !== 'unspecified'

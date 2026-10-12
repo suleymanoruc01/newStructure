@@ -62,7 +62,7 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
 
   useEffect(() => {
     void fetchJobCatalog()
-      .then((catalog) => setSectors(catalog.sectors))
+      .then((catalog) => setSectors(catalog.sectors ?? []))
       .catch(() => setError(t('common:networkError')));
   }, [t]);
 
@@ -230,7 +230,7 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
                 if (!needle) {
                   return true;
                 }
-                return sector.displayName
+                return (sector.displayName ?? '')
                   .toLocaleLowerCase('tr-TR')
                   .includes(needle);
               })

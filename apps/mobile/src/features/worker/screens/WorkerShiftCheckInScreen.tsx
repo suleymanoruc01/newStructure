@@ -30,7 +30,7 @@ import {
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerShiftCheckIn'>;
 
 export function WorkerShiftCheckInScreen({ route, navigation }: Props) {
-  const { shiftId } = route.params;
+  const { shiftId } = route.params ?? { shiftId: '' };
   const { t } = useTranslation(['worker', 'common', 'errors']);
   const [error, setError] = useState<string | null>(null);
   const [branchLabel, setBranchLabel] = useState<string | null>(null);

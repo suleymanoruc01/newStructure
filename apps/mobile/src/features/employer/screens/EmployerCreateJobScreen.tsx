@@ -115,16 +115,19 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           fetchEmployerMe(token),
           fetchJobCatalog(),
         ]);
-        setBranches(branchList.items);
-        if (branchList.items.length === 1) {
-          setBranchId(branchList.items[0]!.id);
+        const branchItems = branchList.items ?? [];
+        setBranches(branchItems);
+        if (branchItems.length === 1) {
+          setBranchId(branchItems[0]!.id);
         }
-        setSectors(catalog.sectors);
-        if (catalog.sectors.length === 1) {
-          const only = catalog.sectors[0]!;
+        const catalogSectors = catalog.sectors ?? [];
+        setSectors(catalogSectors);
+        if (catalogSectors.length === 1) {
+          const only = catalogSectors[0]!;
           setSectorCode(only.code);
-          if (only.occupations.length === 1) {
-            setOccupationCode(only.occupations[0]!.code);
+          const onlyOccupations = only.occupations ?? [];
+          if (onlyOccupations.length === 1) {
+            setOccupationCode(onlyOccupations[0]!.code);
           }
         }
         setVerificationStatus(employer.verificationStatus);
@@ -140,24 +143,25 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
     })();
   }, [contexts, t]);
 
+  const sectorRows = sectors ?? [];
   const occupations =
-    sectors.find((sector) => sector.code === sectorCode)?.occupations ?? [];
+    sectorRows.find((sector) => sector.code === sectorCode)?.occupations ?? [];
   const sectorNeedle = sectorQuery.trim().toLocaleLowerCase('tr-TR');
   const shownSectors = sectorNeedle
-    ? sectors.filter((sector) =>
-        sector.displayName.toLocaleLowerCase('tr-TR').includes(sectorNeedle),
+    ? sectorRows.filter((sector) =>
+        (sector.displayName ?? '').toLocaleLowerCase('tr-TR').includes(sectorNeedle),
       )
-    : sectors;
+    : sectorRows;
   const occupationNeedle = occupationQuery.trim().toLocaleLowerCase('tr-TR');
   const shownOccupations = occupationNeedle
     ? occupations.filter((row) =>
-        row.title.toLocaleLowerCase('tr-TR').includes(occupationNeedle),
+        (row.title ?? '').toLocaleLowerCase('tr-TR').includes(occupationNeedle),
       )
     : occupations;
   const branchNeedle = branchQuery.trim().toLocaleLowerCase('tr-TR');
   const shownBranches = branchNeedle
     ? branches.filter((branch) =>
-        branch.name.toLocaleLowerCase('tr-TR').includes(branchNeedle),
+        (branch.name ?? '').toLocaleLowerCase('tr-TR').includes(branchNeedle),
       )
     : branches;
   const canPublish =
@@ -280,7 +284,7 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
 
   const selectedBranch = branches.find((branch) => branch.id === branchId);
   const branchName = selectedBranch?.name;
-  const sectorName = sectors.find((sector) => sector.code === sectorCode)?.displayName;
+  const sectorName = sectorRows.find((sector) => sector.code === sectorCode)?.displayName;
   const occupationName = occupations.find((row) => row.code === occupationCode)?.title;
   const when = wallToIso(dayKey, startHour, durationH, timeZone);
   const payAmountMinor = tryMajorToMinor(payTry);
@@ -373,7 +377,7 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           <Text className="font-sans text-sm font-semibold text-text-high">
             {t('employer:jobs.sector')}
           </Text>
-          {sectors.length > 6 ? (
+          {sectorRows.length > 6 ? (
             <TextField
               inset
               shape="capsule"

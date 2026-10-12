@@ -17,6 +17,6 @@ export function sortFeed<
     if (sort === 'pay') {
       return (right.payAmountMinor ?? 0) - (left.payAmountMinor ?? 0);
     }
-    return left.startsAt.localeCompare(right.startsAt);
+    return (left.startsAt ?? '').localeCompare(right.startsAt ?? '');
   });
 }

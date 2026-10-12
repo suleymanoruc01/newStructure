@@ -49,7 +49,7 @@ export function WorkerDocumentsListScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listWorkerDocuments(token);
-      setItems(data.items);
+      setItems(data.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -75,7 +75,7 @@ export function WorkerDocumentsListScreen({ navigation }: Props) {
       return byType;
     }
     return byType.filter((doc) =>
-      doc.fileName.toLocaleLowerCase('tr-TR').includes(needle),
+      (doc.fileName ?? '').toLocaleLowerCase('tr-TR').includes(needle),
     );
   }, [items, query, typeFilter]);
 

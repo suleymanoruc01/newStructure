@@ -32,7 +32,7 @@ export function EmployerChecklistScreen({ navigation }: Props) {
       }
       const status = await fetchEmployerSetupStatus(token);
       setComplete(status.complete);
-      setMissing(status.missing);
+      setMissing(status.missing ?? []);
       setLoaded(true);
     } catch {
       setError(t('common:networkError'));

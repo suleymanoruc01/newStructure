@@ -69,9 +69,9 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
         profile.homeLongitude != null ? String(profile.homeLongitude) : '',
       );
       setNightShift(profile.nightShiftAvailable);
-      setSectorCodes(profile.sectorCodes);
-      setOccupationCodes(profile.occupationCodes);
-      setSectors(catalog.sectors);
+      setSectorCodes(profile.sectorCodes ?? []);
+      setOccupationCodes(profile.occupationCodes ?? []);
+      setSectors(catalog.sectors ?? []);
     } catch (err) {
       setError(formErrorMessage(err, t));
     }
@@ -84,16 +84,16 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
   const sectorNeedle = sectorQuery.trim().toLocaleLowerCase('tr-TR');
   const shownSectors = sectorNeedle
     ? sectors.filter((sector) =>
-        sector.displayName.toLocaleLowerCase('tr-TR').includes(sectorNeedle),
+        (sector.displayName ?? '').toLocaleLowerCase('tr-TR').includes(sectorNeedle),
       )
     : sectors;
   const occupations = sectors
     .filter((sector) => sectorCodes.includes(sector.code))
-    .flatMap((sector) => sector.occupations);
+    .flatMap((sector) => sector.occupations ?? []);
   const occupationNeedle = occupationQuery.trim().toLocaleLowerCase('tr-TR');
   const shownOccupations = occupationNeedle
     ? occupations.filter((occupation) =>
-        occupation.title.toLocaleLowerCase('tr-TR').includes(occupationNeedle),
+        (occupation.title ?? '').toLocaleLowerCase('tr-TR').includes(occupationNeedle),
       )
     : occupations;
 
@@ -268,7 +268,7 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
                       );
                       if (on) {
                         const occupationSet = new Set(
-                          sector.occupations.map((row) => row.code),
+                          (sector.occupations ?? []).map((row) => row.code),
                         );
                         setOccupationCodes((current) =>
                           current.filter((code) => !occupationSet.has(code)),

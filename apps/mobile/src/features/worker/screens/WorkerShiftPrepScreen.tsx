@@ -27,7 +27,7 @@ import { type GeofenceRadii } from '../../../shared/location/geofence';
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerShiftPrep'>;
 
 export function WorkerShiftPrepScreen({ route, navigation }: Props) {
-  const { shiftId } = route.params;
+  const { shiftId } = route.params ?? { shiftId: '' };
   const { t } = useTranslation(['worker', 'common', 'errors']);
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState<string | null>(null);

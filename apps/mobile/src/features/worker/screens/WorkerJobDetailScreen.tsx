@@ -27,7 +27,7 @@ import { shareViaWhatsApp } from '../../../shared/share/whatsapp';
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerJobDetail'>;
 
 export function WorkerJobDetailScreen({ route, navigation }: Props) {
-  const { jobId } = route.params;
+  const { jobId } = route.params ?? { jobId: '' };
   const { t } = useTranslation(['worker', 'common', 'errors']);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,7 @@ export function WorkerJobDetailScreen({ route, navigation }: Props) {
       setDetail(data);
       // shortcut: full my-applications list to match jobId; add GET /jobs/:id/my-application when lists grow
       const mine = await listMyApplications(token);
-      const mineRow = mine.items.find((row) => row.jobId === jobId);
+      const mineRow = (mine.items ?? []).find((row) => row.jobId === jobId);
       setMyApplicationId(mineRow?.id ?? null);
       setMyApplicationStatus(mineRow?.status ?? null);
       setMyApplicationKnown(true);
@@ -121,7 +121,8 @@ export function WorkerJobDetailScreen({ route, navigation }: Props) {
                         },
                       ]
                     : []),
-                  ...(detail.distanceKm != null
+                  ...(typeof detail.distanceKm === 'number' &&
+                  Number.isFinite(detail.distanceKm)
                     ? [
                         {
                           label: t('worker:jobs.distance', {
@@ -147,7 +148,7 @@ export function WorkerJobDetailScreen({ route, navigation }: Props) {
               />
               {!detail.eligibility.eligible ? (
                 <View className="mt-2 flex-row flex-wrap gap-2">
-                  {detail.eligibility.reasons.map((reason) => (
+                  {(detail.eligibility.reasons ?? []).map((reason) => (
                     <StatusBadge key={reason} label={reason} />
                   ))}
                 </View>

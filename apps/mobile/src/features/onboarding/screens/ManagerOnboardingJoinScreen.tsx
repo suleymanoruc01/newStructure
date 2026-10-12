@@ -32,7 +32,7 @@ export function ManagerOnboardingJoinScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const result = await managerJoin({ code: code.trim() }, token);
-      applyManagerJoin(result);
+      await applyManagerJoin(result);
       continueAfterGate(navigation, await completeOnboarding());
     } catch (err) {
       if (err instanceof ApiClientError) {

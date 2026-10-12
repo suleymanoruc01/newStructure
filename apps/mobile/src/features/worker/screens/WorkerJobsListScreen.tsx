@@ -61,7 +61,7 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     void fetchJobCatalog()
-      .then((catalog) => setSectors(catalog.sectors))
+      .then((catalog) => setSectors(catalog.sectors ?? []))
       .catch(() => setError(t('common:networkError')));
   }, [t]);
 
@@ -80,19 +80,19 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
           onlyFavorites,
           onlyInstantApproval,
         });
-        setItems(data.items);
+        setItems(data.items ?? []);
         setApplications([]);
         setPastShifts([]);
       } else if (tab === 'previous') {
         const data = await listMyShifts(token);
         const allowed = new Set(jobsListTabStatuses(tab));
-        setPastShifts(data.items.filter((shift) => allowed.has(shift.status)));
+        setPastShifts((data.items ?? []).filter((shift) => allowed.has(shift.status)));
         setItems([]);
         setApplications([]);
       } else {
         const data = await listMyApplications(token);
         const allowed = new Set(jobsListTabStatuses(tab));
-        setApplications(data.items.filter((row) => allowed.has(row.status)));
+        setApplications((data.items ?? []).filter((row) => allowed.has(row.status)));
         setItems([]);
         setPastShifts([]);
       }
@@ -153,7 +153,7 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
   const sectorNeedle = sectorQuery.trim().toLocaleLowerCase('tr-TR');
   const shownSectors = sectorNeedle
     ? sectors.filter((sector) =>
-        sector.displayName.toLocaleLowerCase('tr-TR').includes(sectorNeedle),
+        (sector.displayName ?? '').toLocaleLowerCase('tr-TR').includes(sectorNeedle),
       )
     : sectors;
   const pins = useMemo(

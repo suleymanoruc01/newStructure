@@ -52,7 +52,15 @@ export async function fetchJobFeed(
 }
 
 export async function fetchJobCatalog() {
-  return apiRequest('/job-catalog', jobCatalogResponseSchema);
+  const data = await apiRequest('/job-catalog', jobCatalogResponseSchema);
+  return {
+    ...data,
+    items: data.items ?? [],
+    sectors: (data.sectors ?? []).map((sector) => ({
+      ...sector,
+      occupations: sector.occupations ?? [],
+    })),
+  };
 }
 
 export async function fetchJobDetail(jobId: string, accessToken: string) {

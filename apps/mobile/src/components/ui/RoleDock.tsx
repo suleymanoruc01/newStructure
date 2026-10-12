@@ -8,11 +8,9 @@ import { useDeepLink } from '../../app/navigation/use-deep-link';
 import { dockHidden } from '../../app/navigation/dock-routes';
 import { listNotifications } from '../../api/notifications-api';
 import { getAccessToken } from '../../shared/auth/session-memory';
-import { clayButton, clayCard } from './clay';
 import { DockIcon, type DockIconName } from './DockIcon';
 import { Pressable } from './Pressable';
 
-const CANVAS = '#F3E8CF';
 const SHELF = '#FBF6EC';
 const FOREST = '#344A32';
 const CREAM = '#F3E8CF';
@@ -58,132 +56,86 @@ function DockShelf({
 }
 
 export function RoleDock({ items, activeKey, onPress, bottomInset }: DockProps) {
-  const raised = items.find((item) => item.raised);
-  const rest = items.filter((item) => !item.raised);
-
   return (
-    <View pointerEvents="box-none" style={{ backgroundColor: 'transparent' }}>
+    <View style={{ backgroundColor: 'transparent' }}>
       <DockShelf
         style={{
-          marginTop: 22,
-          overflow: 'hidden',
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           borderTopWidth: 2,
           borderTopColor: CREAM,
-          shadowColor: CHARCOAL,
-          shadowOffset: { width: 0, height: -6 },
-          shadowOpacity: 0.12,
-          shadowRadius: 12,
-          elevation: 8,
           paddingTop: 10,
           paddingBottom: Math.max(bottomInset, 8),
           paddingHorizontal: 8,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
-          {raised ? (
-            <View style={{ width: 76, alignItems: 'center' }}>
-              <Text
-                className="font-sans"
-                style={{ fontSize: 11, color: FOREST, fontWeight: '600' }}
-              >
-                {raised.label}
-              </Text>
-            </View>
-          ) : null}
-          {rest.map((item) => {
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', width: '100%' }}>
+          {items.map((item) => {
             const active = item.key === activeKey;
             const color = active ? FOREST : MUTED;
             return (
-              <Pressable
-                key={item.key}
-                accessibilityLabel={item.label}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                onPress={() => onPress(item.key)}
-                style={{ flex: 1, alignItems: 'center', minHeight: 48, justifyContent: 'flex-end' }}
-              >
-                <View>
-                  <DockIcon color={color} name={item.icon} />
-                  {item.badge && item.badge > 0 ? (
-                    <View
-                      style={{
-                        position: 'absolute',
-                        top: -6,
-                        right: -10,
-                        minWidth: 16,
-                        height: 16,
-                        borderRadius: 8,
-                        backgroundColor: MUSTARD,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        paddingHorizontal: 3,
-                      }}
-                    >
-                      <Text style={{ color: CHARCOAL, fontSize: 10, fontWeight: '700' }}>
-                        {item.badge > 9 ? '9+' : String(item.badge)}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-                <Text
-                  className="font-sans"
-                  style={{
-                    marginTop: 4,
-                    fontSize: 11,
-                    color,
-                    fontWeight: active ? '600' : '500',
-                  }}
+              <View key={item.key} style={{ flexGrow: 1, flexBasis: 0 }}>
+                <Pressable
+                  accessibilityLabel={item.label}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                  pressScale={false}
+                  onPress={() => onPress(item.key)}
+                  style={{ alignItems: 'center', paddingBottom: 4 }}
                 >
-                  {item.label}
-                </Text>
-              </Pressable>
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: item.raised && active ? FOREST : 'transparent',
+                      borderBottomWidth: item.raised && active ? 3 : 0,
+                      borderBottomColor: CHARCOAL,
+                    }}
+                  >
+                    <DockIcon color={item.raised && active ? CREAM : color} name={item.icon} />
+                    {item.badge && item.badge > 0 ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          minWidth: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          backgroundColor: MUSTARD,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          paddingHorizontal: 3,
+                        }}
+                      >
+                        <Text style={{ color: CHARCOAL, fontSize: 10, fontWeight: '700' }}>
+                          {item.badge > 9 ? '9+' : String(item.badge)}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      marginTop: 2,
+                      fontSize: 11,
+                      lineHeight: 14,
+                      textAlign: 'center',
+                      color,
+                      fontWeight: active ? '600' : '500',
+                    }}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              </View>
             );
           })}
         </View>
       </DockShelf>
-      {raised ? (
-        <>
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              left: 12,
-              top: 0,
-              width: 76,
-              height: 76,
-              borderRadius: 38,
-              backgroundColor: CANVAS,
-            }}
-          />
-          <Pressable
-            accessibilityLabel={raised.label}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: raised.key === activeKey }}
-            onPress={() => onPress(raised.key)}
-            style={[
-              raised.key === activeKey ? clayButton('forest') : clayCard,
-              {
-                position: 'absolute',
-                left: 20,
-                top: 8,
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: raised.key === activeKey ? FOREST : CANVAS,
-                alignItems: 'center',
-                justifyContent: 'center',
-              },
-            ]}
-          >
-            <DockIcon
-              color={raised.key === activeKey ? CREAM : FOREST}
-              name={raised.icon}
-            />
-          </Pressable>
-        </>
-      ) : null}
     </View>
   );
 }
@@ -201,7 +153,7 @@ function useUnreadCount(refreshKey: number): number {
       try {
         const data = await listNotifications(token);
         if (!cancelled) {
-          setCount(data.items.filter((item) => item.readAt == null).length);
+          setCount((data.items ?? []).filter((item) => item.readAt == null).length);
         }
       } catch {
         // Badge stays at the last known count.

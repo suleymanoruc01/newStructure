@@ -38,6 +38,7 @@ type Props = {
 export function SharedNotificationDetailScreen({ navigation, route }: Props) {
   const { t } = useTranslation(['system', 'common', 'errors']);
   const zone = useDisplayTimeZone();
+  const notificationId = route.params?.notificationId ?? '';
   const [item, setItem] = useState<Notification | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +49,7 @@ export function SharedNotificationDetailScreen({ navigation, route }: Props) {
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      const row = await fetchNotification(token, route.params.notificationId);
+      const row = await fetchNotification(token, notificationId);
       setItem(row);
       if (!row.readAt) {
         const read = await markNotificationRead(token, row.id);
@@ -61,13 +62,13 @@ export function SharedNotificationDetailScreen({ navigation, route }: Props) {
         setError(t('common:networkError'));
       }
     }
-  }, [route.params.notificationId, t]);
+  }, [notificationId, t]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const names = navigation.getState().routeNames as string[];
+  const names = navigation.getState()?.routeNames ?? [];
   const target = item ? notificationTarget(item.type, item.data) : null;
   const chosen = target ? pickRoute(target, names) : null;
 

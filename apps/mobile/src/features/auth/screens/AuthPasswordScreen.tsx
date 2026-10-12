@@ -27,7 +27,8 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const mode = route.params.mode;
+  const mode = route.params?.mode;
+  const phone = route.params?.phone ?? '';
 
   useEffect(() => {
     if (phase === 'booting' || phase === 'unauthenticated' || phase === 'authenticated') {
@@ -71,7 +72,7 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
         await saveSignupPassword(password);
         return;
       }
-      const signedIn = await loginWithPassword(route.params.phone, password);
+      const signedIn = await loginWithPassword(phone, password);
       if (signedIn.nextRoute) {
         navigation.replace(signedIn.nextRoute);
       }
@@ -94,12 +95,12 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
     setSubmitting(true);
     try {
       const { challengeId } = await requestPhoneOtp(
-        route.params.phone,
+        phone,
         'password_reset',
       );
       navigation.navigate('AuthOtp', {
         challengeId,
-        phone: route.params.phone,
+        phone,
         purpose: 'password_reset',
       });
     } catch (err) {
@@ -114,7 +115,7 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
   };
 
   const setting = mode === 'set';
-  const recovering = setting && route.params.purpose === 'password_reset';
+  const recovering = setting && route.params?.purpose === 'password_reset';
   const title = !setting
     ? t('auth:password.loginTitle')
     : recovering

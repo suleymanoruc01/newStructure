@@ -26,13 +26,7 @@ export function Screen({
     : dock
       ? (['top', 'left', 'right'] as const)
       : undefined;
-  const pad = bleed
-    ? dock
-      ? 'pb-32'
-      : ''
-    : dock
-      ? 'px-4 pb-32 pt-6'
-      : 'px-4 py-6';
+  const pad = bleed ? '' : dock ? 'px-4 pt-6' : 'px-4 py-6';
   if (scroll) {
     return (
       <SafeAreaView

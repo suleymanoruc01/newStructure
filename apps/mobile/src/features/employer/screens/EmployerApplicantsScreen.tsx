@@ -36,7 +36,11 @@ type Filter = 'pending' | 'accepted' | 'substitute' | 'rejected';
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerApplicants'>;
 
 export function EmployerApplicantsScreen({ route, navigation }: Props) {
-  const { jobId, jobTitle, filter: initialFilter } = route.params;
+  const { jobId, jobTitle, filter: initialFilter } = route.params ?? {
+    jobId: '',
+    jobTitle: null,
+    filter: undefined,
+  };
   const { t } = useTranslation(['employer', 'common', 'errors', 'system']);
   const [filter, setFilter] = useState<Filter>(initialFilter ?? 'pending');
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +53,7 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     void fetchJobCatalog()
-      .then((catalog) => setSectors(catalog.sectors))
+      .then((catalog) => setSectors(catalog.sectors ?? []))
       .catch(() => setError(t('common:networkError')));
   }, [t]);
 
@@ -62,7 +66,7 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await listJobApplications(jobId, token, filter);
-      setItems(data.items);
+      setItems(data.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -94,7 +98,7 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
     return items.filter((item) => {
       const name = (
         item.workerDisplayName ??
-        `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`
+        `${item.profileSnapshot?.firstName ?? ''} ${item.profileSnapshot?.lastName ?? ''}`
       )
         .trim()
         .toLocaleLowerCase('tr-TR');
@@ -181,7 +185,7 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
                 status={item.status}
                 title={
                   item.workerDisplayName ??
-                  `${item.profileSnapshot.firstName ?? ''} ${item.profileSnapshot.lastName ?? ''}`.trim()
+                  `${item.profileSnapshot?.firstName ?? ''} ${item.profileSnapshot?.lastName ?? ''}`.trim()
                 }
                 onPress={() =>
                   navigation.navigate('EmployerApplicantDetail', {

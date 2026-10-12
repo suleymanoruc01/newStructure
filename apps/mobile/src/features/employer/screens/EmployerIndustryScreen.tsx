@@ -41,8 +41,8 @@ export function EmployerIndustryScreen({ navigation }: Props) {
           fetchEmployerMe(token),
           fetchJobCatalog(),
         ]);
-        setCodes(employer.industryCodes);
-        setSectors(catalog.sectors);
+        setCodes(employer.industryCodes ?? []);
+        setSectors(catalog.sectors ?? []);
       } catch (err) {
         setError(formErrorMessage(err, t));
       } finally {
@@ -55,8 +55,8 @@ export function EmployerIndustryScreen({ navigation }: Props) {
   const shownSectors = needle
     ? sectors.filter(
         (sector) =>
-          sector.displayName.toLocaleLowerCase('tr-TR').includes(needle) ||
-          sector.code.toLocaleLowerCase('tr-TR').includes(needle),
+          (sector.displayName ?? '').toLocaleLowerCase('tr-TR').includes(needle) ||
+          (sector.code ?? '').toLocaleLowerCase('tr-TR').includes(needle),
       )
     : sectors;
 

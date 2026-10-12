@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
+import { formatTr } from '../../shared/datetime/istanbul';
 import { AuroraWash } from './AuroraWash';
 import { ClayChip } from './ClayChip';
 import { clayChip, claySheet } from './clay';
@@ -86,15 +87,8 @@ export function DayStrip({ days, selected, zone, onSelect }: DayStripProps) {
     <View style={{ flexDirection: 'row', marginTop: 20, gap: 6 }}>
       {days.map((day) => {
         const active = day === selected;
-        const date = new Date(`${day}T12:00:00.000Z`);
-        const number = new Intl.DateTimeFormat('tr-TR', {
-          timeZone: zone,
-          day: 'numeric',
-        }).format(date);
-        const letter = new Intl.DateTimeFormat('tr-TR', {
-          timeZone: zone,
-          weekday: 'narrow',
-        }).format(date);
+        const number = formatTr(`${day}T12:00:00.000Z`, zone, { day: 'numeric' });
+        const letter = formatTr(`${day}T12:00:00.000Z`, zone, { weekday: 'narrow' });
         return (
           <Pressable
             key={day}
@@ -142,10 +136,11 @@ export function DayStrip({ days, selected, zone, onSelect }: DayStripProps) {
 type SheetProps = {
   title?: string;
   fill?: boolean;
+  dock?: boolean;
   children: React.ReactNode;
 };
 
-export function SheetModule({ title, fill = true, children }: SheetProps) {
+export function SheetModule({ title, fill = true, dock = false, children }: SheetProps) {
   const bottom = useSafeAreaInsets().bottom;
   return (
     <View
@@ -156,7 +151,7 @@ export function SheetModule({ title, fill = true, children }: SheetProps) {
         flex: fill ? 1 : undefined,
         paddingHorizontal: 20,
         paddingTop: title ? 28 : 36,
-        paddingBottom: Math.max(bottom, 16),
+        paddingBottom: dock ? 24 : Math.max(bottom, 16),
         overflow: 'hidden',
         zIndex: 1,
       }}
@@ -227,7 +222,7 @@ export function ModulePage({
       >
         {hero}
       </HeroModule>
-      <SheetModule fill title={sheetTitle}>
+      <SheetModule dock={dock} fill title={sheetTitle}>
         {children}
       </SheetModule>
     </Screen>

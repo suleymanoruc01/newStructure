@@ -27,6 +27,7 @@ import {
   upcomingItems,
 } from '../../../shared/calendar/shift-overlap';
 import {
+  formatTr,
   istanbulDayKey,
   monthGridKeys,
   shiftMonthKey,
@@ -55,7 +56,7 @@ export function EmployerCalendarScreen({ navigation }: Props) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
       const data = await fetchEmployerCalendar(token);
-      setItems(data.items);
+      setItems(data.items ?? []);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -87,7 +88,7 @@ export function EmployerCalendarScreen({ navigation }: Props) {
         worker.includes(needle)
       );
     })
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    .sort((a, b) => (a.startsAt ?? '').localeCompare(b.startsAt ?? ''));
   const monthKey = day.slice(0, 7);
   const monthShifts = items.filter(
     (shift) => istanbulDayKey(shift.startsAt, timeZone).startsWith(monthKey),
@@ -108,11 +109,10 @@ export function EmployerCalendarScreen({ navigation }: Props) {
     marks[key] = (marks[key] ?? 0) + 1;
   }
   const gridDays = monthGridKeys(new Date(`${day}T12:00:00.000Z`), timeZone);
-  const eyebrow = new Intl.DateTimeFormat('tr-TR', {
-    timeZone,
+  const eyebrow = formatTr(`${day}T12:00:00.000Z`, timeZone, {
     day: 'numeric',
     month: 'long',
-  }).format(new Date(`${day}T12:00:00.000Z`));
+  });
 
   const openJob = (jobId: string) => {
     openInTab(navigation, 'EmployerJobDetail', ['EmployerJobs', 'ManagerJobs'], {
