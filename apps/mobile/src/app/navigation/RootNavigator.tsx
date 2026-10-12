@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { clayChip } from '../../components/ui/clay';
 import { Pressable } from '../../components/ui/Pressable';
 
 import { RoleContextSwitchScreen } from '../../features/shared/screens/RoleContextSwitchScreen';
@@ -45,6 +46,7 @@ function AppShellPlaceholder() {
         <Pressable
           accessibilityRole="button"
           className="mx-4 mt-2 rounded-full bg-surface-1 px-3 py-2"
+          style={clayChip(false)}
           onPress={() => setContextSwitchOpen(true)}
           testID="ActiveContextBadge"
         >

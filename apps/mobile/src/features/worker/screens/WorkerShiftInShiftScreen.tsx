@@ -11,7 +11,7 @@ import { JobCard } from '../../../components/job/JobCard';
 import { ShiftFacts } from '../../../components/job/ShiftFacts';
 import { LocationMap } from '../../../components/map/LocationMap';
 import { Button } from '../../../components/ui/Button';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
@@ -178,21 +178,12 @@ export function WorkerShiftInShiftScreen({ route, navigation }: Props) {
         <View className="mt-3 gap-3">
           <View className="flex-row flex-wrap gap-2">
             {INCIDENT_SEVERITIES.map((value) => (
-              <Pressable
+              <ClayChip
                 key={value}
-                className={`rounded-full px-3 py-2 ${
-                  severity === value ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={t(`worker:shift.severity.${value}`)}
+                selected={severity === value}
                 onPress={() => setSeverity(value)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    severity === value ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {t(`worker:shift.severity.${value}`)}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <TextField

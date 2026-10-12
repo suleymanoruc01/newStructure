@@ -9,6 +9,9 @@ export type TopUpPackageOption = {
   tokenCount: number;
   priceTry: number;
   isPopular?: boolean;
+  iosProductId?: string;
+  androidProductId?: string;
+  adaptyProductId?: string;
 };
 
 type Props = {

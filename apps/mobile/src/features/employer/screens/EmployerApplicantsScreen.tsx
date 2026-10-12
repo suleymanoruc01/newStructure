@@ -1,6 +1,8 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
+import { ClayChip } from '../../../components/ui/ClayChip';
+import { clayChip } from '../../../components/ui/clay';
 import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -127,21 +129,12 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
     >
       <View className="mb-3 flex-row flex-wrap gap-2">
         {filters.map((value) => (
-          <Pressable
+          <ClayChip
             key={value}
-            className={`rounded-full px-3 py-2 ${
-              filter === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={statusLabelTr(value)}
+            selected={filter === value}
             onPress={() => setFilter(value)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                filter === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {statusLabelTr(value)}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       <View className="mb-3">
@@ -289,43 +282,39 @@ function ApplicantActions({
 }) {
   return (
     <View className="mt-3 flex-row flex-wrap gap-2">
-      <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onProcess}>
-        <Text className="font-sans text-sm text-text-high">{labels.process}</Text>
-      </Pressable>
+      <ClayChip label={labels.process} onPress={onProcess} />
       {status === 'pending' || status === 'substitute' ? (
-        <Pressable className="rounded-full bg-action-primary px-3 py-2" onPress={onAccept}>
-          <Text className="font-sans text-sm font-semibold text-text-on">
-            {labels.accept}
-          </Text>
-        </Pressable>
+        <ClayChip label={labels.accept} selected onPress={onAccept} />
       ) : null}
       {status === 'pending' || status === 'substitute' ? (
-        <Pressable className="rounded-full bg-feedback-error px-3 py-2" onPress={onReject}>
+        <Pressable
+          className="rounded-full bg-feedback-error px-3 py-2"
+          style={clayChip(true)}
+          onPress={onReject}
+        >
           <Text className="font-sans text-sm font-semibold text-text-on">
             {labels.reject}
           </Text>
         </Pressable>
       ) : null}
       {status === 'pending' ? (
-        <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onSubstitute}>
-          <Text className="font-sans text-sm text-text-high">{labels.substitute}</Text>
-        </Pressable>
+        <ClayChip label={labels.substitute} onPress={onSubstitute} />
       ) : null}
       {status === 'substitute' ? (
-        <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onRemoveSubstitute}>
-          <Text className="font-sans text-sm text-text-high">{labels.remove}</Text>
-        </Pressable>
+        <ClayChip label={labels.remove} onPress={onRemoveSubstitute} />
       ) : null}
       {status === 'accepted' ? (
-        <Pressable className="rounded-full bg-feedback-error px-3 py-2" onPress={onRevoke}>
+        <Pressable
+          className="rounded-full bg-feedback-error px-3 py-2"
+          style={clayChip(true)}
+          onPress={onRevoke}
+        >
           <Text className="font-sans text-sm font-semibold text-text-on">
             {labels.revoke}
           </Text>
         </Pressable>
       ) : null}
-      <Pressable className="rounded-full bg-surface-2 px-3 py-2" onPress={onFavorite}>
-        <Text className="font-sans text-sm text-text-high">{labels.favorite}</Text>
-      </Pressable>
+      <ClayChip label={labels.favorite} onPress={onFavorite} />
     </View>
   );
 }

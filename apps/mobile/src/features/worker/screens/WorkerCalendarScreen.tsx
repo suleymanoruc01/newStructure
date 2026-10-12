@@ -18,10 +18,9 @@ import { MonthGrid } from '../../../components/ui/MonthGrid';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { TextField } from '../../../components/ui/TextField';
-import { Screen } from '../../../components/ui/Screen';
-import { HeroModule, SheetModule } from '../../../components/ui/ScreenModules';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import {
   countOverlapPairs,
@@ -122,16 +121,14 @@ export function WorkerCalendarScreen({ navigation }: Props) {
   }).format(new Date(`${day}T12:00:00.000Z`));
 
   return (
-    <Screen
-      bleed
+    <ModulePage
       dock
+      eyebrow={eyebrow}
       onRefresh={() => void load()}
       refreshing={loading}
-      scroll
       testID="m.worker.calendar.root"
+      title={t('worker:calendar.title')}
     >
-      <HeroModule eyebrow={eyebrow} title={t('worker:calendar.title')} />
-      <SheetModule>
         <View className="mb-4">
           <StatStrip
             items={[
@@ -154,31 +151,20 @@ export function WorkerCalendarScreen({ navigation }: Props) {
             ]}
           />
         </View>
-        <View className="mb-3 flex-row justify-between">
-          <Pressable
-            accessibilityRole="button"
+        <View className="mb-3 flex-row flex-wrap justify-between gap-2">
+          <ClayChip
+            label={t('worker:calendar.prevMonth')}
             onPress={() => setSelected(shiftMonthKey(day, -1, timeZone))}
-          >
-            <Text className="font-sans text-sm font-semibold text-action-secondary">
-              {t('worker:calendar.prevMonth')}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
+          />
+          <ClayChip
+            label={t('worker:calendar.today')}
+            selected={day === today}
             onPress={() => setSelected(today)}
-          >
-            <Text className="font-sans text-sm font-semibold text-action-secondary">
-              {t('worker:calendar.today')}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
+          />
+          <ClayChip
+            label={t('worker:calendar.nextMonth')}
             onPress={() => setSelected(shiftMonthKey(day, 1, timeZone))}
-          >
-            <Text className="font-sans text-sm font-semibold text-action-secondary">
-              {t('worker:calendar.nextMonth')}
-            </Text>
-          </Pressable>
+          />
         </View>
         <MonthGrid
           days={gridDays}
@@ -256,25 +242,23 @@ export function WorkerCalendarScreen({ navigation }: Props) {
                     />
                   </View>
                 ) : null}
-                <Pressable
-                  accessibilityRole="button"
-                  className="mt-3 self-start rounded-full bg-action-secondary px-3 py-2"
-                  onPress={() =>
-                    void addEventToCalendar({
-                      title:
-                        shift.jobTitle ??
-                        shift.branchName ??
-                        t('worker:jobs.untitled'),
-                      startsAt: shift.startsAt,
-                      endsAt: shift.endsAt,
-                      location: shift.branchName ?? undefined,
-                    })
-                  }
-                >
-                  <Text className="font-sans text-xs text-text-on">
-                    {t('worker:calendar.add')}
-                  </Text>
-                </Pressable>
+                <View className="mt-3 self-start">
+                  <ClayChip
+                    label={t('worker:calendar.add')}
+                    selected
+                    onPress={() =>
+                      void addEventToCalendar({
+                        title:
+                          shift.jobTitle ??
+                          shift.branchName ??
+                          t('worker:jobs.untitled'),
+                        startsAt: shift.startsAt,
+                        endsAt: shift.endsAt,
+                        location: shift.branchName ?? undefined,
+                      })
+                    }
+                  />
+                </View>
               </JobCard>
             );
           })}
@@ -328,7 +312,6 @@ export function WorkerCalendarScreen({ navigation }: Props) {
             })}
           </View>
         ) : null}
-      </SheetModule>
-    </Screen>
+    </ModulePage>
   );
 }

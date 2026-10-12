@@ -8,11 +8,11 @@ import { fetchJobCatalog } from '../../../api/jobs-api';
 import { LocationMap } from '../../../components/map/LocationMap';
 import { AvailabilityWeekGrid } from '../../../components/availability/AvailabilityWeekGrid';
 import { BirthDateChips } from '../../../components/ui/BirthDateChips';
-import { Button } from '../../../components/ui/Button';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
-import { WizardSteps } from '../../../components/ui/WizardSteps';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { clayCard } from '../../../components/ui/clay';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ApiClientError } from '../../../api/client';
@@ -67,8 +67,24 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
   }, [t]);
 
   const onNext = async () => {
-    if (step < 2) {
-      setStep(step + 1);
+    if (step === 0) {
+      if (!firstName.trim() || !lastName.trim() || !birthDate) {
+        setError(t('onboarding:worker.identityIncomplete'));
+        return;
+      }
+      setError(null);
+      setStep(1);
+      return;
+    }
+    if (step === 1) {
+      const lat = Number.parseFloat(homeLat);
+      const lng = Number.parseFloat(homeLng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        setError(t('onboarding:worker.invalidCoords'));
+        return;
+      }
+      setError(null);
+      setStep(2);
       return;
     }
     setSubmitting(true);
@@ -138,9 +154,32 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
       testID={ONBOARDING_SCREEN_IDS.workerProfile}
       title={t('onboarding:worker.title')}
     >
-      <WizardSteps step={step + 1} total={3} />
+      <WizardShell
+        error={error}
+        heading={
+          step === 0
+            ? t('onboarding:worker.wizard.identity')
+            : step === 1
+              ? t('onboarding:worker.wizard.work')
+              : t('onboarding:worker.wizard.availability')
+        }
+        hint={
+          step === 0
+            ? t('onboarding:worker.wizard.identityHint')
+            : step === 1
+              ? t('onboarding:worker.wizard.workHint')
+              : t('onboarding:worker.wizard.availabilityHint')
+        }
+        primaryDisabled={submitting}
+        primaryLabel={
+          step < 2 ? t('common:continue') : t('onboarding:worker.finish')
+        }
+        step={step + 1}
+        total={3}
+        onPrimary={() => void onNext()}
+      >
       {step === 0 ? (
-        <View className="mt-2 gap-3">
+        <View className="gap-3">
           <TextField
             label={t('onboarding:worker.firstName')}
             value={firstName}
@@ -159,27 +198,19 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {GENDERS.map((value) => (
-              <Pressable
+              <ClayChip
                 key={value}
-                className={`rounded-full px-3 py-2 ${
-                  gender === value ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                accessibilityRole="radio"
+                label={t(`worker:profile.gender.${value}`)}
+                selected={gender === value}
                 onPress={() => setGender(value)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    gender === value ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {t(`worker:profile.gender.${value}`)}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
         </View>
       ) : null}
       {step === 1 ? (
-        <View className="mt-2 gap-3">
+        <View className="gap-3">
           <Text className="font-sans text-sm font-semibold text-text-high">
             {t('onboarding:worker.sectors')}
           </Text>
@@ -203,14 +234,11 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
                   .toLocaleLowerCase('tr-TR')
                   .includes(needle);
               })
-              .map((sector) => {
-              const on = sectorCodes.includes(sector.code);
-              return (
-                <Pressable
+              .map((sector) => (
+                <ClayChip
                   key={sector.code}
-                  className={`rounded-full px-3 py-2 ${
-                    on ? 'bg-action-primary' : 'bg-surface-1'
-                  }`}
+                  label={sector.displayName}
+                  selected={sectorCodes.includes(sector.code)}
                   onPress={() =>
                     setSectorCodes((current) =>
                       current.includes(sector.code)
@@ -218,17 +246,8 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
                         : [...current, sector.code],
                     )
                   }
-                >
-                  <Text
-                    className={`font-sans text-sm ${
-                      on ? 'text-text-on' : 'text-text-high'
-                    }`}
-                  >
-                    {sector.displayName}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                />
+              ))}
           </View>
           <Pressable
             accessibilityRole="switch"
@@ -262,10 +281,7 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
         </View>
       ) : null}
       {step === 2 ? (
-        <View className="mt-2 gap-3">
-          <Text className="font-sans text-base text-text-medium">
-            {t('onboarding:worker.availabilityHint')}
-          </Text>
+        <View className="gap-3">
           <AvailabilityWeekGrid
             markedDays={availDays}
             selectedDay={availDay}
@@ -285,21 +301,12 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
             {AVAIL_HOURS.map((hour) => {
               const value = `${String(hour).padStart(2, '0')}:00`;
               return (
-                <Pressable
+                <ClayChip
                   key={`s-${hour}`}
-                  className={`rounded-full px-3 py-2 ${
-                    availStart === value ? 'bg-action-primary' : 'bg-surface-1'
-                  }`}
+                  label={t('worker:availability.hour', { hour })}
+                  selected={availStart === value}
                   onPress={() => setAvailStart(value)}
-                >
-                  <Text
-                    className={`font-sans text-sm ${
-                      availStart === value ? 'text-text-on' : 'text-text-high'
-                    }`}
-                  >
-                    {t('worker:availability.hour', { hour })}
-                  </Text>
-                </Pressable>
+                />
               );
             })}
           </View>
@@ -310,38 +317,18 @@ export function WorkerOnboardingProfileScreen({ navigation }: Props) {
             {AVAIL_HOURS.map((hour) => {
               const value = `${String(hour).padStart(2, '0')}:00`;
               return (
-                <Pressable
+                <ClayChip
                   key={`e-${hour}`}
-                  className={`rounded-full px-3 py-2 ${
-                    availEnd === value ? 'bg-action-primary' : 'bg-surface-1'
-                  }`}
+                  label={t('worker:availability.hour', { hour })}
+                  selected={availEnd === value}
                   onPress={() => setAvailEnd(value)}
-                >
-                  <Text
-                    className={`font-sans text-sm ${
-                      availEnd === value ? 'text-text-on' : 'text-text-high'
-                    }`}
-                  >
-                    {t('worker:availability.hour', { hour })}
-                  </Text>
-                </Pressable>
+                />
               );
             })}
           </View>
         </View>
       ) : null}
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <View className="mt-6">
-        <Button
-          disabled={submitting}
-          label={
-            step < 2 ? t('common:continue') : t('onboarding:worker.finish')
-          }
-          onPress={() => void onNext()}
-        />
-      </View>
+      </WizardShell>
     </ModulePage>
   );
 }

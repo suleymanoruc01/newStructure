@@ -80,4 +80,4 @@ Internal Nest service methods used by `jobs` / `shifts` (in-process — not a se
 | --- | --- |
 | TK-1 | No-show after `can_come`: capture fee, release, or strike only? |
 | TK-2 | Manual GPS confirm: always capture? |
-| TK-3 | Payment provider |
+| TK-3 | Payment provider | **Accepted:** Adapty (`w.admin.config.adapty`); App Store + Google Play via Adapty. Off → no store sale; admin/test ledger credit still works. |

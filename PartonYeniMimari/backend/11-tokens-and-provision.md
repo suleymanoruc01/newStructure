@@ -80,4 +80,4 @@ jobs / shifts tarafından kullanılan dahili Nest servis metotları (süreç iç
 | --- | --- |
 | TK-1 | can_come dedikten sonra işe gelmeme: ücret tahsil et, serbest bırak veya yalnızca ihlal mi yaz? |
 | TK-2 | GPS elle doğrulanırsa her zaman jeton tahsil edilsin mi? |
-| TK-3 | Ödeme sağlayıcısı |
+| TK-3 | Ödeme sağlayıcısı | **Kabul:** Adapty; App Store + Google Play. Ayarlar xadmin `w.admin.config.adapty`. |

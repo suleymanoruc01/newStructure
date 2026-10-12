@@ -68,7 +68,7 @@ flowchart LR
 **Tamamlanma kontrol listesi**
 
 - [ ] Hazırlık ortamında `GET /health/live|ready` başarılı  
-- [ ] `POST /api/v1/auth/otp/*`, SMS sanal ortamıyla baştan sona çalışıyor  
+- [ ] `POST /api/v1/auth/otp/*` Verimor ile (xadmin `w.admin.config.sms`); kapalıyken OTP `290821`
 - [ ] `/api/v1` için OpenAPI oluşturuldu ve mobil istemci üretiminde kullanılıyor  
 - [ ] Mobil uygulama iOS + Android geliştirme derlemelerinde açılıyor  
 - [ ] Paylaşılan paketlerde sır yok; mobil Prisma'yı içe aktaramıyor
@@ -121,7 +121,7 @@ flowchart LR
 - [ ] Sahte GPS reddetme yolu izleniyor (v1'de buluşsal yöntem olsa bile)  
 - [ ] Outbox **süreç içinde** tüketiliyor (henüz ayrı işçi yok)
 
-**Bu aşamada kararlaştırılacak ürün ayrımları:** TK-1 işe gelmeme politikası, gap-3h-no-response, gap-payments sağlayıcısı.
+**Bu aşamada kararlaştırılacak ürün ayrımları:** TK-1 işe gelmeme politikası, gap-3h-no-response. gap-payments **kabul:** Adapty (`w.admin.config.adapty`).
 
 ---
 

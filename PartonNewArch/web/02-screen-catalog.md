@@ -87,6 +87,8 @@ Detail under [`screens/`](screens/). Employer console remains optional for v1 pr
 | `w.admin.risk.queue` | Risk / multi-account / mock GPS | P0 | `CASE-ABUSE`, `CASE-LOCATION` |
 | `w.admin.policies.manage` | Policy documents | P0 | `CASE-AUTH`, `CASE-SECURITY` |
 | `w.admin.config.remote` | App config / geofence / flags | P0 | `CASE-UX`, `CASE-LOCATION` |
+| `w.admin.config.sms` | Verimor SMS OTP credentials | P0 | `CASE-AUTH` |
+| `w.admin.config.adapty` | Adapty IAP (App Store / Play) | P0 | `CASE-TOKEN` |
 | `w.admin.audit.log` | Legal audit log | P0 | `CASE-SECURITY` · [11-legal-audit-reports](11-legal-audit-reports.md) · ADR-0037 |
 | `w.admin.audit.detail` | Legal audit event detail | P0 | `CASE-SECURITY` · ADR-0037 |
 | `w.admin.audit.reports` | Legal audit CSV/PDF reports | P0 | `CASE-SECURITY` · ADR-0037 |

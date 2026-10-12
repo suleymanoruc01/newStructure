@@ -2,6 +2,8 @@ import type { AvailabilityWindowInput } from '@parton/api-contracts';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import { ClayChip } from '../../../components/ui/ClayChip';
+import { clayCard } from '../../../components/ui/clay';
 import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
@@ -220,21 +222,12 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
           {AVAIL_HOURS.map((hour) => {
             const value = `${String(hour).padStart(2, '0')}:00`;
             return (
-              <Pressable
+              <ClayChip
                 key={`s-${hour}`}
-                className={`rounded-full px-3 py-2 ${
-                  newStart === value ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={t('worker:availability.hour', { hour })}
+                selected={newStart === value}
                 onPress={() => setNewStart(value)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    newStart === value ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {t('worker:availability.hour', { hour })}
-                </Text>
-              </Pressable>
+              />
             );
           })}
         </View>
@@ -245,28 +238,20 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
           {AVAIL_HOURS.map((hour) => {
             const value = `${String(hour).padStart(2, '0')}:00`;
             return (
-              <Pressable
+              <ClayChip
                 key={`e-${hour}`}
-                className={`rounded-full px-3 py-2 ${
-                  newEnd === value ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={t('worker:availability.hour', { hour })}
+                selected={newEnd === value}
                 onPress={() => setNewEnd(value)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    newEnd === value ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {t('worker:availability.hour', { hour })}
-                </Text>
-              </Pressable>
+              />
             );
           })}
         </View>
         <Pressable
           accessibilityRole="switch"
           accessibilityState={{ checked: newCrossesMidnight }}
-          className="flex-row items-center justify-between py-2"
+          className="flex-row items-center justify-between rounded-[22px] bg-surface-1 px-4 py-3"
+          style={clayCard}
           onPress={() => setNewCrossesMidnight((v) => !v)}
         >
           <Text className="font-sans text-sm text-text-high">

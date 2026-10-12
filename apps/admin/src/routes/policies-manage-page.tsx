@@ -112,7 +112,7 @@ export function PoliciesManagePage() {
         {items.map((item) => (
           <form
             key={item.id}
-            className="grid gap-3 rounded-lg border border-[#CBD5E1] p-4"
+            className="grid gap-3 rounded-lg border border-border p-4"
             onSubmit={(event) => {
               event.preventDefault();
               void save(item);
@@ -133,7 +133,7 @@ export function PoliciesManagePage() {
               <Label htmlFor={`${item.id}-body`}>Metin</Label>
               <textarea
                 id={`${item.id}-body`}
-                className="min-h-40 w-full rounded-[0.5rem] border border-[#CBD5E1] bg-card px-3 py-2 text-sm text-foreground"
+                className="min-h-40 w-full rounded-[0.5rem] border border-input bg-card px-3 py-2 text-sm text-foreground"
                 value={item.body}
                 onChange={(event) => edit(item.id, { body: event.target.value })}
               />

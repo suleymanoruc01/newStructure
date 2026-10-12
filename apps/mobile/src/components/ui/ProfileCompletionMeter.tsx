@@ -2,6 +2,8 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { clayCard } from './clay';
+
 /** Matches `computeWorkerCompletion` keys in workers.service. */
 const TOTAL = 6;
 
@@ -17,9 +19,12 @@ export function ProfileCompletionMeter({
   const pct = Math.round((filled / TOTAL) * 100);
   return (
     <View className="mt-3">
-      <View className="h-2 overflow-hidden rounded-full bg-surface-2">
+      <View
+        style={clayCard}
+        className="h-3 overflow-hidden rounded-full bg-surface-1"
+      >
         <View
-          className="h-2 rounded-full bg-action-primary"
+          className="h-3 rounded-full bg-action-primary"
           style={{ width: `${pct}%` }}
         />
       </View>

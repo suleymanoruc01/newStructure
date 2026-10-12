@@ -1,6 +1,8 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { clayCard } from './clay';
+
 export function StatStrip({
   items,
 }: {
@@ -11,7 +13,8 @@ export function StatStrip({
       {items.map((item) => (
         <View
           key={item.label}
-          className="min-w-[96px] rounded-[18px] bg-surface-2 px-3 py-2"
+          style={clayCard}
+          className="min-w-[96px] rounded-[18px] bg-surface-1 px-3 py-2"
         >
           <Text className="font-display text-lg font-semibold text-text-high">
             {item.value}

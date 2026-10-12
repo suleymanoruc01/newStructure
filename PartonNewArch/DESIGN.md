@@ -17,6 +17,8 @@ PartOn is a **Turkey-first shift marketplace**: workers find short jobs; employe
 
 **Atmosphere:** Warm cream canvas (`surface-base` `#F3E8CF`) like a paper roster under sun; deep **forest** charcoal for dark mode and admin density (`#252823` / `#234D3C`); a single **orange** primary CTA (`#E97A3D`) for the one next action; mustard for favorites/stars only; rust for errors — never neon red.
 
+**Mobile chrome (locked):** mix of **Claymorphism** (chunky 16–24px radii, 3–4px lips, inner highlight + outer shelf shadow) and **Aurora** (soft forest/orange/mustard/leaf orbs on the login hero, cream wash on the overlapping sheet). Login (`AuthPhone`) is the reference. Never purple/indigo/cyan mesh.
+
 **Channel voices (same tokens, different density):**
 
 | Channel | Feel | Density |
@@ -27,11 +29,11 @@ PartOn is a **Turkey-first shift marketplace**: workers find short jobs; employe
 
 **Key characteristics:**
 
-- Elevation by **surface ladder**, not shadow stacks (Starbucks/Wise lesson: color-block depth)  
-- **One** primary CTA per viewport (orange)  
-- Chrome floats; content stays solid and high-contrast  
+- Elevation: **clay lips + shelf shadow** on cards/CTAs; aurora only on hero/sheet chrome  
+- **One** primary CTA per viewport (orange, clay capsule)  
+- Chrome: forest aurora hero + cream overlapping clay sheet (login)  
 - Turkish copy primary; short action labels  
-- Anti-patterns: purple glow, glass on cards, pill clusters as decoration, emoji chrome  
+- Anti-patterns: purple glow, glass on content cards, emoji chrome  
 
 **Page rhythm (marketing):** Cream hero → cream content → forest inverted band → cream utility → forest footer.  
 **App rhythm (mobile):** Cream base → solid level-1 cards → orange CTA sticky when needed.  
@@ -90,7 +92,7 @@ Canonical hex and roles live in [`shared/01-color-system.md`](shared/01-color-sy
 
 ### Gradients
 
-**Hold for product UI.** Prefer solid color-block banding. Marketing may use subtle cream→level-1 washes only — never purple/indigo gradients.
+**Product UI:** Aurora orbs only, using forest / orange / mustard / leaf / cream — never purple/indigo/cyan. Heroes use a blurred forest wash; sheets stay cream with faint orbs (off when Reduce Transparency is on). Marketing may use subtle cream→level-1 washes.
 
 ---
 
@@ -214,13 +216,13 @@ Use locked recipes **R1–R8** in [`shared/03-screen-ux-layout.md`](shared/03-sc
 
 | Level | Treatment | Use |
 | --- | --- | --- |
-| 0 Flat | Surface color only | Default |
-| 1 Raised | `surface-level-1` on `surface-base` | Cards |
-| 2 Overlay | `surface-level-2` + optional soft shadow `0 1px 2px rgba(37,40,35,0.08)` | Modals |
-| Chrome | Translucency / blur **chrome only** (iOS Liquid Glass principles) | Tab bars, nav |
+| 0 Flat | Surface color only | Canvas behind chrome |
+| 1 Clay | `surface-level-1` + inner cream lip + outer shelf shadow | Cards, chips, fields |
+| 2 Clay CTA | Orange/forest fill + 6px bottom lip | Primary / secondary buttons |
+| Chrome | Forest aurora hero + cream clay sheet; dock clay FAB | Login-aligned screens |
 | Inverted | `surface-inverted` band | Marketing bookends, premium |
 
-**Shadow philosophy:** Whisper or none. Prefer surface steps (Starbucks/Wise color-block lesson). No neon glow, no multi-layer fashion shadows.
+**Shadow philosophy:** Clay double-lip (inner highlight + outer shelf), not fashion multi-glow. Aurora orbs stay in token colors. No purple/neon.
 
 ---
 

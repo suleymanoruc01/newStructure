@@ -1,6 +1,8 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { clayChip } from './clay';
+import { ClayCard } from './ClayCard';
 import { Pressable } from './Pressable';
 
 const WEEKDAY_TR = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as const;
@@ -23,7 +25,7 @@ export function MonthGrid({
   onSelect: (day: string) => void;
 }) {
   return (
-    <View>
+    <ClayCard>
       <View className="mb-2 flex-row">
         {WEEKDAY_TR.map((label) => (
           <Text
@@ -48,10 +50,10 @@ export function MonthGrid({
               key={day}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
-              className={`mb-1 items-center py-1.5 ${
-                active ? 'rounded-[12px] bg-action-accent' : ''
+              className={`mb-1 items-center rounded-[16px] py-1.5 ${
+                active ? 'bg-action-accent' : ''
               }`}
-              style={{ width: '14.28%' }}
+              style={[{ width: '14.28%' }, active ? clayChip(true) : undefined]}
               onPress={() => onSelect(day)}
             >
               <Text
@@ -78,6 +80,6 @@ export function MonthGrid({
           );
         })}
       </View>
-    </View>
+    </ClayCard>
   );
 }

@@ -49,6 +49,6 @@ PartOn replaces Firebase Auth / Firestore security rules with a Nest-owned API. 
 - JWT claim staleness — mitigate with DB reload on writes  
 
 ### Follow-up
-- Confirm AS-1 SMS provider  
+- AS-1 SMS provider **accepted:** Verimor `/v2/otp`, xadmin `w.admin.config.sms`; off → OTP `290821`
 - Confirm AO-11 product language for manager  
 - Lock AS-4 email/password  

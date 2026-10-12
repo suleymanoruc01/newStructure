@@ -16,6 +16,8 @@ import {
   adminMatchingDiagnosticsQuerySchema,
   adminRatingModerationPatchSchema,
   adminRemoteConfigSchema,
+  adminSmsSettingsPatchSchema,
+  adminAdaptySettingsPatchSchema,
   adminTokenCreditSchema,
   adminUserPatchSchema,
   adminPolicyPatchSchema,
@@ -515,6 +517,46 @@ export class AdminOpsController {
   ) {
     const parsed = adminRemoteConfigSchema.parse(body);
     const data = await this.ops.patchRemoteConfig(
+      req.userId!,
+      parsed,
+      req.requestId ?? '',
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get('config/sms')
+  async smsSettings(@Req() req: Request) {
+    const data = await this.ops.getSmsSettings();
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch('config/sms')
+  async patchSmsSettings(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(adminSmsSettingsPatchSchema)) body: unknown,
+  ) {
+    const parsed = adminSmsSettingsPatchSchema.parse(body);
+    const data = await this.ops.patchSmsSettings(
+      req.userId!,
+      parsed,
+      req.requestId ?? '',
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get('config/adapty')
+  async adaptySettings(@Req() req: Request) {
+    const data = await this.ops.getAdaptySettings();
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch('config/adapty')
+  async patchAdaptySettings(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(adminAdaptySettingsPatchSchema)) body: unknown,
+  ) {
+    const parsed = adminAdaptySettingsPatchSchema.parse(body);
+    const data = await this.ops.patchAdaptySettings(
       req.userId!,
       parsed,
       req.requestId ?? '',

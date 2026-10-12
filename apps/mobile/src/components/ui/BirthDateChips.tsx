@@ -11,7 +11,7 @@ import {
   parseCivil,
   yearsInDecade,
 } from '../../shared/datetime/birth-date';
-import { Pressable } from './Pressable';
+import { ClayChip } from './ClayChip';
 
 export function BirthDateChips({
   value,
@@ -39,61 +39,34 @@ export function BirthDateChips({
       </Text>
       <View className="flex-row flex-wrap gap-2">
         {birthDecades().map((item) => (
-          <Pressable
+          <ClayChip
             key={item}
-            className={`rounded-full px-3 py-2 ${
-              decade === item ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={`${item}’ler`}
             onPress={() => write(item, month, day)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                decade === item ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {item}’ler
-            </Text>
-          </Pressable>
+            selected={decade === item}
+          />
         ))}
       </View>
       <View className="flex-row flex-wrap gap-2">
         {yearsInDecade(decade).map((item) => (
-          <Pressable
+          <ClayChip
             key={item}
-            className={`rounded-full px-3 py-2 ${
-              parsed?.year === item ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={String(item)}
             onPress={() => write(item, month, day)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                parsed?.year === item ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {item}
-            </Text>
-          </Pressable>
+            selected={parsed?.year === item}
+          />
         ))}
       </View>
       <View className="flex-row flex-wrap gap-2">
         {MONTH_SHORT_TR.map((label, index) => {
           const item = index + 1;
           return (
-            <Pressable
+            <ClayChip
               key={label}
-              className={`rounded-full px-3 py-2 ${
-                parsed?.month === item ? 'bg-action-primary' : 'bg-surface-1'
-              }`}
+              label={label}
               onPress={() => write(year, item, day)}
-            >
-              <Text
-                className={`font-sans text-sm ${
-                  parsed?.month === item ? 'text-text-on' : 'text-text-high'
-                }`}
-              >
-                {label}
-              </Text>
-            </Pressable>
+              selected={parsed?.month === item}
+            />
           );
         })}
       </View>
@@ -101,21 +74,12 @@ export function BirthDateChips({
         {Array.from({ length: dayCount }, (_, index) => {
           const item = index + 1;
           return (
-            <Pressable
+            <ClayChip
               key={item}
-              className={`rounded-full px-3 py-2 ${
-                parsed?.day === item ? 'bg-action-primary' : 'bg-surface-1'
-              }`}
+              label={String(item)}
               onPress={() => write(year, month, item)}
-            >
-              <Text
-                className={`font-sans text-sm ${
-                  parsed?.day === item ? 'text-text-on' : 'text-text-high'
-                }`}
-              >
-                {item}
-              </Text>
-            </Pressable>
+              selected={parsed?.day === item}
+            />
           );
         })}
       </View>

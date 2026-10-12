@@ -105,7 +105,7 @@ flowchart TB
     PG[(PostgreSQL)]
   end
   subgraph edge [Harici]
-    SMS[SMS / OTP]
+    SMS[Verimor SMS / OTP]
     Push[FCM / APNs]
     Obj[Nesne depolama]
     Cloud[Bulut barındırma sağlayıcısı belirlenecek]

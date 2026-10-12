@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { pick, types as docTypes } from '@react-native-documents/picker';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { useTranslation } from 'react-i18next';
 import type { WorkerDocumentType } from '@parton/api-contracts';
 
@@ -17,6 +17,7 @@ import { JobCard } from '../../../components/job/JobCard';
 import { Button } from '../../../components/ui/Button';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerDocumentsUpload'>;
@@ -40,6 +41,7 @@ export function WorkerDocumentsUploadScreen({ navigation }: Props) {
   const [pickedSize, setPickedSize] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [step, setStep] = useState(0);
 
   const onPickFile = async () => {
     setError(null);
@@ -100,57 +102,78 @@ export function WorkerDocumentsUploadScreen({ navigation }: Props) {
   };
 
   return (
-    <ModulePage title={t('worker:documents.uploadTitle')} testID="m.worker.documents.upload" scroll>
-      
-      <Text className="font-sans mt-2 text-sm text-text-medium">
-        {t('worker:documents.uploadLead')}
-      </Text>
-      <View className="mt-4 flex-row flex-wrap gap-2">
-        {DOCUMENT_TYPES.map((type) => (
-          <Pressable
-            key={type}
-            accessibilityRole="button"
-            className={`rounded-full px-3 py-2 ${
-              documentType === type ? 'bg-accent-mustard' : 'bg-surface-1'
-            }`}
-            onPress={() => setDocumentType(type)}
-          >
-            <Text className="font-sans text-sm text-text-high">
-              {t(`worker:documents.types.${type}`)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      {pickedName ? (
-        <View className="mt-4">
-          <JobCard title={pickedName}>
-            <StatusBadge
-              label={t(`worker:documents.types.${documentType}`)}
-              tone="strong"
-            />
-            {pickedSize != null ? (
-              <Text className="font-sans mt-2 text-sm text-text-medium">
-                {Math.round(pickedSize / 1024)} KB
-              </Text>
+    <ModulePage
+      back={step > 0 ? () => setStep(0) : 'auto'}
+      scroll
+      testID="m.worker.documents.upload"
+      title={t('worker:documents.uploadTitle')}
+    >
+      <WizardShell
+        error={error}
+        heading={
+          step === 0
+            ? t('worker:documents.wizard.type')
+            : t('worker:documents.wizard.file')
+        }
+        hint={
+          step === 0
+            ? t('worker:documents.wizard.typeHint')
+            : t('worker:documents.wizard.fileHint')
+        }
+        primaryDisabled={submitting}
+        primaryLabel={
+          step === 0
+            ? t('common:continue')
+            : submitting
+              ? t('common:loading')
+              : t('worker:documents.uploadSubmit')
+        }
+        step={step + 1}
+        total={2}
+        onPrimary={() => {
+          if (step === 0) {
+            setError(null);
+            setStep(1);
+            return;
+          }
+          void onUpload();
+        }}
+      >
+        {step === 0 ? (
+          <View className="flex-row flex-wrap gap-2">
+            {DOCUMENT_TYPES.map((type) => (
+              <ClayChip
+                key={type}
+                label={t(`worker:documents.types.${type}`)}
+                selected={documentType === type}
+                tone="accent"
+                onPress={() => setDocumentType(type)}
+              />
+            ))}
+          </View>
+        ) : (
+          <View className="gap-3">
+            {pickedName ? (
+              <JobCard title={pickedName}>
+                <StatusBadge
+                  label={t(`worker:documents.types.${documentType}`)}
+                  tone="strong"
+                />
+                {pickedSize != null ? (
+                  <Text className="font-sans mt-2 text-sm text-text-medium">
+                    {Math.round(pickedSize / 1024)} KB
+                  </Text>
+                ) : null}
+              </JobCard>
             ) : null}
-          </JobCard>
-        </View>
-      ) : null}
-      <Button
-        className="mt-6"
-        label={pickedName ?? t('worker:documents.pickFile')}
-        onPress={() => void onPickFile()}
-        variant="secondary"
-      />
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <Button
-        className="mt-8"
-        disabled={submitting}
-        label={submitting ? t('common:loading') : t('worker:documents.uploadSubmit')}
-        onPress={() => void onUpload()}
-      />
+            <Button
+              label={pickedName ?? t('worker:documents.pickFile')}
+              variant="secondary"
+              onPress={() => void onPickFile()}
+            />
+          </View>
+        )}
+      </WizardShell>
     </ModulePage>
   );
 }

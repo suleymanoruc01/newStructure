@@ -135,6 +135,7 @@ sequenceDiagram
 | --- | --- | --- |
 | Phone unique | One active user per E.164 | T-003 |
 | OTP hashed | Store only hash; plaintext in SMS only | T-252 |
+| SMS vendor | Verimor `POST /v2/otp` when enabled on `w.admin.config.sms`. When off, stored OTP is `290821` and no SMS is sent. Password never leaves admin GET. | T-005 |
 | Expiry | Short TTL (e.g. 5 min) | T-006 |
 | Lockout | Exponential backoff after N fails | T-005, T-007 |
 | Rate limit | Per phone + per IP | abuse |
@@ -390,7 +391,7 @@ Log: `userId`, `sid`, `ctx.role`, `route`, decision — **never** OTP, refresh, 
 
 | ID | Question | Default until decided |
 | --- | --- | --- |
-| AS-1 | SMS provider | Abstract `SmsPort` |
+| AS-1 | SMS provider | **Accepted:** Verimor `/v2/otp` on `w.admin.config.sms`; off → OTP `290821`. No Twilio. |
 | AS-2 | Device binding / refresh reuse | Rotate + revoke family |
 | AS-3 | Multi-role one account vs separate logins | **One account, multiple memberships + context switch** |
 | AS-4 | Email + password in v1 | **Off** (OTP only) |

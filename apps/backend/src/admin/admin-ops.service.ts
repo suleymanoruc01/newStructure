@@ -8,7 +8,9 @@ import type {
   AdminJobForceCloseBody,
   AdminJobPatchBody,
   AdminRatingModerationPatchBody,
+  AdminAdaptySettingsBody,
   AdminRemoteConfigBody,
+  AdminSmsSettingsBody,
   AdminTokenCreditBody,
   AdminUserPatchBody,
   AdminVerificationPatchBody,
@@ -1528,6 +1530,167 @@ export class AdminOpsService {
       metadata: body,
     });
     return updated;
+  }
+
+  private publicSmsSettings(row: {
+    verimorEnabled: boolean;
+    username: string;
+    password: string;
+    header: string;
+  }) {
+    return {
+      verimorEnabled: row.verimorEnabled,
+      username: row.username,
+      header: row.header,
+      passwordSet: row.password.length > 0,
+      fallbackOtp: '290821' as const,
+    };
+  }
+
+  async getSmsSettings() {
+    const row = await this.prisma.smsSettings.upsert({
+      where: { id: 'default' },
+      create: { id: 'default' },
+      update: {},
+    });
+    return this.publicSmsSettings(row);
+  }
+
+  async patchSmsSettings(
+    actorUserId: string,
+    body: AdminSmsSettingsBody,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.smsSettings.upsert({
+      where: { id: 'default' },
+      create: { id: 'default' },
+      update: {},
+    });
+    const username = body.username.trim();
+    const header = body.header.trim();
+    const password =
+      body.password !== undefined && body.password.length > 0
+        ? body.password
+        : existing.password;
+    if (body.verimorEnabled && (!username || !password)) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Verimor için kullanıcı adı ve şifre gerekli.',
+      );
+    }
+    const updated = await this.prisma.smsSettings.update({
+      where: { id: 'default' },
+      data: {
+        verimorEnabled: body.verimorEnabled,
+        username,
+        header,
+        password,
+      },
+    });
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'config.sms_updated',
+      actorUserId,
+      actorRole: 'admin',
+      requestId,
+      metadata: {
+        verimorEnabled: updated.verimorEnabled,
+        username: updated.username,
+        header: updated.header,
+        passwordSet: updated.password.length > 0,
+      },
+    });
+    return this.publicSmsSettings(updated);
+  }
+
+  private publicAdaptySettings(row: {
+    enabled: boolean;
+    publicSdkKey: string;
+    secretKey: string;
+    webhookAuthorization: string;
+    placementId: string;
+    appleStoreConnected: boolean;
+    googleStoreConnected: boolean;
+  }) {
+    return {
+      enabled: row.enabled,
+      publicSdkKey: row.publicSdkKey,
+      placementId: row.placementId,
+      appleStoreConnected: row.appleStoreConnected,
+      googleStoreConnected: row.googleStoreConnected,
+      secretSet: row.secretKey.length > 0,
+      webhookAuthorizationSet: row.webhookAuthorization.length > 0,
+      webhookPath: '/api/v1/webhooks/adapty' as const,
+    };
+  }
+
+  async getAdaptySettings() {
+    const row = await this.prisma.adaptySettings.upsert({
+      where: { id: 'default' },
+      create: { id: 'default' },
+      update: {},
+    });
+    return this.publicAdaptySettings(row);
+  }
+
+  async patchAdaptySettings(
+    actorUserId: string,
+    body: AdminAdaptySettingsBody,
+    requestId: string,
+  ) {
+    const existing = await this.prisma.adaptySettings.upsert({
+      where: { id: 'default' },
+      create: { id: 'default' },
+      update: {},
+    });
+    const publicSdkKey = body.publicSdkKey.trim();
+    const placementId = body.placementId.trim();
+    const secretKey =
+      body.secretKey !== undefined && body.secretKey.length > 0
+        ? body.secretKey
+        : existing.secretKey;
+    const webhookAuthorization =
+      body.webhookAuthorization !== undefined &&
+      body.webhookAuthorization.length > 0
+        ? body.webhookAuthorization
+        : existing.webhookAuthorization;
+    if (body.enabled && (!publicSdkKey || !secretKey || !webhookAuthorization)) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Adapty için public SDK key, secret ve webhook yetkisi gerekli.',
+      );
+    }
+    const updated = await this.prisma.adaptySettings.update({
+      where: { id: 'default' },
+      data: {
+        enabled: body.enabled,
+        publicSdkKey,
+        placementId,
+        appleStoreConnected: body.appleStoreConnected,
+        googleStoreConnected: body.googleStoreConnected,
+        secretKey,
+        webhookAuthorization,
+      },
+    });
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'config.adapty_updated',
+      actorUserId,
+      actorRole: 'admin',
+      requestId,
+      metadata: {
+        enabled: updated.enabled,
+        publicSdkKey: updated.publicSdkKey,
+        placementId: updated.placementId,
+        appleStoreConnected: updated.appleStoreConnected,
+        googleStoreConnected: updated.googleStoreConnected,
+        secretSet: updated.secretKey.length > 0,
+        webhookAuthorizationSet: updated.webhookAuthorization.length > 0,
+      },
+    });
+    return this.publicAdaptySettings(updated);
   }
 
   async listRiskEvents(limit = 50) {

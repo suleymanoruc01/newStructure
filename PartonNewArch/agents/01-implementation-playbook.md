@@ -40,7 +40,7 @@ Ship **thin vertical slices** that advance this loop; polish after green path.
 
 ### S1 — Auth vertical
 
-1. OTP request/verify via **real SMS sandbox** provider (fail boot if unset)  
+1. OTP request/verify via **Verimor** (`w.admin.config.sms`). When Verimor is off, OTP is `290821` and no SMS is sent.
 2. Access JWT (memory client-side) + refresh sessions  
 3. `/me`, logout, context list/switch (real AuthZ)  
 4. Zod auth schemas  

@@ -38,8 +38,9 @@ export const tokenTopUpBodySchema = z
   .object({
     packageId: z.string().uuid().optional(),
     amount: z.number().int().min(1).max(100_000).optional(),
-    /** Required when `TOKEN_TOPUP_LEDGER_CREDIT` is false (sandbox PSP). */
+    /** Sandbox only — ignored when Adapty is on in xadmin. */
     paymentOutcome: tokenTopUpPaymentOutcomeSchema.optional(),
+    adaptyTransactionId: z.string().trim().min(4).max(200).optional(),
   })
   .refine((body) => body.packageId != null || body.amount != null, {
     message: 'packageId veya amount gerekli',

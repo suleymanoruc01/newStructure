@@ -9,7 +9,7 @@ import { listFavorites } from '../../../api/favorites-api';
 import { ApiClientError } from '../../../api/client';
 import { JobCard } from '../../../components/job/JobCard';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
@@ -102,23 +102,16 @@ export function WorkerFavoritesListScreen({ navigation }: Props) {
       </View>
       <View className="mt-3 flex-row flex-wrap gap-2">
         {(['all', 'employer', 'worker'] as const).map((value) => (
-          <Pressable
+          <ClayChip
             key={value}
-            className={`rounded-full px-3 py-2 ${
-              kind === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
-            onPress={() => setKind(value)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                kind === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {value === 'all'
+            label={
+              value === 'all'
                 ? t('worker:favorites.filterAll')
-                : t(`worker:favorites.${value}`)}
-            </Text>
-          </Pressable>
+                : t(`worker:favorites.${value}`)
+            }
+            selected={kind === value}
+            onPress={() => setKind(value)}
+          />
         ))}
       </View>
       {loading && items.length === 0 ? (

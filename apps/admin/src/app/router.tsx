@@ -15,6 +15,8 @@ import {
   MatchingDiagnosticsPage,
   PerfMetricsPage,
   RemoteConfigPage,
+  VerimorSmsPage,
+  AdaptyPaymentsPage,
   SupportTicketDetailPage,
 } from "@/routes/ops-special-pages";
 import {
@@ -244,6 +246,8 @@ export function AppRouter() {
           <Route path="support/:id" element={<SupportTicketDetailPage />} />
           <Route path="policies" element={<PoliciesManagePage />} />
           <Route path="config" element={<RemoteConfigPage />} />
+          <Route path="config/sms" element={<VerimorSmsPage />} />
+          <Route path="config/adapty" element={<AdaptyPaymentsPage />} />
           <Route
             path="audit"
             element={

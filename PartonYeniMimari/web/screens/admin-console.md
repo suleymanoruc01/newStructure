@@ -111,6 +111,24 @@
 | **Amaç** | Özellik işaretleri, bakım kipi, asgari uygulama sürümleri, varsayılan coğrafi çit |
 | **Vakalar** | CASE-UX, CASE-LOCATION |
 
+### w.admin.config.sms
+
+| Alan | Ayrıntı |
+| --- | --- |
+| **Yol** | /config/sms |
+| **MVP** | P0 |
+| **Amaç** | Verimor OTP: aktif, kullanıcı adı, şifre (yalnız yazılır), gönderici başlığı. Kapalıyken OTP `290821`; SMS gitmez. Twilio yok. |
+| **Vakalar** | CASE-AUTH |
+
+### w.admin.config.adapty
+
+| Alan | Ayrıntı |
+| --- | --- |
+| **Yol** | /config/adapty |
+| **MVP** | P0 |
+| **Amaç** | Adapty IAP: public/secret key, webhook, App Store + Play bağlı. Jeton paketlerinde mağaza ürün ID’leri. |
+| **Vakalar** | CASE-TOKEN |
+
 ### w.admin.notifications.broadcast
 
 | Alan | Ayrıntı |

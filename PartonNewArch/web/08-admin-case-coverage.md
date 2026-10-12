@@ -29,7 +29,7 @@ Admin does **not** re-implement GPS check-in or job-seeker feed. It **does** lis
 
 | Group | Cases | Admin screen(s) | Ops purpose |
 | --- | ---: | --- | --- |
-| **CASE-AUTH** | 15 | `w.admin.login` · `w.admin.users.*` · `w.admin.policies.manage` · `w.admin.verification.queue` | Sessions, lockouts, policy versions, firm verification (T-015) |
+| **CASE-AUTH** | 15 | `w.admin.login` · `w.admin.users.*` · `w.admin.policies.manage` · `w.admin.verification.queue` · `w.admin.config.sms` | Sessions, lockouts, policy versions, firm verification (T-015), Verimor OTP |
 | **CASE-WORKER-PROFILE** | 15 | `w.admin.workers.list` · `w.admin.workers.detail` · `w.admin.documents.queue` | Profiles, availability inspect, documents (T-022–024) |
 | **CASE-EMPLOYER-BRANCH** | 8 | `w.admin.employers.list` · `w.admin.employers.detail` · `w.admin.branches.list` | Orgs, branches, tax/verification |
 | **CASE-JOB-POSTING** | 19 | `w.admin.jobs.list` · `w.admin.jobs.detail` · `w.admin.catalog.manage` | Oversight, force-close, catalog CMS, favorites-only flag inspect |
@@ -40,7 +40,7 @@ Admin does **not** re-implement GPS check-in or job-seeker feed. It **does** lis
 | **CASE-AVAILABILITY-3H** | 8 | `w.admin.shifts.list` · `w.admin.shifts.detail` | 3h confirm state, seat release |
 | **CASE-CHECKIN** | 13 | `w.admin.shifts.*` · `w.admin.disputes.queue` | Check-in events, manual confirm, disputes (T-134–135) |
 | **CASE-LOCATION** | 13 | `w.admin.config.remote` · `w.admin.risk.queue` · `w.admin.branches.list` | Geofence defaults, mock-GPS risk, branch coords |
-| **CASE-TOKEN** | 15 | `w.admin.tokens.ledger` · `w.admin.employers.detail` · `w.admin.jobs.detail` | Holds/captures, manual credit, concurrency signals |
+| **CASE-TOKEN** | 15 | `w.admin.tokens.ledger` · `w.admin.tokens.packages` · `w.admin.config.adapty` · `w.admin.employers.detail` · `w.admin.jobs.detail` | Holds/captures, Adapty IAP, manual credit |
 | **CASE-FAVORITES** | 8 | `w.admin.workers.detail` · `w.admin.employers.detail` · `w.admin.jobs.detail` | Favorite edges + favorites-only jobs |
 | **CASE-RATINGS** | 9 | `w.admin.ratings.queue` · `w.admin.ratings.detail` | Moderation, averages, abuse of ratings |
 | **CASE-ABUSE** | 12 | `w.admin.abuse.*` · `w.admin.risk.queue` · `w.admin.users.detail` | Reports, bans, multi-account, mock GPS |

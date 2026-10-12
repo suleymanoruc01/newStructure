@@ -32,3 +32,32 @@ export function clayButton(variant: 'primary' | 'forest'): ViewStyle {
     borderBottomColor: variant === 'primary' ? PRIMARY_EDGE : CHARCOAL,
   };
 }
+
+/** Login overlapping cream sheet — hero lip + overlays. */
+export const claySheet: ViewStyle = {
+  backgroundColor: '#FBF6EC',
+  borderTopLeftRadius: 40,
+  borderTopRightRadius: 40,
+  borderTopWidth: 2,
+  borderTopColor: CREAM_EDGE,
+  shadowColor: CHARCOAL,
+  shadowOffset: { width: 0, height: -8 },
+  shadowOpacity: 0.12,
+  shadowRadius: 16,
+  elevation: 8,
+};
+
+/** Compact clay pill — chips, badges, day cells. */
+export function clayChip(selected = false): ViewStyle {
+  return {
+    shadowColor: CHARCOAL,
+    shadowOffset: { width: 1, height: 3 },
+    shadowOpacity: selected ? 0.2 : 0.12,
+    shadowRadius: 4,
+    elevation: selected ? 3 : 2,
+    borderTopWidth: 2,
+    borderTopColor: CREAM_EDGE,
+    borderBottomWidth: 3,
+    borderBottomColor: selected ? PRIMARY_EDGE : SHELF_EDGE,
+  };
+}

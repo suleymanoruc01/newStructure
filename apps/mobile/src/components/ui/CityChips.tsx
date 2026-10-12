@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { matchProvinces } from '../../shared/location/tr-provinces';
-import { Pressable } from './Pressable';
+import { ClayChip } from './ClayChip';
 import { TextField } from './TextField';
 
 export function CityChips({
@@ -32,21 +32,12 @@ export function CityChips({
       />
       <View className="flex-row flex-wrap gap-2">
         {[...extra, ...shown].map((city) => (
-          <Pressable
+          <ClayChip
             key={city}
-            className={`rounded-full px-3 py-2 ${
-              value === city ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={city}
             onPress={() => onChange(city)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                value === city ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {city}
-            </Text>
-          </Pressable>
+            selected={value === city}
+          />
         ))}
         {query.trim() && shown.length === 0 ? (
           <Text className="font-sans text-sm text-text-medium">

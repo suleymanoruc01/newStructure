@@ -55,6 +55,7 @@ import {
   type PostLoginRoute,
 } from './auth-gate';
 import type { AuthPhase, OnboardingKind } from './auth-types';
+import { identifyAdapty } from '../../payments/adapty';
 
 type AuthContextValue = {
   phase: AuthPhase;
@@ -128,6 +129,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    void identifyAdapty(user?.id ?? null);
+  }, [user?.id]);
 
   const applySession = useCallback(
     (
@@ -514,6 +519,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Sign-out still clears the local session if the token delete fails.
       }
     }
+    await identifyAdapty(null);
     await clearRefreshToken();
     clearSessionMemory();
     clearSystemRoute();

@@ -20,7 +20,7 @@
 sequenceDiagram
   participant App as RN uygulaması
   participant API as Nest API
-  participant SMS as SMS sağlayıcısı
+  participant SMS as Verimor SMS
   participant DB as PostgreSQL
   App->>API: POST /api/v1/auth/otp/request { phone }
   API->>DB: otp_challenge oluştur (özetlenmiş kod, süre sonu)
@@ -74,6 +74,7 @@ Güvenlik için istemcide “gizlenmiş” ekranlara asla güvenmeyin.
 ## Sırlar ve kişisel veriler
 
 - OTP kodları özetlenmiş saklanır; açık metin yalnızca SMS'te bulunur
+- SMS sağlayıcısı **Verimor** (`POST /v2/otp`); kimlik bilgileri xadmin `w.admin.config.sms`. Kapalıyken OTP `290821`, SMS gitmez. Twilio yok.
 - Yenileme jetonları saklanırken özetlenir
 - Telefon numaraları standartlaştırılır (E.164)
 - Hassas eylemleri denetim kaydına alın: giriş, rol değişimi, işe giriş geçersiz kılma
@@ -116,7 +117,7 @@ Güvenlik için istemcide “gizlenmiş” ekranlara asla güvenmeyin.
 
 | Kimlik | Soru |
 | --- | --- |
-| AS-1 | SMS sağlayıcısı (Twilio, Netgsm vb.) |
+| AS-1 | SMS sağlayıcısı | **Kabul:** Verimor `/v2/otp`, ayarlar xadmin `w.admin.config.sms`; kapalıyken OTP `290821`. Twilio yok. |
 | AS-2 | Cihaza bağlama / yenileme jetonunun yeniden kullanımını tespit etme (T-184) |
 | AS-3 | Çok rollü kullanıcılar: tek hesap mı, ayrı girişler mi? |
 | AS-4 | v1'de e-posta + parola olacak mı? |

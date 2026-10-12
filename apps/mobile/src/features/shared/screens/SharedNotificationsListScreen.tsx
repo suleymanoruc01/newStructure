@@ -20,7 +20,7 @@ import { JobCard } from '../../../components/job/JobCard';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { StatStrip } from '../../../components/ui/StatStrip';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { NavRow } from '../../../components/ui/NavRow';
@@ -225,42 +225,26 @@ export function SharedNotificationsListScreen({ navigation }: Props) {
       ) : null}
       <View className="mt-3 flex-row flex-wrap gap-2">
         {([false, true] as const).map((value) => (
-          <Pressable
+          <ClayChip
             key={value ? 'unread' : 'all'}
-            className={`rounded-full px-3 py-2 ${
-              unreadOnly === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
-            onPress={() => setUnreadOnly(value)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                unreadOnly === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {value
+            label={
+              value
                 ? t('system:notifications.unread')
-                : t('system:notifications.filterAll')}
-            </Text>
-          </Pressable>
+                : t('system:notifications.filterAll')
+            }
+            selected={unreadOnly === value}
+            onPress={() => setUnreadOnly(value)}
+          />
         ))}
         {types.map((type) => (
-          <Pressable
+          <ClayChip
             key={type}
-            className={`rounded-full px-3 py-2 ${
-              typeFilter === type ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={notificationTypeLabel(type)}
+            selected={typeFilter === type}
             onPress={() =>
               setTypeFilter((current) => (current === type ? null : type))
             }
-          >
-            <Text
-              className={`font-sans text-sm ${
-                typeFilter === type ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {notificationTypeLabel(type)}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       {!loading && items.length === 0 ? (

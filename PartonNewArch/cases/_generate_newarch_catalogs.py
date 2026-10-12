@@ -125,6 +125,8 @@ GROUP_ARCH = {
             "POST /api/v1/policies/acceptances",
             "POST /api/v1/users/me/roles",
             "POST /api/v1/employers",
+            "GET /api/v1/admin/config/sms",
+            "PATCH /api/v1/admin/config/sms",
         ],
         "screens": [
             "m.auth.phone",
@@ -141,6 +143,7 @@ GROUP_ARCH = {
             "w.admin.users.list",
             "w.admin.policies.manage",
             "w.admin.verification.queue",
+            "w.admin.config.sms",
         ],
         "docs": [
             "backend/18-auth-rbac.md",

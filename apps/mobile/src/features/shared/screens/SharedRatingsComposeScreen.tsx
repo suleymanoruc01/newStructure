@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
@@ -96,21 +97,12 @@ export function SharedRatingsComposeScreen({ route, navigation }: Props) {
             t('ratings:compose.chipAgain'),
           ] as const
         ).map((label) => (
-          <Pressable
+          <ClayChip
             key={label}
-            className={`rounded-full px-3 py-2 ${
-              comment === label ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={label}
+            selected={comment === label}
             onPress={() => setComment(label)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                comment === label ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {label}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       <TextField

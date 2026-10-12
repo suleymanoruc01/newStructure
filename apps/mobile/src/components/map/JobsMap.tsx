@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../ui/Button';
-import { clayCard } from '../ui/clay';
+import { clayCard, claySheet } from '../ui/clay';
 import { ISTANBUL_PIN, mapRegion } from '../../shared/location/geofence';
 
 const FOREST = '#344A32';
@@ -94,9 +94,9 @@ export function JobsMap({
         onRequestClose={() => setExpanded(false)}
         visible={expanded}
       >
-        <SafeAreaView className="flex-1 bg-surface-base" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="flex-1 bg-action-secondary" edges={['top', 'left', 'right']}>
           <View className="flex-1">{map('full')}</View>
-          <View className="px-4 py-4">
+          <View className="px-5 pb-8 pt-6" style={claySheet}>
             <Button
               label={t('back')}
               variant="secondary"

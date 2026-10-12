@@ -8,9 +8,24 @@ export class PlatformService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getPublicRemoteConfig() {
-    const row = await this.prisma.remoteConfig.findUnique({
-      where: { id: 'default' },
-    });
+    const [row, adapty] = await Promise.all([
+      this.prisma.remoteConfig.findUnique({
+        where: { id: 'default' },
+      }),
+      this.prisma.adaptySettings.findUnique({
+        where: { id: 'default' },
+      }),
+    ]);
+    const adaptyOn = Boolean(
+      adapty?.enabled && adapty.publicSdkKey.trim().length > 0,
+    );
+    const payments = {
+      adaptyEnabled: adaptyOn,
+      adaptyPublicSdkKey: adaptyOn ? adapty!.publicSdkKey : '',
+      adaptyPlacementId: adaptyOn ? adapty!.placementId : '',
+      appleStoreConnected: adapty?.appleStoreConnected ?? false,
+      googleStoreConnected: adapty?.googleStoreConnected ?? false,
+    };
     if (!row) {
       return {
         maintenanceMode: false,
@@ -22,6 +37,7 @@ export class PlatformService {
         checkinEarlyMinutes: 15,
         checkinLateMinutes: 30,
         timeZone: ISTANBUL_TIME_ZONE,
+        ...payments,
       };
     }
     return {
@@ -34,6 +50,7 @@ export class PlatformService {
       checkinEarlyMinutes: row.checkinEarlyMinutes,
       checkinLateMinutes: row.checkinLateMinutes,
       timeZone: row.timeZone,
+      ...payments,
     };
   }
 

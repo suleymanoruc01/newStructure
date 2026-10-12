@@ -20,11 +20,6 @@ export class AppConfigService {
         infer: true,
       }),
       OTP_PEPPER: this.config.get('OTP_PEPPER', { infer: true }),
-      TWILIO_ACCOUNT_SID: this.config.get('TWILIO_ACCOUNT_SID', {
-        infer: true,
-      }),
-      TWILIO_AUTH_TOKEN: this.config.get('TWILIO_AUTH_TOKEN', { infer: true }),
-      TWILIO_FROM_NUMBER: this.config.get('TWILIO_FROM_NUMBER', { infer: true }),
       CORS_ORIGINS: this.config.get('CORS_ORIGINS', { infer: true }),
       COOKIE_SECURE: this.config.get('COOKIE_SECURE', { infer: true }),
       REFRESH_COOKIE_NAME: this.config.get('REFRESH_COOKIE_NAME', {

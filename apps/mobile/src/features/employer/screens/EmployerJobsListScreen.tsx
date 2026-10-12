@@ -13,7 +13,7 @@ import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
@@ -112,66 +112,33 @@ export function EmployerJobsListScreen({ navigation }: Props) {
     >
       <View className="mt-2 flex-row flex-wrap gap-2">
         {(['list', 'map'] as const).map((mode) => (
-          <Pressable
+          <ClayChip
             key={mode}
-            className={`rounded-full px-3 py-2 ${
-              view === mode ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={mode === 'list' ? t('employer:jobs.viewList') : t('employer:jobs.viewMap')}
+            selected={view === mode}
             onPress={() => setView(mode)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                view === mode ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {mode === 'list' ? t('employer:jobs.viewList') : t('employer:jobs.viewMap')}
-            </Text>
-          </Pressable>
+          />
         ))}
         {filters.map((value) => (
-          <Pressable
+          <ClayChip
             key={value}
-            className={`rounded-full px-3 py-2 ${
-              statusFilter === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={value === 'all' ? t('employer:jobs.filterAll') : statusLabelTr(value)}
+            selected={statusFilter === value}
             onPress={() => setStatusFilter(value)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                statusFilter === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {value === 'all'
-                ? t('employer:jobs.filterAll')
-                : statusLabelTr(value)}
-            </Text>
-          </Pressable>
+          />
         ))}
         {branches.length > 1
           ? branches.map((branch) => (
-              <Pressable
+              <ClayChip
                 key={branch.branchId}
-                className={`rounded-full px-3 py-2 ${
-                  branchId === branch.branchId
-                    ? 'bg-action-primary'
-                    : 'bg-surface-1'
-                }`}
+                label={branch.label}
+                selected={branchId === branch.branchId}
                 onPress={() =>
                   setBranchId((current) =>
                     current === branch.branchId ? null : branch.branchId,
                   )
                 }
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    branchId === branch.branchId
-                      ? 'text-text-on'
-                      : 'text-text-high'
-                  }`}
-                >
-                  {branch.label}
-                </Text>
-              </Pressable>
+              />
             ))
           : null}
       </View>

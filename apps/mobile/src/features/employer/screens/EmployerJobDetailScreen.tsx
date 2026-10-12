@@ -13,6 +13,8 @@ import { JobCard } from '../../../components/job/JobCard';
 import { JobFacts } from '../../../components/job/JobFacts';
 import { LocationMap } from '../../../components/map/LocationMap';
 import { Button } from '../../../components/ui/Button';
+import { ClayChip } from '../../../components/ui/ClayChip';
+import { clayChip } from '../../../components/ui/clay';
 import { Pressable } from '../../../components/ui/Pressable';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
@@ -232,9 +234,9 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
                 ['substitute', applicantCounts.substitute],
               ] as const
             ).map(([value, count]) => (
-              <Pressable
+              <ClayChip
                 key={value}
-                className="rounded-full bg-surface-1 px-3 py-2"
+                label={`${statusLabelTr(value)} · ${count}`}
                 onPress={() =>
                   navigation.navigate('EmployerApplicants', {
                     jobId,
@@ -242,11 +244,7 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
                     filter: value,
                   })
                 }
-              >
-                <Text className="font-sans text-sm text-text-high">
-                  {statusLabelTr(value)} · {count}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           {pendingPreview.map((item) => {
@@ -281,7 +279,8 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
           </Text>
           <View className="flex-row items-center gap-3">
             <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              className="h-11 w-11 items-center justify-center rounded-full bg-surface-1"
+              style={clayChip(false)}
               onPress={() =>
                 setHeadcount(
                   String(Math.max(1, (Number.parseInt(headcount, 10) || 1) - 1)),
@@ -294,7 +293,8 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
               {Number.parseInt(headcount, 10) || 1}
             </Text>
             <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              className="h-11 w-11 items-center justify-center rounded-full bg-surface-1"
+              style={clayChip(false)}
               onPress={() =>
                 setHeadcount(
                   String((Number.parseInt(headcount, 10) || 1) + 1),

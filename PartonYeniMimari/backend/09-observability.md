@@ -43,7 +43,7 @@ OpenTelemetry daha sonra eklenebilir; başlangıçta uçtan uca istek kimlikleri
 | DATABASE_URL | Postgres |
 | JWT_ACCESS_SECRET | Erişim jetonları |
 | JWT_REFRESH_SECRET | Yenileme jetonları |
-| SMS_* | Sağlayıcı |
+| (yok) | Verimor SMS kimliği env’de değil; xadmin `w.admin.config.sms` |
 | FCM_* / APNS_* | Push |
 | LOG_LEVEL | Ayrıntı düzeyi |
 

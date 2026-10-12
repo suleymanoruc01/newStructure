@@ -3,6 +3,7 @@ import { Platform, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { fetchPlatformRemoteConfig } from '../../api/platform-api';
+import { activateAdapty } from '../../payments/adapty';
 import { setDisplayTimeZone } from '../datetime/istanbul';
 import { ApiClientError } from '../../api/client';
 
@@ -42,6 +43,9 @@ export function PlatformGate({ children }: PlatformGateProps) {
       try {
         const config = await fetchPlatformRemoteConfig();
         setDisplayTimeZone(config.timeZone);
+        if (config.adaptyEnabled && config.adaptyPublicSdkKey) {
+          await activateAdapty(config.adaptyPublicSdkKey);
+        }
         if (config.maintenanceMode) {
           setBlocked(t('common:maintenance'));
           return;

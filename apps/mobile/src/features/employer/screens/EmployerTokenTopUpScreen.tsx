@@ -1,17 +1,19 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { ApiClientError } from '../../../api/client';
+import { fetchPlatformRemoteConfig } from '../../../api/platform-api';
 import { fetchTokenPackages, topUpTokens } from '../../../api/tokens-api';
-import { Button } from '../../../components/ui/Button';
+import { purchaseAdaptyProduct } from '../../../payments/adapty';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { PaymentMethodList } from '../components/tokens/PaymentMethodList';
 import {
@@ -34,6 +36,12 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState(0);
+  const [adaptyEnabled, setAdaptyEnabled] = useState(false);
+  const [adaptyPlacementId, setAdaptyPlacementId] = useState('');
+  const [method, setMethod] = useState<'apple' | 'google' | 'sandbox_card'>(
+    'sandbox_card',
+  );
 
   useEffect(() => {
     void (async () => {
@@ -44,13 +52,28 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
           setLoading(false);
           return;
         }
-        const list = await fetchTokenPackages(token);
+        const [list, platform] = await Promise.all([
+          fetchTokenPackages(token),
+          fetchPlatformRemoteConfig(),
+        ]);
+        setAdaptyEnabled(platform.adaptyEnabled);
+        setAdaptyPlacementId(platform.adaptyPlacementId);
+        setMethod(
+          platform.adaptyEnabled
+            ? Platform.OS === 'ios'
+              ? 'apple'
+              : 'google'
+            : 'sandbox_card',
+        );
         const mapped = list.items.map((item) => ({
           id: item.id,
           label: item.label,
           tokenCount: item.tokenCount,
           priceTry: item.priceTry,
           isPopular: item.isPopular,
+          iosProductId: item.iosProductId,
+          androidProductId: item.androidProductId,
+          adaptyProductId: item.adaptyProductId,
         }));
         setPackages(mapped);
         const popular = mapped.find((p) => p.isPopular) ?? mapped[0] ?? null;
@@ -82,8 +105,34 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
         return;
       }
       const idem = `topup-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      let adaptyTransactionId: string | undefined;
+      if (adaptyEnabled) {
+        if (
+          !adaptyPlacementId ||
+          !(selected.iosProductId || selected.androidProductId || selected.adaptyProductId)
+        ) {
+          setError(t('employer:tokens.storeProductMissing'));
+          return;
+        }
+        const purchased = await purchaseAdaptyProduct({
+          placementId: adaptyPlacementId,
+          iosProductId: selected.iosProductId ?? '',
+          androidProductId: selected.androidProductId ?? '',
+          adaptyProductId: selected.adaptyProductId ?? '',
+        });
+        if ('cancelled' in purchased) {
+          setConfirmOpen(false);
+          setError(t('employer:tokens.paymentCancelled'));
+          return;
+        }
+        adaptyTransactionId = purchased.transactionId;
+      }
       const result = await topUpTokens(
-        { packageId: selected.id, paymentOutcome: 'approve' },
+        {
+          packageId: selected.id,
+          paymentOutcome: adaptyEnabled ? undefined : 'approve',
+          adaptyTransactionId,
+        },
         token,
         idem,
       );
@@ -107,15 +156,50 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
   };
 
   return (
-    <ModulePage title={t('employer:tokens.topUpTitle')} testID="m.employer.tokens.top-up" scroll>
-      
-      {loading ? (
-        <View className="mt-4">
-          <SkeletonList />
-        </View>
-      ) : null}
-      {selected ? (
-        <View className="mt-3">
+    <ModulePage
+      back={step > 0 ? () => setStep(0) : 'auto'}
+      scroll
+      testID="m.employer.tokens.top-up"
+      title={t('employer:tokens.topUpTitle')}
+    >
+      <WizardShell
+        error={error}
+        extraFooter={
+          success ? <StatusBadge label={success} tone="strong" /> : null
+        }
+        heading={
+          step === 0
+            ? t('employer:tokens.wizard.package')
+            : t('employer:tokens.wizard.pay')
+        }
+        hint={
+          step === 0
+            ? t('employer:tokens.wizard.packageHint')
+            : t('employer:tokens.wizard.payHint')
+        }
+        primaryDisabled={loading}
+        primaryLabel={
+          step === 0
+            ? t('common:continue')
+            : t('employer:tokens.continueToPay')
+        }
+        step={step + 1}
+        total={2}
+        onPrimary={() => {
+          if (!selected) {
+            setError(t('employer:tokens.pickAmount'));
+            return;
+          }
+          if (step === 0) {
+            setError(null);
+            setStep(1);
+            return;
+          }
+          setConfirmOpen(true);
+        }}
+      >
+        {loading ? <SkeletonList /> : null}
+        {selected ? (
           <StatStrip
             items={[
               {
@@ -128,51 +212,38 @@ export function EmployerTokenTopUpScreen({ navigation }: Props) {
               },
             ]}
           />
-        </View>
-      ) : null}
-      {!loading && packages.length === 0 ? (
-        <View className="mt-4">
-          <EmptyState title={t('employer:tokens.pickAmount')} />
-        </View>
-      ) : null}
-      <View className="mt-2">
-        <TopUpAmountPicker
-          packages={packages}
-          selectedId={selected?.id ?? null}
-          onSelect={setSelected}
-          priceLabelFor={(price) =>
-            t('employer:tokens.priceTry', { price })
-          }
-        />
-      </View>
-      <View className="mt-8">
-        <PaymentMethodList
-          selected="sandbox_card"
-          onSelect={() => undefined}
-          title={t('employer:tokens.paymentMethodTitle')}
-          sandboxLabel={t('employer:tokens.sandboxCard')}
-        />
-      </View>
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <View className="mt-6">
-        <Button
-          label={t('employer:tokens.continueToPay')}
-          onPress={() => {
-            if (!selected) {
-              setError(t('employer:tokens.pickAmount'));
-              return;
-            }
-            setConfirmOpen(true);
-          }}
-        />
-      </View>
-      {success ? (
-        <View className="mt-4">
-          <StatusBadge label={success} tone="strong" />
-        </View>
-      ) : null}
+        ) : null}
+        {step === 0 ? (
+          <View className="gap-3">
+            {!loading && packages.length === 0 ? (
+              <EmptyState title={t('employer:tokens.pickAmount')} />
+            ) : null}
+            <TopUpAmountPicker
+              packages={packages}
+              selectedId={selected?.id ?? null}
+              onSelect={setSelected}
+              priceLabelFor={(price) =>
+                t('employer:tokens.priceTry', { price })
+              }
+            />
+          </View>
+        ) : (
+          <View className="gap-3">
+            <PaymentMethodList
+              selected={method}
+              onSelect={setMethod}
+              title={t('employer:tokens.paymentMethodTitle')}
+              appleLabel={t('employer:tokens.applePay')}
+              googleLabel={t('employer:tokens.googlePay')}
+              sandboxLabel={t('employer:tokens.sandboxCard')}
+              adaptyEnabled={adaptyEnabled}
+            />
+            {!adaptyEnabled ? (
+              <EmptyState title={t('employer:tokens.adaptyOffHint')} />
+            ) : null}
+          </View>
+        )}
+      </WizardShell>
       <TopUpConfirmSheet
         visible={confirmOpen}
         amountLabel={

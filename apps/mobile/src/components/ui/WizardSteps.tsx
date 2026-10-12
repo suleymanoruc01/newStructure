@@ -2,6 +2,8 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { clayCard } from './clay';
+
 export function WizardSteps({
   step,
   total,
@@ -15,7 +17,7 @@ export function WizardSteps({
       <Text className="font-sans mb-2 text-sm font-semibold text-text-medium">
         {t('step', { current: step, total })}
       </Text>
-      <View className="flex-row gap-1">
+      <View style={clayCard} className="flex-row gap-1 rounded-full bg-surface-1 p-2">
         {Array.from({ length: total }, (_, index) => (
           <View
             key={index}

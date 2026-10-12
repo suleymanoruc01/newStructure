@@ -6,6 +6,7 @@ import { AppConfigService } from '../config/app-config.service.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service.js';
+import { AdaptyService } from './adapty.service.js';
 import { TopUpProvider, type TopUpPaymentOutcome } from './top-up.provider.js';
 import { TokenPackagesService } from './token-packages.service.js';
 
@@ -18,6 +19,7 @@ export class TokensService {
     private readonly config: AppConfigService,
     private readonly topUpProvider: TopUpProvider,
     private readonly packages: TokenPackagesService,
+    private readonly adapty: AdaptyService,
     private readonly subscriptions: SubscriptionsService,
   ) {}
 
@@ -382,9 +384,34 @@ export class TokensService {
     amount: number,
     idempotencyKey?: string,
     paymentOutcome?: TopUpPaymentOutcome,
-    meta?: { packageId: string | null; bonus: number; base: number },
+    meta?: {
+      packageId: string | null;
+      bonus: number;
+      base: number;
+      userId?: string;
+      adaptyTransactionId?: string;
+      source?: 'client' | 'webhook';
+    },
   ) {
-    this.topUpProvider.assertPaymentAllowed(paymentOutcome);
+    await this.topUpProvider.assertPaymentAllowed({
+      paymentOutcome,
+      adaptyTransactionId: meta?.adaptyTransactionId,
+    });
+    if (meta?.adaptyTransactionId && (await this.adapty.isActive())) {
+      if (meta.source !== 'webhook') {
+        const pkg = meta.packageId
+          ? await this.packages.getActiveById(meta.packageId)
+          : null;
+        await this.adapty.assertStorePurchase({
+          customerUserId: meta.userId ?? employerId,
+          transactionId: meta.adaptyTransactionId,
+          vendorProductIds: pkg
+            ? [pkg.iosProductId, pkg.androidProductId, pkg.adaptyProductId]
+            : [],
+        });
+      }
+      idempotencyKey = `adapty:${meta.adaptyTransactionId}`;
+    }
     if (idempotencyKey) {
       const prior = await this.prisma.tokenLedgerEntry.findUnique({
         where: { idempotencyKey },
@@ -444,6 +471,106 @@ export class TokensService {
         bonusCredited: meta?.bonus ?? 0,
       };
     });
+  }
+
+  async applyAdaptyWebhook(body: unknown): Promise<void> {
+    if (!(await this.adapty.isActive())) {
+      return;
+    }
+    if (!body || typeof body !== 'object') {
+      return;
+    }
+    const event = body as Record<string, unknown>;
+    const eventType = String(event.event_type ?? '');
+    const customerUserId = String(event.customer_user_id ?? '');
+    const props =
+      event.event_properties && typeof event.event_properties === 'object'
+        ? (event.event_properties as Record<string, unknown>)
+        : {};
+    const transactionId = String(
+      props.transaction_id ?? props.original_transaction_id ?? '',
+    );
+    const vendorProductId = String(props.vendor_product_id ?? '');
+    if (!customerUserId || !transactionId) {
+      return;
+    }
+    const membership = await this.prisma.employerMembership.findFirst({
+      where: { userId: customerUserId, status: 'active' },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (!membership) {
+      return;
+    }
+    if (eventType === 'non_subscription_purchase_refunded') {
+      const refundKey = `adapty-refund:${transactionId}`;
+      const already = await this.prisma.tokenLedgerEntry.findUnique({
+        where: { idempotencyKey: refundKey },
+      });
+      if (already) {
+        return;
+      }
+      const prior = await this.prisma.tokenLedgerEntry.findUnique({
+        where: { idempotencyKey: `adapty:${transactionId}` },
+      });
+      if (!prior || prior.type !== 'top_up') {
+        return;
+      }
+      await this.prisma.$transaction(async (tx) => {
+        await tx.tokenAccount.update({
+          where: { employerId: membership.employerId },
+          data: { balance: { decrement: prior.amount } },
+        });
+        const account = await tx.tokenAccount.findUnique({
+          where: { employerId: membership.employerId },
+        });
+        await tx.tokenLedgerEntry.create({
+          data: {
+            employerId: membership.employerId,
+            type: 'refund',
+            amount: prior.amount,
+            balanceAfter: account?.balance ?? 0,
+            refType: 'adapty',
+            idempotencyKey: refundKey,
+          },
+        });
+      });
+      return;
+    }
+    if (eventType !== 'non_subscription_purchase') {
+      return;
+    }
+    const pkg = vendorProductId
+      ? await this.prisma.tokenPackage.findFirst({
+          where: {
+            isActive: true,
+            OR: [
+              { iosProductId: vendorProductId },
+              { androidProductId: vendorProductId },
+              { adaptyProductId: vendorProductId },
+            ],
+          },
+        })
+      : null;
+    if (!pkg) {
+      return;
+    }
+    const resolved = await this.resolveTopUpAmount(membership.employerId, {
+      packageId: pkg.id,
+    });
+    await this.creditTopUp(
+      membership.employerId,
+      resolved.total,
+      `adapty:${transactionId}`,
+      'approve',
+      {
+        packageId: resolved.packageId,
+        bonus: resolved.bonus,
+        base: resolved.base,
+        userId: customerUserId,
+        adaptyTransactionId: transactionId,
+        source: 'webhook',
+      },
+    );
   }
 
   async captureForShift(

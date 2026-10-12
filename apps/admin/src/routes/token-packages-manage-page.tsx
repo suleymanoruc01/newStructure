@@ -15,6 +15,9 @@ type PackageRow = {
   isPopular: boolean;
   isActive: boolean;
   sortOrder: number;
+  iosProductId: string;
+  androidProductId: string;
+  adaptyProductId: string;
 };
 
 function asPackage(raw: unknown): PackageRow | null {
@@ -34,6 +37,9 @@ function asPackage(raw: unknown): PackageRow | null {
     isPopular: Boolean(item.isPopular),
     isActive: Boolean(item.isActive),
     sortOrder: Number(item.sortOrder),
+    iosProductId: String(item.iosProductId ?? ""),
+    androidProductId: String(item.androidProductId ?? ""),
+    adaptyProductId: String(item.adaptyProductId ?? ""),
   };
 }
 
@@ -43,6 +49,9 @@ const defaultNewPackage = {
   priceTry: "0",
   discountPercent: "0",
   sortOrder: "0",
+  iosProductId: "",
+  androidProductId: "",
+  adaptyProductId: "",
 };
 
 export function TokenPackagesManagePage() {
@@ -81,6 +90,9 @@ export function TokenPackagesManagePage() {
         sortOrder: Number(newPackage.sortOrder) || 0,
         isActive: true,
         isPopular: false,
+        iosProductId: newPackage.iosProductId.trim(),
+        androidProductId: newPackage.androidProductId.trim(),
+        adaptyProductId: newPackage.adaptyProductId.trim(),
       });
       setNewPackage(defaultNewPackage);
       setMessage("Paket oluşturuldu.");
@@ -104,6 +116,9 @@ export function TokenPackagesManagePage() {
         isPopular: row.isPopular,
         isActive: row.isActive,
         sortOrder: row.sortOrder,
+        iosProductId: row.iosProductId,
+        androidProductId: row.androidProductId,
+        adaptyProductId: row.adaptyProductId,
       });
       await load();
     } catch (err) {
@@ -149,6 +164,33 @@ export function TokenPackagesManagePage() {
               inputMode="numeric"
               value={newPackage.sortOrder}
               onChange={(e) => setNewPackage((p) => ({ ...p, sortOrder: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label>App Store ürün ID</Label>
+            <Input
+              value={newPackage.iosProductId}
+              onChange={(e) =>
+                setNewPackage((p) => ({ ...p, iosProductId: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <Label>Play ürün ID</Label>
+            <Input
+              value={newPackage.androidProductId}
+              onChange={(e) =>
+                setNewPackage((p) => ({ ...p, androidProductId: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <Label>Adapty ürün ID</Label>
+            <Input
+              value={newPackage.adaptyProductId}
+              onChange={(e) =>
+                setNewPackage((p) => ({ ...p, adaptyProductId: e.target.value }))
+              }
             />
           </div>
           <div className="flex items-end">
@@ -220,6 +262,53 @@ export function TokenPackagesManagePage() {
                       prev.map((p) =>
                         p.id === row.id
                           ? { ...p, discountPercent: Number(e.target.value) || 0 }
+                          : p,
+                      ),
+                    )
+                  }
+                />
+              </div>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div>
+                <Label>App Store ürün ID</Label>
+                <Input
+                  value={row.iosProductId}
+                  onChange={(e) =>
+                    setItems((prev) =>
+                      prev.map((p) =>
+                        p.id === row.id
+                          ? { ...p, iosProductId: e.target.value }
+                          : p,
+                      ),
+                    )
+                  }
+                />
+              </div>
+              <div>
+                <Label>Play ürün ID</Label>
+                <Input
+                  value={row.androidProductId}
+                  onChange={(e) =>
+                    setItems((prev) =>
+                      prev.map((p) =>
+                        p.id === row.id
+                          ? { ...p, androidProductId: e.target.value }
+                          : p,
+                      ),
+                    )
+                  }
+                />
+              </div>
+              <div>
+                <Label>Adapty ürün ID</Label>
+                <Input
+                  value={row.adaptyProductId}
+                  onChange={(e) =>
+                    setItems((prev) =>
+                      prev.map((p) =>
+                        p.id === row.id
+                          ? { ...p, adaptyProductId: e.target.value }
                           : p,
                       ),
                     )

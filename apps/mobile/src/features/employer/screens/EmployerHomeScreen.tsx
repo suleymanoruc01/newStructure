@@ -18,8 +18,7 @@ import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { TextField } from '../../../components/ui/TextField';
 import { NavRow } from '../../../components/ui/NavRow';
 import { StatStrip } from '../../../components/ui/StatStrip';
-import { Screen } from '../../../components/ui/Screen';
-import { HeroModule, SheetModule } from '../../../components/ui/ScreenModules';
+import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
@@ -115,16 +114,15 @@ export function EmployerHomeScreen({ navigation, route }: Props) {
   }).format(new Date());
 
   return (
-    <Screen
-      bleed
+    <ModulePage
+      back="off"
       dock
+      eyebrow={eyebrow}
       onRefresh={() => void load()}
       refreshing={loading}
-      scroll
       testID={testID}
+      title={t('employer:home.title')}
     >
-      <HeroModule eyebrow={eyebrow} title={t('employer:home.title')} />
-      <SheetModule>
         <Button
           label={t('employer:jobs.create')}
           onPress={() =>
@@ -289,7 +287,6 @@ export function EmployerHomeScreen({ navigation, route }: Props) {
             ) : null}
           </View>
         ) : null}
-      </SheetModule>
-    </Screen>
+    </ModulePage>
   );
 }

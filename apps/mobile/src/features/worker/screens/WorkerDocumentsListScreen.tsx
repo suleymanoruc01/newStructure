@@ -9,7 +9,7 @@ import { ApiClientError } from '../../../api/client';
 import { listWorkerDocuments } from '../../../api/worker-documents-api';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { JobCard } from '../../../components/job/JobCard';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
@@ -105,23 +105,16 @@ export function WorkerDocumentsListScreen({ navigation }: Props) {
       {items.length > 0 ? (
         <View className="mt-3 flex-row flex-wrap gap-2">
           {DOC_FILTERS.map((value) => (
-            <Pressable
+            <ClayChip
               key={value}
-              className={`rounded-full px-3 py-2 ${
-                typeFilter === value ? 'bg-action-primary' : 'bg-surface-1'
-              }`}
-              onPress={() => setTypeFilter(value)}
-            >
-              <Text
-                className={`font-sans text-sm ${
-                  typeFilter === value ? 'text-text-on' : 'text-text-high'
-                }`}
-              >
-                {value === 'all'
+              label={
+                value === 'all'
                   ? t('worker:documents.filterAll')
-                  : t(`worker:documents.types.${value}`)}
-              </Text>
-            </Pressable>
+                  : t(`worker:documents.types.${value}`)
+              }
+              selected={typeFilter === value}
+              onPress={() => setTypeFilter(value)}
+            />
           ))}
         </View>
       ) : null}

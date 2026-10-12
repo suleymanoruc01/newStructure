@@ -10,9 +10,6 @@ export const envSchema = z.object({
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(1800),
   JWT_REFRESH_TTL_DAYS: z.coerce.number().int().positive().default(30),
   OTP_PEPPER: z.string().min(16),
-  TWILIO_ACCOUNT_SID: z.string().min(1),
-  TWILIO_AUTH_TOKEN: z.string().min(1),
-  TWILIO_FROM_NUMBER: z.string().min(1),
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:5174'),
   COOKIE_SECURE: z
     .enum(['true', 'false'])

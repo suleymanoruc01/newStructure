@@ -20,8 +20,7 @@ import { TextField } from '../../../components/ui/TextField';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
-import { Screen } from '../../../components/ui/Screen';
-import { DayStrip, HeroModule, SheetModule } from '../../../components/ui/ScreenModules';
+import { DayStrip, ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
 import { type GeofenceRadii } from '../../../shared/location/geofence';
@@ -128,23 +127,23 @@ export function WorkerHomeScreen({ navigation }: Props) {
   }).format(new Date(`${day}T12:00:00.000Z`));
 
   return (
-    <Screen
-      bleed
+    <ModulePage
+      back="off"
       dock
-      onRefresh={() => void load()}
-      refreshing={loading}
-      scroll
-      testID="m.worker.home.root"
-    >
-      <HeroModule eyebrow={eyebrow} title={t('worker:home.title')}>
+      eyebrow={eyebrow}
+      hero={
         <DayStrip
           days={weekDayKeys(new Date(), timeZone)}
           onSelect={setSelected}
           selected={day}
           zone={timeZone}
         />
-      </HeroModule>
-      <SheetModule>
+      }
+      onRefresh={() => void load()}
+      refreshing={loading}
+      testID="m.worker.home.root"
+      title={t('worker:home.title')}
+    >
         {error ? (
           <Text className="font-sans mb-4 text-sm text-feedback-error">{error}</Text>
         ) : null}
@@ -340,8 +339,7 @@ export function WorkerHomeScreen({ navigation }: Props) {
             />
           </View>
         ) : null}
-      </SheetModule>
-    </Screen>
+    </ModulePage>
   );
 }
 

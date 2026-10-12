@@ -136,6 +136,14 @@
     "statDocuments": "Belge",
     "editTitle": "Profili düzenle",
     "editLead": "Kişisel bilgiler, konum ve sektörler eşleşmeyi doğrudan etkiler.",
+    "wizard": {
+      "identity": "Kimlik",
+      "identityHint": "Ad, soyad, doğum tarihi ve cinsiyet.",
+      "location": "Konum",
+      "locationHint": "Ev pini yakındaki ilanlar için kullanılır.",
+      "work": "İş",
+      "workHint": "Sektör, meslek ve gece vardiyası."
+    },
     "shortcuts": "Kısayollar",
     "firstName": "Ad",
     "lastName": "Soyad",
@@ -151,6 +159,7 @@
     "occupationSearchEmpty": "Bu aramaya uyan meslek yok.",
     "nightShift": "Gece vardiyasına uygun",
     "save": "Kaydet",
+    "identityIncomplete": "Ad, soyad ve doğum tarihini doldurun.",
     "invalidCoords": "Geçerli enlem ve boylam girin.",
     "gender": {
       "female": "Kadın",
@@ -305,6 +314,12 @@
     "uploadCta": "Belge yükle",
     "uploadTitle": "Belge yükle",
     "uploadLead": "PDF veya görsel seçin; boyut ve format sunucuda doğrulanır.",
+    "wizard": {
+      "type": "Belge türü",
+      "typeHint": "Yükleyeceğiniz belgenin türünü seçin.",
+      "file": "Dosya",
+      "fileHint": "PDF veya görsel; boyut sunucuda doğrulanır."
+    },
     "pickFile": "Dosya seç",
     "pickRequired": "Önce bir dosya seçin.",
     "pickFailed": "Dosya seçilemedi.",

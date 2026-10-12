@@ -50,7 +50,6 @@ Nest uygulamayı bir modül grafiği olarak düzenler: her modül REST denetleyi
 ## Sonraki kararlara kadar kapsam dışı
 
 - Kesin bulut sağlayıcısı / bölgesi
-- Kesin SMS sağlayıcısı
 - Tam ERD (özellik ve alan çalıştaylarından sonra)
 - Ayrı işçi / kuyruk ürünleştirmesi
 - Hata zarfı, sayfalama, OpenAPI politikası (AO-6)
@@ -64,3 +63,4 @@ Nest uygulamayı bir modül grafiği olarak düzenler: her modül REST denetleyi
 | BQ-3 | İlk günden Redis / önbellek | Açık (ölçeklenebilirlik takip işleri) |
 | BQ-4 | Yönetim arayüzü sunumu (Nest'in sunduğu SPA, AdminJS, …) | Açık |
 | BQ-5 | Monorepo aracı (pnpm / Nx / Turborepo) | Açık (AO-7) |
+| AS-1 | SMS sağlayıcısı | **Kabul:** Verimor `/v2/otp`, ayarlar xadmin `w.admin.config.sms`; kapalıyken OTP `290821`. Twilio yok. |

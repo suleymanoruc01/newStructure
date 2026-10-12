@@ -441,8 +441,11 @@ model TokenPackage {
   priceTry        Int      @map("price_try")
   discountPercent Int      @default(0) @map("discount_percent")
   isPopular       Boolean  @default(false) @map("is_popular")
-  isActive        Boolean  @default(true) @map("is_active")
-  sortOrder       Int      @default(0) @map("sort_order")
+  isActive          Boolean  @default(true) @map("is_active")
+  sortOrder         Int      @default(0) @map("sort_order")
+  iosProductId      String   @default("") @map("ios_product_id")
+  androidProductId  String   @default("") @map("android_product_id")
+  adaptyProductId   String   @default("") @map("adapty_product_id")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -908,4 +911,29 @@ model RemoteConfig {
   updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("remote_config")
+}
+
+model SmsSettings {
+  id             String   @id @default("default")
+  verimorEnabled Boolean  @default(false) @map("verimor_enabled")
+  username       String   @default("")
+  password       String   @default("")
+  header         String   @default("")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("sms_settings")
+}
+
+model AdaptySettings {
+  id                    String   @id @default("default")
+  enabled               Boolean  @default(false)
+  publicSdkKey          String   @default("") @map("public_sdk_key")
+  secretKey             String   @default("") @map("secret_key")
+  webhookAuthorization  String   @default("") @map("webhook_authorization")
+  placementId           String   @default("") @map("placement_id")
+  appleStoreConnected   Boolean  @default(false) @map("apple_store_connected")
+  googleStoreConnected  Boolean  @default(false) @map("google_store_connected")
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("adapty_settings")
 }

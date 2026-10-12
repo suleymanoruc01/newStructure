@@ -1,67 +1,19 @@
 import { useNavigation } from '@react-navigation/native';
-import { BlurView } from '@sbaiahmed1/react-native-blur';
-import React, { useEffect, useState } from 'react';
-import { AccessibilityInfo, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import React from 'react';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
+import { AuroraWash } from './AuroraWash';
+import { ClayChip } from './ClayChip';
+import { clayChip, claySheet } from './clay';
 import { Pressable } from './Pressable';
 import { Screen } from './Screen';
 
 const FOREST = '#344A32';
 const CREAM = '#F3E8CF';
-const SHEET = '#FBF6EC';
 const CHARCOAL = '#252823';
 const MUSTARD = '#E2B83F';
-const ORANGE = '#E97A3D';
-const LEAF = '#79A94B';
-
-function useSolidWash(): boolean {
-  const [solid, setSolid] = useState(false);
-  useEffect(() => {
-    let mounted = true;
-    void AccessibilityInfo.isReduceTransparencyEnabled().then((value) => {
-      if (mounted) {
-        setSolid(value);
-      }
-    });
-    const subscription = AccessibilityInfo.addEventListener(
-      'reduceTransparencyChanged',
-      setSolid,
-    );
-    return () => {
-      mounted = false;
-      subscription.remove();
-    };
-  }, []);
-  return solid;
-}
-
-function Glow({
-  color,
-  size,
-  style,
-}: {
-  color: string;
-  size: number;
-  style: ViewStyle;
-}) {
-  return (
-    <View
-      pointerEvents="none"
-      style={[
-        {
-          position: 'absolute',
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-        },
-        style,
-      ]}
-    />
-  );
-}
 
 type HeroProps = {
   eyebrow: string;
@@ -79,7 +31,6 @@ export function HeroModule({
   children,
 }: HeroProps) {
   const top = useSafeAreaInsets().top;
-  const solid = useSolidWash();
   return (
     <View
       style={{
@@ -92,48 +43,33 @@ export function HeroModule({
         overflow: 'hidden',
       }}
     >
-      {solid ? null : (
-        <>
-          <Glow color={ORANGE} size={220} style={{ top: -70, right: -50, opacity: 0.55 }} />
-          <Glow color={MUSTARD} size={160} style={{ top: 36, right: 28, opacity: 0.28 }} />
-          <Glow color={LEAF} size={200} style={{ bottom: -80, left: -40, opacity: 0.4 }} />
-          <Glow color={CREAM} size={120} style={{ bottom: 8, right: -20, opacity: 0.16 }} />
-          <BlurView
-            blurAmount={48}
-            blurType="dark"
-            pointerEvents="none"
-            reducedTransparencyFallbackColor={FOREST}
-            style={StyleSheet.absoluteFill}
-          />
-        </>
-      )}
-      {onBack ? (
-        <Pressable
-          accessibilityLabel={backLabel}
-          accessibilityRole="button"
-          onPress={onBack}
-          style={{ marginBottom: 12, alignSelf: 'flex-start' }}
-        >
-          <Text className="font-sans" style={{ color: CREAM, fontSize: 15, fontWeight: '600' }}>
-            {backLabel}
+      <AuroraWash variant="forest" />
+      <View style={{ zIndex: 1 }}>
+        {onBack ? (
+          <View style={{ marginBottom: 12, alignSelf: 'flex-start' }}>
+            <ClayChip
+              accessibilityLabel={backLabel}
+              label={backLabel ?? ''}
+              onPress={onBack}
+            />
+          </View>
+        ) : null}
+        {eyebrow ? (
+          <Text
+            className="font-sans"
+            style={{ color: CREAM, fontSize: 12, fontWeight: '600' }}
+          >
+            {eyebrow}
           </Text>
-        </Pressable>
-      ) : null}
-      {eyebrow ? (
+        ) : null}
         <Text
-          className="font-sans"
-          style={{ color: CREAM, fontSize: 12, fontWeight: '600' }}
+          className="font-display"
+          style={{ color: CREAM, fontSize: 32, fontWeight: '700', marginTop: 6 }}
         >
-          {eyebrow}
+          {title}
         </Text>
-      ) : null}
-      <Text
-        className="font-display"
-        style={{ color: CREAM, fontSize: 32, fontWeight: '700', marginTop: 6 }}
-      >
-        {title}
-      </Text>
-      {children}
+        {children}
+      </View>
     </View>
   );
 }
@@ -165,13 +101,16 @@ export function DayStrip({ days, selected, zone, onSelect }: DayStripProps) {
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             onPress={() => onSelect(day)}
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              borderRadius: 14,
-              paddingVertical: 8,
-              backgroundColor: active ? MUSTARD : 'transparent',
-            }}
+            style={[
+              clayChip(active),
+              {
+                flex: 1,
+                alignItems: 'center',
+                borderRadius: 16,
+                paddingVertical: 8,
+                backgroundColor: active ? MUSTARD : 'transparent',
+              },
+            ]}
           >
             <Text
               className="font-display"
@@ -206,34 +145,31 @@ type SheetProps = {
   children: React.ReactNode;
 };
 
-export function SheetModule({ title, fill = false, children }: SheetProps) {
+export function SheetModule({ title, fill = true, children }: SheetProps) {
   const bottom = useSafeAreaInsets().bottom;
   return (
     <View
       style={{
+        ...claySheet,
         marginTop: -40,
         flexGrow: 1,
         flex: fill ? 1 : undefined,
-        backgroundColor: SHEET,
-        borderTopLeftRadius: 40,
-        borderTopRightRadius: 40,
-        shadowColor: CHARCOAL,
-        shadowOffset: { width: 0, height: -8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-        elevation: 8,
         paddingHorizontal: 20,
         paddingTop: title ? 28 : 36,
         paddingBottom: Math.max(bottom, 16),
+        overflow: 'hidden',
         zIndex: 1,
       }}
     >
-      {title ? (
-        <Text className="font-display mb-4 text-xl font-semibold text-text-high">
-          {title}
-        </Text>
-      ) : null}
-      {children}
+      <AuroraWash variant="cream" />
+      <View style={{ zIndex: 1, flexGrow: fill ? 1 : undefined }}>
+        {title ? (
+          <Text className="font-display mb-4 text-xl font-semibold text-text-high">
+            {title}
+          </Text>
+        ) : null}
+        {children}
+      </View>
     </View>
   );
 }
@@ -254,7 +190,7 @@ type ModulePageProps = {
 
 export function ModulePage({
   title,
-  eyebrow = '',
+  eyebrow = 'PartOn',
   testID,
   dock = false,
   scroll = true,

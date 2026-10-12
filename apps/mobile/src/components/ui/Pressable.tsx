@@ -7,7 +7,7 @@ import {
   type PressableProps,
 } from 'react-native';
 
-import { PRESS_MS, pressTarget } from './press-feedback';
+import { PRESS_MS, RELEASE_MS, pressTarget } from './press-feedback';
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 
@@ -15,9 +15,10 @@ export function Pressable({
   disabled,
   onPressIn,
   onPressOut,
+  pressScale = true,
   style,
   ...rest
-}: PressableProps) {
+}: PressableProps & { pressScale?: boolean }) {
   const scale = useRef(new Animated.Value(1)).current;
   const reduceMotion = useRef(false);
 
@@ -43,7 +44,7 @@ export function Pressable({
   function animate(pressed: boolean) {
     Animated.timing(scale, {
       toValue: pressTarget(reduceMotion.current, pressed),
-      duration: reduceMotion.current ? 0 : PRESS_MS,
+      duration: reduceMotion.current ? 0 : pressed ? PRESS_MS : RELEASE_MS,
       easing: EASE_OUT,
       useNativeDriver: true,
     }).start();
@@ -53,18 +54,20 @@ export function Pressable({
     <RNPressable
       disabled={disabled}
       onPressIn={(event) => {
-        if (!disabled) {
+        if (!disabled && pressScale) {
           animate(true);
         }
         onPressIn?.(event);
       }}
       onPressOut={(event) => {
-        animate(false);
+        if (pressScale) {
+          animate(false);
+        }
         onPressOut?.(event);
       }}
       style={(state) => {
         const caller = typeof style === 'function' ? style(state) : style;
-        return [caller, { transform: [{ scale }] }];
+        return pressScale ? [caller, { transform: [{ scale }] }] : caller;
       }}
       {...rest}
     />

@@ -123,7 +123,7 @@ Never rely on “hidden” client screens for security. Full matrix: [18 §4–5
 
 | ID | Question | Default in [18](18-auth-rbac.md) |
 | --- | --- | --- |
-| AS-1 | SMS provider (Twilio, Netgsm, etc.) | `SmsPort` abstraction |
+| AS-1 | SMS provider | **Accepted:** Verimor `/v2/otp` via `w.admin.config.sms`; off → OTP `290821` |
 | AS-2 | Device binding / refresh reuse detection (T-184) | Rotate + revoke family |
 | AS-3 | Multi-role users: one account vs separate logins | One account + context switch |
 | AS-4 | Email + password in v1? | Off (OTP only) |

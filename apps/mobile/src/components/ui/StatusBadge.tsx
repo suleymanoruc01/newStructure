@@ -1,6 +1,8 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { clayChip } from './clay';
+
 export type StatusTone = 'neutral' | 'strong' | 'warn' | 'error';
 
 export function statusTone(status: string): StatusTone {
@@ -60,7 +62,10 @@ export function StatusBadge({
           : 'bg-surface-2';
   const text = tone === 'neutral' ? 'text-text-high' : 'text-text-on';
   return (
-    <View className={`self-start rounded-full px-3 py-1 ${fill}`}>
+    <View
+      style={clayChip(tone !== 'neutral')}
+      className={`self-start rounded-full px-3 py-1 ${fill}`}
+    >
       <Text className={`font-sans text-xs font-semibold ${text}`}>{label}</Text>
     </View>
   );

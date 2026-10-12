@@ -42,7 +42,7 @@ Canonical terms for PartOn docs and code. Prefer these names in ADRs, cases, Ope
 | **Capture** | Consume held tokens (e.g. on publish/accept rules) |
 | **Release** | Return hold to balance |
 | **Ledger** | Append-only token movements |
-| **Top-up** | Purchase/credit tokens (provider open — gap-payments) |
+| **Top-up** | Purchase/credit tokens via **Adapty** (App Store / Google Play) |
 
 ## Day-of & location
 

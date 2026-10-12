@@ -35,7 +35,11 @@ export function Screen({
       : 'px-4 py-6';
   if (scroll) {
     return (
-      <SafeAreaView className="flex-1 bg-surface-base" edges={edges} testID={testID}>
+      <SafeAreaView
+        className={`flex-1 ${bleed ? 'bg-action-secondary' : 'bg-surface-base'}`}
+        edges={edges}
+        testID={testID}
+      >
         <ScrollView
           className="flex-1"
           contentContainerClassName={`grow ${pad}`}
@@ -58,7 +62,11 @@ export function Screen({
   }
 
   return (
-    <SafeAreaView className={`flex-1 bg-surface-base ${pad}`} edges={edges} testID={testID}>
+    <SafeAreaView
+      className={`flex-1 ${bleed ? 'bg-action-secondary' : 'bg-surface-base'} ${pad}`}
+      edges={edges}
+      testID={testID}
+    >
       <View className="flex-1">{children}</View>
     </SafeAreaView>
   );

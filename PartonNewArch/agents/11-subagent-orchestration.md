@@ -90,7 +90,7 @@ Report: files touched, commands run, exit gate evidence.
 | --- | --- | --- |
 | `DATABASE_URL` | All | Host or managed Postgres — see [`docs/DEV.md`](../../docs/DEV.md) |
 | `JWT_*` | Auth | Generate in `.env.example` instructions |
-| `TWILIO_*` or `NETGSM_*` | OTP SMS | **Fail boot** — no ConsoleSms |
+| Verimor (xadmin `w.admin.config.sms`) | OTP SMS | Off → OTP `290821`, no SMS. On → real `POST https://sms.verimor.com.tr/v2/otp` |
 | `FCM_SERVICE_ACCOUNT_PATH` | Notify S5+ | **Fail boot** when notifications module loads |
 | `S3_*` | Documents S7 | S3-compatible endpoint on host or cloud |
 

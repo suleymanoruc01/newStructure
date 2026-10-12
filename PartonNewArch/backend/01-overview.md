@@ -90,7 +90,6 @@ Why monolith first:
 ## Out of scope until later decisions
 
 - Concrete cloud vendor / region (AO-10)  
-- Exact SMS vendor  
 - Full ERD (after feature + domain workshops)  
 - Separate worker process (after Stage B evidence)  
 

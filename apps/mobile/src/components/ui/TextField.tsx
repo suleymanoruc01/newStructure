@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { clayCard } from './clay';
+import { clayCard, clayChip } from './clay';
 
 type TextFieldProps = {
   label: string;
@@ -62,7 +62,10 @@ export function TextField({
         }
       >
         {prefix && capsule ? (
-          <View className="h-10 items-center justify-center rounded-full bg-action-secondary px-3">
+          <View
+            className="h-10 items-center justify-center rounded-full bg-action-secondary px-3"
+            style={clayChip(false)}
+          >
             <Text className="font-sans text-base font-semibold text-text-on">{prefix}</Text>
           </View>
         ) : prefix ? (

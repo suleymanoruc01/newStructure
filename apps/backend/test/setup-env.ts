@@ -21,11 +21,6 @@ process.env.JWT_ACCESS_SECRET =
 process.env.JWT_ACCESS_TTL_SECONDS = process.env.JWT_ACCESS_TTL_SECONDS ?? '1800';
 process.env.JWT_REFRESH_TTL_DAYS = process.env.JWT_REFRESH_TTL_DAYS ?? '30';
 process.env.OTP_PEPPER = process.env.OTP_PEPPER ?? 'test-otp-pepper-16-chars';
-process.env.TWILIO_ACCOUNT_SID =
-  process.env.TWILIO_ACCOUNT_SID ?? 'ACtesttwiliosidfortests000000';
-process.env.TWILIO_AUTH_TOKEN =
-  process.env.TWILIO_AUTH_TOKEN ?? 'test-twilio-auth-token-value';
-process.env.TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER ?? '+15005550006';
 process.env.CORS_ORIGINS =
   process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:5174';
 process.env.COOKIE_SECURE = process.env.COOKIE_SECURE ?? 'false';

@@ -14,7 +14,7 @@ import { Button } from '../../../components/ui/Button';
 import { JobCard } from '../../../components/job/JobCard';
 import { JobFacts } from '../../../components/job/JobFacts';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { ModulePage } from '../../../components/ui/ScreenModules';
@@ -138,23 +138,16 @@ export function WorkerApplicationsListScreen({ navigation }: Props) {
       </View>
       <View className="mt-3 flex-row flex-wrap gap-2">
         {FILTERS.map((value) => (
-          <Pressable
+          <ClayChip
             key={value}
-            className={`rounded-full px-3 py-2 ${
-              filter === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
-            onPress={() => setFilter(value)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                filter === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {value === 'all'
+            label={
+              value === 'all'
                 ? t('worker:applications.filterAll')
-                : statusLabelTr(value)}
-            </Text>
-          </Pressable>
+                : statusLabelTr(value)
+            }
+            selected={filter === value}
+            onPress={() => setFilter(value)}
+          />
         ))}
       </View>
       {loading && items.length === 0 ? (

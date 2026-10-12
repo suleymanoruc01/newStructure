@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { Button } from '../../../components/ui/Button';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
-import { clayCard } from '../../../components/ui/clay';
+import { clayCard, clayChip } from '../../../components/ui/clay';
 import { Pressable } from '../../../components/ui/Pressable';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { listPublishedPolicies } from '../../../api/auth-api';
@@ -236,7 +236,10 @@ export function AuthPoliciesScreen({ navigation }: Props) {
           <Text className="mt-2 font-display text-2xl font-semibold leading-8 text-text-high">
             {current.title}
           </Text>
-          <View className="mt-3 self-start rounded-full bg-surface-base px-3 py-1">
+          <View
+            className="mt-3 self-start rounded-full bg-surface-1 px-3 py-2"
+            style={clayChip(false)}
+          >
             <Text className="font-sans text-sm text-text-medium">
               {t('auth:policies.version', { version: current.version })}
             </Text>

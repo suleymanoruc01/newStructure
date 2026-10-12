@@ -10,7 +10,7 @@ function messageOf(err: unknown, fallback: string): string {
 }
 
 const selectClass =
-  "flex h-11 w-full rounded-[0.5rem] border border-[#CBD5E1] bg-card px-3 text-sm text-foreground";
+  "flex h-11 w-full rounded-[0.5rem] border border-input bg-card px-3 text-sm text-foreground";
 
 export function UserStatusControl({
   userId,

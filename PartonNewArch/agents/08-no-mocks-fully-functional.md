@@ -27,7 +27,7 @@
 | Banned | Why |
 | --- | --- |
 | `NoopFcmProvider` / “log and skip push” as default | Push path must actually call FCM HTTP v1 |
-| `ConsoleSmsProvider` / “OTP always 123456” in app | OTP must go through real SMS sandbox (or documented telephony test harness that **sends**) |
+| `ConsoleSmsProvider` / “OTP always 123456” in app | OTP uses Verimor `POST /v2/otp` when enabled on `w.admin.config.sms`. When Verimor is **off**, the stored code is the documented fallback `290821` (hashed in Postgres; no SMS). That is admin config, not a ConsoleSms fake-success. |
 | Mock payment that returns success without ledger write | Tokens must move in Postgres |
 | Soft-fail AuthZ that allows on error | Security theatre |
 | In-memory “DB” for Nest modules | Postgres is SoR |
@@ -61,11 +61,11 @@
 | Postgres 18 | Host or managed instance — required |
 | Redis | Host or managed when Stage B enabled — real BullMQ |
 | Object storage | **S3-compatible** endpoint (managed or host MinIO) — not a fake Map |
-| SMS | Real provider **test/sandbox** credentials in `.env` (Netgsm/Twilio/etc. per product pick) |
+| SMS | Verimor credentials in xadmin `w.admin.config.sms` (not env). Off → OTP `290821`. |
 | FCM | Real Firebase **project** service account JSON path in `.env` |
 | Mobile push verify | Send to a dev device token or FCM topic dry-run **API** that hits Google |
 
-`.env.example` lists every required key. Nest `ConfigModule` **refuses to start** if SMS/FCM/DB/JWT secrets missing in `development`/`production`.  
+`.env.example` lists every required key. Nest `ConfigModule` **refuses to start** if FCM/DB/JWT secrets missing in `development`/`production`. Verimor SMS is admin-config, not boot env.  
 `test` env may point at Compose Postgres + sandbox keys from CI secrets — still **no noop providers**.
 
 ---
@@ -73,17 +73,17 @@
 ## 5. Interfaces OK — fake implementations not OK
 
 ```text
-✅ SmsProvider interface + NetgsmSmsProvider / TwilioSmsProvider (wired)
+✅ SmsService → Verimor `POST /v2/otp` when enabled in xadmin
 ❌ SmsProvider + ConsoleSmsProvider as the active binding
 
 ✅ FcmHttpV1Provider calling Google APIs
 ❌ FcmProvider that only logs payload
 
-✅ TopUpProvider + admin credit use-case that writes ledger
+✅ TopUpProvider + Adapty IAP (App Store/Play) + admin credit that writes ledger
 ❌ “MockPspProvider.success()” without persistence
 ```
 
-Provider selection via env (`SMS_PROVIDER=twilio`) must resolve to a **real** class.
+Verimor on/off is xadmin `w.admin.config.sms`, not an env provider switch.
 
 ---
 

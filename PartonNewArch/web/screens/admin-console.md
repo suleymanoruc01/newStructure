@@ -268,6 +268,24 @@
 | **Cases** | `CASE-UX`, `CASE-LOCATION` |
 | **Components** | `RemoteConfigForm`, `GeofenceDefaultEditor`, `MaintenanceToggle`, IANA `timeZone` (default `Europe/Istanbul`), `geofenceMaxAccuracyM`, `checkinEarlyMinutes`, `checkinLateMinutes` |
 
+### `w.admin.config.sms`
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/config/sms` |
+| **MVP** | P0 |
+| **Cases** | `CASE-AUTH` |
+| **Components** | Verimor enable toggle, username, password (write-only), sender `header`. When Verimor is off, OTP is `290821` and no SMS is sent. Password is never returned by `GET /admin/config/sms`. |
+
+### `w.admin.config.adapty`
+
+| Field | Detail |
+| --- | --- |
+| **Route** | `/config/adapty` |
+| **MVP** | P0 |
+| **Cases** | `CASE-TOKEN` |
+| **Components** | Adapty enable, public SDK key, secret (write-only), webhook Authorization, placement ID, App Store / Play connected checkboxes. Webhook `POST /api/v1/webhooks/adapty`. Token packages carry iOS/Android/Adapty product IDs. |
+
 ### `w.admin.audit.log`
 
 | Field | Detail |

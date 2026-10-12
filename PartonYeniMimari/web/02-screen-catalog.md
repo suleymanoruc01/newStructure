@@ -62,6 +62,8 @@ Ayrıntılar [screens/](screens/) altındadır.
 | w.admin.risk.queue | Risk / çoklu hesap / sahte GPS | P1 | CASE-ABUSE |
 | w.admin.policies.manage | Politika belgeleri | P0 | CASE-AUTH |
 | w.admin.config.remote | Uygulama yapılandırması / coğrafi çit / işaretler | P1 | CASE-UX, CASE-LOCATION |
+| w.admin.config.sms | Verimor SMS OTP ayarları | P0 | CASE-AUTH |
+| w.admin.config.adapty | Adapty App Store / Play ödemeleri | P0 | CASE-TOKEN |
 | w.admin.notifications.broadcast | Toplu bildirim aracı | P2 | CASE-NOTIFICATIONS |
 | w.admin.audit.log | Denetim günlüğü | P1 | CASE-SECURITY |
 
@@ -71,7 +73,7 @@ Ayrıntılar [screens/](screens/) altındadır.
 | --- | --- |
 | Genel sayfalar ve kimlik doğrulama | 8 |
 | İşveren konsolu | 23 |
-| Yönetim konsolu | 14 |
+| Yönetim konsolu | 16 |
 | **Toplam** | **45** |
 
 İş oluşturma akışında **yalnızca favoriler** işareti bulunmalıdır (T-056, T-168).  

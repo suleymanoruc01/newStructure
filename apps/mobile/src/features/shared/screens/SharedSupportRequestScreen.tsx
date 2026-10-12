@@ -9,7 +9,7 @@ import { Button } from '../../../components/ui/Button';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
@@ -99,21 +99,12 @@ export function SharedSupportRequestScreen({ navigation }: Props) {
             t('system:support.chipAccount'),
           ] as const
         ).map((label) => (
-          <Pressable
+          <ClayChip
             key={label}
-            className={`rounded-full px-3 py-2 ${
-              subject === label ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={label}
+            selected={subject === label}
             onPress={() => setSubject(label)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                subject === label ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {label}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       <TextField

@@ -50,6 +50,9 @@ export class TokenPackagesService implements OnModuleInit {
     isPopular: boolean;
     isActive: boolean;
     sortOrder: number;
+    iosProductId: string;
+    androidProductId: string;
+    adaptyProductId: string;
   }) {
     return {
       id: row.id,
@@ -60,6 +63,9 @@ export class TokenPackagesService implements OnModuleInit {
       isPopular: row.isPopular,
       isActive: row.isActive,
       sortOrder: row.sortOrder,
+      iosProductId: row.iosProductId,
+      androidProductId: row.androidProductId,
+      adaptyProductId: row.adaptyProductId,
     };
   }
 
@@ -112,6 +118,9 @@ export class TokenPackagesService implements OnModuleInit {
         isPopular: body.isPopular ?? false,
         isActive: body.isActive ?? true,
         sortOrder: body.sortOrder ?? 0,
+        iosProductId: body.iosProductId ?? '',
+        androidProductId: body.androidProductId ?? '',
+        adaptyProductId: body.adaptyProductId ?? '',
       },
     });
     await this.audit.append({

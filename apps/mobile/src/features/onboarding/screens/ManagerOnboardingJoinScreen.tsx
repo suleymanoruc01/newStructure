@@ -1,13 +1,11 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
-import { Button } from '../../../components/ui/Button';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { WizardSteps } from '../../../components/ui/WizardSteps';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { managerJoin } from '../../../api/branches-api';
@@ -50,11 +48,16 @@ export function ManagerOnboardingJoinScreen({ navigation }: Props) {
   return (
     <ModulePage title={t('onboarding:manager.title')} testID={ONBOARDING_SCREEN_IDS.managerJoin} scroll>
       
-      <WizardSteps step={1} total={1} />
-      <Text className="font-sans mt-2 text-base text-text-medium">
-        {t('onboarding:manager.subtitle')}
-      </Text>
-      <View className="mt-3">
+      <WizardShell
+        error={error}
+        heading={t('onboarding:manager.title')}
+        hint={t('onboarding:manager.subtitle')}
+        primaryDisabled={submitting || code.trim().length < 6}
+        primaryLabel={t('onboarding:manager.submit')}
+        step={1}
+        total={1}
+        onPrimary={() => void onSubmit()}
+      >
         <StatusBadge
           label={
             code.trim().length >= 6
@@ -63,25 +66,13 @@ export function ManagerOnboardingJoinScreen({ navigation }: Props) {
           }
           tone={code.trim().length >= 6 ? 'strong' : 'warn'}
         />
-      </View>
-      <View className="mt-6">
         <TextField
+          autoCapitalize="characters"
           label={t('onboarding:manager.codeLabel')}
           value={code}
           onChangeText={setCode}
-          autoCapitalize="characters"
         />
-      </View>
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <View className="mt-6">
-        <Button
-          disabled={submitting || code.trim().length < 6}
-          label={t('onboarding:manager.submit')}
-          onPress={() => void onSubmit()}
-        />
-      </View>
+      </WizardShell>
     </ModulePage>
   );
 }

@@ -14,7 +14,16 @@
     "latitude": "Ev konumu — enlem",
     "longitude": "Ev konumu — boylam",
     "availabilityHint": "Müsait olduğunuz günleri ve saatleri seçin.",
+    "wizard": {
+      "identity": "Kimlik",
+      "identityHint": "Ad, soyad, doğum tarihi ve cinsiyet eşleşmeyi etkiler.",
+      "work": "İş ve konum",
+      "workHint": "Sektör ve ev pini yakındaki ilanlar için kullanılır.",
+      "availability": "Müsaitlik",
+      "availabilityHint": "Müsait olduğunuz günleri ve saatleri seçin."
+    },
     "finish": "Profili tamamla",
+    "identityIncomplete": "Ad, soyad ve doğum tarihini doldurun.",
     "invalidCoords": "Geçerli enlem ve boylam girin."
   },
   "employer": {
@@ -32,7 +41,19 @@
     "city": "İl",
     "latitude": "Enlem",
     "longitude": "Boylam",
+    "wizard": {
+      "identity": "Firma",
+      "identityHint": "Ticari unvan ve vergi numarası doğrulama için gerekli.",
+      "industries": "Sektörler",
+      "industriesHint": "İlanlarınızın görüneceği sektörleri seçin.",
+      "branch": "Şube",
+      "branchHint": "Çalışanların konumunu doğrulamak için adres gerekli.",
+      "pin": "Konum",
+      "pinHint": "Haritaya dokunarak şube pinini koyun."
+    },
     "finish": "Kurulumu bitir",
+    "identityIncomplete": "Ticari unvan ve vergi numarasını doldurun.",
+    "branchIncomplete": "Şube adı, adres ve ili doldurun.",
     "invalidCoords": "Geçerli enlem ve boylam girin."
   },
   "manager": {

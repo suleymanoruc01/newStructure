@@ -119,7 +119,7 @@ export function BroadcastPage() {
           <Label htmlFor="broadcast-audience">Kitle</Label>
           <select
             id="broadcast-audience"
-            className="flex h-11 w-full rounded-[0.5rem] border border-[#CBD5E1] bg-card px-3 text-sm"
+            className="flex h-11 w-full rounded-[0.5rem] border border-input bg-card px-3 text-sm"
             value={audience}
             onChange={(event) => setAudience(event.target.value)}
           >
@@ -214,6 +214,337 @@ export function RemoteConfigPage() {
           ))}
           <Button type="button" onClick={() => void save()}>Kaydet</Button>
           {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Yükleniyor…</p>
+      )}
+    </PageShell>
+  );
+}
+
+export function VerimorSmsPage() {
+  const [form, setForm] = useState<{
+    verimorEnabled: boolean;
+    username: string;
+    header: string;
+    passwordSet: boolean;
+    fallbackOtp: string;
+  } | null>(null);
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetchAdminResource("/admin/config/sms").then((data) => {
+      if (!data || typeof data !== "object") {
+        return;
+      }
+      const row = data as Record<string, unknown>;
+      setForm({
+        verimorEnabled: row.verimorEnabled === true,
+        username: String(row.username ?? ""),
+        header: String(row.header ?? ""),
+        passwordSet: row.passwordSet === true,
+        fallbackOtp: String(row.fallbackOtp ?? "290821"),
+      });
+    });
+  }, []);
+
+  async function save() {
+    if (!form) {
+      return;
+    }
+    setMessage(null);
+    try {
+      const json = await adminPatch("/admin/config/sms", {
+        verimorEnabled: form.verimorEnabled,
+        username: form.username,
+        header: form.header,
+        ...(password.length > 0 ? { password } : {}),
+      });
+      const envelope = json as { data?: Record<string, unknown> };
+      const row = envelope.data;
+      if (row) {
+        setForm({
+          verimorEnabled: row.verimorEnabled === true,
+          username: String(row.username ?? ""),
+          header: String(row.header ?? ""),
+          passwordSet: row.passwordSet === true,
+          fallbackOtp: String(row.fallbackOtp ?? "290821"),
+        });
+        setPassword("");
+      }
+      setMessage("SMS ayarları güncellendi.");
+    } catch (err) {
+      setMessage(isApiClientError(err) ? err.message : "Kayıt başarısız.");
+    }
+  }
+
+  return (
+    <PageShell title="Verimor SMS" screenId="w.admin.config.sms">
+      {form ? (
+        <div className="grid max-w-lg gap-3">
+          <p className="text-sm text-muted-foreground">
+            OTP, Verimor <code>/v2/otp</code> ile gönderilir. Hesap kapalıyken
+            doğrulama kodu <strong>{form.fallbackOtp}</strong> olur; SMS
+            gitmez.
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.verimorEnabled}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev ? { ...prev, verimorEnabled: e.target.checked } : prev,
+                )
+              }
+            />
+            Verimor aktif
+          </label>
+          {!form.verimorEnabled ? (
+            <p className="text-sm text-muted-foreground">
+              Ön tanımlı OTP: {form.fallbackOtp}
+            </p>
+          ) : null}
+          <div>
+            <Label htmlFor="verimor-username">Kullanıcı adı</Label>
+            <Input
+              id="verimor-username"
+              value={form.username}
+              autoComplete="off"
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev ? { ...prev, username: e.target.value } : prev,
+                )
+              }
+            />
+          </div>
+          <div>
+            <Label htmlFor="verimor-password">
+              Şifre{form.passwordSet ? " (kayıtlı — boş bırakınca değişmez)" : ""}
+            </Label>
+            <Input
+              id="verimor-password"
+              type="password"
+              value={password}
+              autoComplete="new-password"
+              placeholder={form.passwordSet ? "••••••" : ""}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="verimor-header">Gönderici başlığı</Label>
+            <Input
+              id="verimor-header"
+              value={form.header}
+              maxLength={20}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev ? { ...prev, header: e.target.value } : prev,
+                )
+              }
+            />
+          </div>
+          <Button type="button" onClick={() => void save()}>
+            Kaydet
+          </Button>
+          {message ? (
+            <p className="text-sm text-muted-foreground">{message}</p>
+          ) : null}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Yükleniyor…</p>
+      )}
+    </PageShell>
+  );
+}
+
+export function AdaptyPaymentsPage() {
+  const [form, setForm] = useState<{
+    enabled: boolean;
+    publicSdkKey: string;
+    placementId: string;
+    appleStoreConnected: boolean;
+    googleStoreConnected: boolean;
+    secretSet: boolean;
+    webhookAuthorizationSet: boolean;
+    webhookPath: string;
+  } | null>(null);
+  const [secretKey, setSecretKey] = useState("");
+  const [webhookAuthorization, setWebhookAuthorization] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetchAdminResource("/admin/config/adapty").then((data) => {
+      if (!data || typeof data !== "object") {
+        return;
+      }
+      const row = data as Record<string, unknown>;
+      setForm({
+        enabled: row.enabled === true,
+        publicSdkKey: String(row.publicSdkKey ?? ""),
+        placementId: String(row.placementId ?? ""),
+        appleStoreConnected: row.appleStoreConnected === true,
+        googleStoreConnected: row.googleStoreConnected === true,
+        secretSet: row.secretSet === true,
+        webhookAuthorizationSet: row.webhookAuthorizationSet === true,
+        webhookPath: String(row.webhookPath ?? "/api/v1/webhooks/adapty"),
+      });
+    });
+  }, []);
+
+  async function save() {
+    if (!form) {
+      return;
+    }
+    setMessage(null);
+    try {
+      const json = await adminPatch("/admin/config/adapty", {
+        enabled: form.enabled,
+        publicSdkKey: form.publicSdkKey,
+        placementId: form.placementId,
+        appleStoreConnected: form.appleStoreConnected,
+        googleStoreConnected: form.googleStoreConnected,
+        ...(secretKey.length > 0 ? { secretKey } : {}),
+        ...(webhookAuthorization.length > 0 ? { webhookAuthorization } : {}),
+      });
+      const envelope = json as { data?: Record<string, unknown> };
+      const row = envelope.data;
+      if (row) {
+        setForm({
+          enabled: row.enabled === true,
+          publicSdkKey: String(row.publicSdkKey ?? ""),
+          placementId: String(row.placementId ?? ""),
+          appleStoreConnected: row.appleStoreConnected === true,
+          googleStoreConnected: row.googleStoreConnected === true,
+          secretSet: row.secretSet === true,
+          webhookAuthorizationSet: row.webhookAuthorizationSet === true,
+          webhookPath: String(row.webhookPath ?? "/api/v1/webhooks/adapty"),
+        });
+        setSecretKey("");
+        setWebhookAuthorization("");
+      }
+      setMessage("Adapty ayarları güncellendi.");
+    } catch (err) {
+      setMessage(isApiClientError(err) ? err.message : "Kayıt başarısız.");
+    }
+  }
+
+  return (
+    <PageShell title="Adapty ödemeler" screenId="w.admin.config.adapty">
+      {form ? (
+        <div className="grid max-w-lg gap-3">
+          <p className="text-sm text-muted-foreground">
+            Apple App Store ve Google Play jeton satışları Adapty üzerinden
+            gider. Mağaza anahtarlarını Adapty panosunda bağlayın; webhook URL:{" "}
+            <code>{form.webhookPath}</code>
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.enabled}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev ? { ...prev, enabled: e.target.checked } : prev,
+                )
+              }
+            />
+            Adapty aktif
+          </label>
+          {!form.enabled ? (
+            <p className="text-sm text-muted-foreground">
+              Kapalıyken mağaza satışı yok; test/sandbox yükleme ve admin jeton
+              kredisi çalışır.
+            </p>
+          ) : null}
+          <div>
+            <Label htmlFor="adapty-public">Public SDK key</Label>
+            <Input
+              id="adapty-public"
+              value={form.publicSdkKey}
+              autoComplete="off"
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev ? { ...prev, publicSdkKey: e.target.value } : prev,
+                )
+              }
+            />
+          </div>
+          <div>
+            <Label htmlFor="adapty-secret">
+              Secret API key
+              {form.secretSet ? " (kayıtlı — boş bırakınca değişmez)" : ""}
+            </Label>
+            <Input
+              id="adapty-secret"
+              type="password"
+              value={secretKey}
+              autoComplete="new-password"
+              placeholder={form.secretSet ? "••••••" : ""}
+              onChange={(e) => setSecretKey(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="adapty-webhook">
+              Webhook Authorization
+              {form.webhookAuthorizationSet
+                ? " (kayıtlı — boş bırakınca değişmez)"
+                : ""}
+            </Label>
+            <Input
+              id="adapty-webhook"
+              type="password"
+              value={webhookAuthorization}
+              autoComplete="off"
+              placeholder={form.webhookAuthorizationSet ? "••••••" : ""}
+              onChange={(e) => setWebhookAuthorization(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="adapty-placement">Placement ID</Label>
+            <Input
+              id="adapty-placement"
+              value={form.placementId}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev ? { ...prev, placementId: e.target.value } : prev,
+                )
+              }
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.appleStoreConnected}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev
+                    ? { ...prev, appleStoreConnected: e.target.checked }
+                    : prev,
+                )
+              }
+            />
+            App Store Adapty’de bağlı
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.googleStoreConnected}
+              onChange={(e) =>
+                setForm((prev) =>
+                  prev
+                    ? { ...prev, googleStoreConnected: e.target.checked }
+                    : prev,
+                )
+              }
+            />
+            Google Play Adapty’de bağlı
+          </label>
+          <Button type="button" onClick={() => void save()}>
+            Kaydet
+          </Button>
+          {message ? (
+            <p className="text-sm text-muted-foreground">{message}</p>
+          ) : null}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">Yükleniyor…</p>

@@ -5,12 +5,11 @@ import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { fetchJobCatalog } from '../../../api/jobs-api';
-import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
-import { WizardSteps } from '../../../components/ui/WizardSteps';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { ApiClientError } from '../../../api/client';
 import { createEmployer, patchEmployerMe } from '../../../api/employers-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -27,6 +26,7 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
   const { t } = useTranslation(['onboarding', 'employer', 'common', 'errors']);
   const { applyEmployerCreate, completeOnboarding, contexts } = useAuth();
   const employerId = contexts.find((item) => item.role === 'employer')?.employerId;
+  const [step, setStep] = useState(employerId ? 1 : 0);
   const [legalName, setLegalName] = useState('');
   const [tradingName, setTradingName] = useState('');
   const [taxId, setTaxId] = useState('');
@@ -54,6 +54,15 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
     : sectors;
 
   const onSubmit = async () => {
+    if (step === 0) {
+      if (!legalName.trim() || !taxId.trim()) {
+        setError(t('onboarding:employer.identityIncomplete'));
+        return;
+      }
+      setError(null);
+      setStep(1);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -99,16 +108,32 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
   };
 
   return (
-    <ModulePage title={t('onboarding:employer.businessTitle')} testID={ONBOARDING_SCREEN_IDS.employerBusiness} scroll>
-      <WizardSteps step={1} total={2} />
-      {employerId ? null : (
-        <Text className="font-sans mt-2 text-base text-text-medium">
-          {t('onboarding:employer.businessSubtitle')}
-        </Text>
-      )}
-      <View className="mt-6 gap-3">
-        {employerId ? null : (
-          <>
+    <ModulePage
+      back={step > 0 && !employerId ? () => setStep(0) : 'auto'}
+      scroll
+      testID={ONBOARDING_SCREEN_IDS.employerBusiness}
+      title={t('onboarding:employer.businessTitle')}
+    >
+      <WizardShell
+        error={error}
+        heading={
+          step === 0
+            ? t('onboarding:employer.wizard.identity')
+            : t('onboarding:employer.wizard.industries')
+        }
+        hint={
+          step === 0
+            ? t('onboarding:employer.wizard.identityHint')
+            : t('onboarding:employer.wizard.industriesHint')
+        }
+        primaryDisabled={submitting}
+        primaryLabel={t('common:continue')}
+        step={step + 1}
+        total={4}
+        onPrimary={() => void onSubmit()}
+      >
+        {step === 0 ? (
+          <View className="gap-3">
             <TextField
               label={t('onboarding:employer.legalName')}
               value={legalName}
@@ -120,65 +145,46 @@ export function EmployerOnboardingBusinessScreen({ navigation }: Props) {
               onChangeText={setTradingName}
             />
             <TextField
+              keyboardType="number-pad"
               label={t('onboarding:employer.taxId')}
               value={taxId}
               onChangeText={setTaxId}
-              keyboardType="number-pad"
             />
-          </>
+          </View>
+        ) : (
+          <View className="gap-3">
+            <Text className="font-sans text-sm font-semibold text-text-high">
+              {t('onboarding:employer.industries')}
+            </Text>
+            {sectors.length > 6 ? (
+              <TextField
+                label={t('employer:industry.search')}
+                value={query}
+                onChangeText={setQuery}
+              />
+            ) : null}
+            <View className="flex-row flex-wrap gap-2">
+              {shownSectors.map((sector) => (
+                <ClayChip
+                  key={sector.code}
+                  label={sector.displayName}
+                  selected={industryCodes.includes(sector.code)}
+                  onPress={() =>
+                    setIndustryCodes((current) =>
+                      current.includes(sector.code)
+                        ? current.filter((code) => code !== sector.code)
+                        : [...current, sector.code],
+                    )
+                  }
+                />
+              ))}
+            </View>
+            {needle && shownSectors.length === 0 ? (
+              <EmptyState title={t('employer:industry.searchEmpty')} />
+            ) : null}
+          </View>
         )}
-        <Text className="font-sans text-sm font-semibold text-text-high">
-          {t('onboarding:employer.industries')}
-        </Text>
-        {sectors.length > 6 ? (
-          <TextField
-            label={t('employer:industry.search')}
-            value={query}
-            onChangeText={setQuery}
-          />
-        ) : null}
-        <View className="flex-row flex-wrap gap-2">
-          {shownSectors.map((sector) => {
-            const on = industryCodes.includes(sector.code);
-            return (
-              <Pressable
-                key={sector.code}
-                className={`rounded-full px-3 py-2 ${
-                  on ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
-                onPress={() =>
-                  setIndustryCodes((current) =>
-                    current.includes(sector.code)
-                      ? current.filter((code) => code !== sector.code)
-                      : [...current, sector.code],
-                  )
-                }
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    on ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {sector.displayName}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        {needle && shownSectors.length === 0 ? (
-          <EmptyState title={t('employer:industry.searchEmpty')} />
-        ) : null}
-      </View>
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <View className="mt-6">
-        <Button
-          disabled={submitting}
-          label={t('common:continue')}
-          onPress={() => void onSubmit()}
-        />
-      </View>
+      </WizardShell>
     </ModulePage>
   );
 }

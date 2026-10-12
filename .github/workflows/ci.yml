@@ -23,9 +23,6 @@ jobs:
           DATABASE_URL: postgresql://parton:parton@localhost:5432/parton?schema=public
           JWT_ACCESS_SECRET: ci-jwt-secret-32-chars-minimum!!!!!!
           OTP_PEPPER: ci-otp-pepper-16-chars
-          TWILIO_ACCOUNT_SID: ACci0000000000000000000000000000
-          TWILIO_AUTH_TOKEN: ci-twilio-auth-token-value
-          TWILIO_FROM_NUMBER: +15005550006
           FIREBASE_PROJECT_ID: parton-ci
           FIREBASE_SERVICE_ACCOUNT_JSON: '{"project_id":"parton-ci","client_email":"ci@parton-ci.iam.gserviceaccount.com","private_key":"-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7\\n-----END PRIVATE KEY-----\\n"}'
           S3_ENDPOINT: http://127.0.0.1:19000

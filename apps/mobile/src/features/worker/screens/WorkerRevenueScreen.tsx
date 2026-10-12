@@ -12,7 +12,7 @@ import { ShiftFacts } from '../../../components/job/ShiftFacts';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { durationHours } from '../../../shared/datetime/countdown';
@@ -104,21 +104,14 @@ export function WorkerRevenueScreen({ navigation }: Props) {
       ) : null}
       <View className="mt-4 flex-row flex-wrap gap-2">
         {(['all', 'week', 'month'] as const).map((value) => (
-          <Pressable
+          <ClayChip
             key={value}
-            className={`rounded-full px-3 py-2 ${
-              range === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={t(
+              `worker:revenue.${value === 'all' ? 'all' : value === 'week' ? 'thisWeek' : 'thisMonth'}`,
+            )}
+            selected={range === value}
             onPress={() => setRange(value)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                range === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {t(`worker:revenue.${value === 'all' ? 'all' : value === 'week' ? 'thisWeek' : 'thisMonth'}`)}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       <View className="mt-4">

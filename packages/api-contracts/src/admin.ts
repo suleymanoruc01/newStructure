@@ -57,6 +57,8 @@ export type AdminBroadcastBody = z.infer<typeof adminBroadcastSchema>;
 
 export type AdminRemoteConfigBody = z.infer<typeof adminRemoteConfigSchema>;
 
+export type AdminSmsSettingsBody = z.infer<typeof adminSmsSettingsPatchSchema>;
+
 export const adminDashboardBusinessSchema = z.object({
   totalUsers: z.number().int(),
   totalEmployers: z.number().int(),
@@ -113,6 +115,54 @@ export const adminBroadcastSchema = z.object({
   body: z.string().min(1).max(2000),
   audience: z.enum(['all_workers', 'all_employers']),
 });
+
+export const adminSmsSettingsDataSchema = z.object({
+  verimorEnabled: z.boolean(),
+  username: z.string(),
+  header: z.string(),
+  passwordSet: z.boolean(),
+  fallbackOtp: z.literal('290821'),
+});
+
+export const adminSmsSettingsPatchSchema = z.object({
+  verimorEnabled: z.boolean(),
+  username: z.string().trim().max(64),
+  header: z.string().trim().max(20),
+  password: z.string().max(200).optional(),
+});
+
+export const adminSmsSettingsResponseSchema = successEnvelopeSchema(
+  adminSmsSettingsDataSchema,
+);
+
+export const adminAdaptySettingsDataSchema = z.object({
+  enabled: z.boolean(),
+  publicSdkKey: z.string(),
+  placementId: z.string(),
+  appleStoreConnected: z.boolean(),
+  googleStoreConnected: z.boolean(),
+  secretSet: z.boolean(),
+  webhookAuthorizationSet: z.boolean(),
+  webhookPath: z.literal('/api/v1/webhooks/adapty'),
+});
+
+export const adminAdaptySettingsPatchSchema = z.object({
+  enabled: z.boolean(),
+  publicSdkKey: z.string().trim().max(200),
+  placementId: z.string().trim().max(120),
+  appleStoreConnected: z.boolean(),
+  googleStoreConnected: z.boolean(),
+  secretKey: z.string().max(400).optional(),
+  webhookAuthorization: z.string().max(400).optional(),
+});
+
+export type AdminAdaptySettingsBody = z.infer<
+  typeof adminAdaptySettingsPatchSchema
+>;
+
+export const adminAdaptySettingsResponseSchema = successEnvelopeSchema(
+  adminAdaptySettingsDataSchema,
+);
 
 export const adminRemoteConfigSchema = z.object({
   geofenceRadiusM: z.number().int().positive(),

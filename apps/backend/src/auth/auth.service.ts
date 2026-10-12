@@ -27,7 +27,7 @@ import {
 import { MembershipService } from './membership.service.js';
 import { normalizePhoneE164 } from './phone.util.js';
 import { SessionService } from './session.service.js';
-import { SmsService } from './sms.service.js';
+import { FALLBACK_OTP, SmsService } from './sms.service.js';
 import { TokenService } from './token.service.js';
 import type { SessionIssueResult } from './auth.types.js';
 import {
@@ -241,7 +241,8 @@ export class AuthService {
       );
     }
 
-    const code = generateOtpCode();
+    const verimorOn = await this.sms.isVerimorActive();
+    const code = verimorOn ? generateOtpCode() : FALLBACK_OTP;
     const codeHash = hashOtp(code, this.config.env.OTP_PEPPER);
     const expiresAt = new Date(Date.now() + OTP_TTL_MS);
 
@@ -263,7 +264,7 @@ export class AuthService {
       },
     });
 
-    await this.sms.sendOtp(phoneE164, code);
+    await this.sms.sendOtp(phoneE164, code, challenge.id);
 
     return {
       challengeId: challenge.id,

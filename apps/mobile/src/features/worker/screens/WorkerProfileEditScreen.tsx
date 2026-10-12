@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
@@ -15,8 +16,8 @@ import {
 import { AccountLinkSection } from '../../shared/AccountLinkSection';
 import { LocationMap } from '../../../components/map/LocationMap';
 import { BirthDateChips } from '../../../components/ui/BirthDateChips';
-import { Button } from '../../../components/ui/Button';
 import { clayCard } from '../../../components/ui/clay';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { TextField } from '../../../components/ui/TextField';
@@ -44,6 +45,7 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [sectorQuery, setSectorQuery] = useState('');
   const [occupationQuery, setOccupationQuery] = useState('');
+  const [step, setStep] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
@@ -96,6 +98,26 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
     : occupations;
 
   const onSave = async () => {
+    if (step === 0) {
+      if (!firstName.trim() || !lastName.trim() || !birthDate) {
+        setError(t('worker:profile.identityIncomplete'));
+        return;
+      }
+      setError(null);
+      setStep(1);
+      return;
+    }
+    if (step === 1) {
+      const lat = Number.parseFloat(homeLat);
+      const lng = Number.parseFloat(homeLng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        setError(t('worker:profile.invalidCoords'));
+        return;
+      }
+      setError(null);
+      setStep(2);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -135,116 +157,152 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
     }
   };
 
+  const lat = Number.parseFloat(homeLat);
+  const lng = Number.parseFloat(homeLng);
+
   return (
-    <ModulePage title={t('worker:profile.editTitle')} testID="m.worker.profile.edit" scroll>
-      
-      <Text className="font-sans mt-2 text-base text-text-medium">
-        {t('worker:profile.editLead')}
-      </Text>
-      <View className="mt-6 gap-3">
-        <TextField
-          label={t('worker:profile.firstName')}
-          value={firstName}
-          onChangeText={setFirstName}
-          autoCapitalize="words"
-        />
-        <TextField
-          label={t('worker:profile.lastName')}
-          value={lastName}
-          onChangeText={setLastName}
-          autoCapitalize="words"
-        />
-        <BirthDateChips value={birthDate} onChange={setBirthDate} />
-        <LocationMap
-          pin={
-            Number.isFinite(Number.parseFloat(homeLat)) &&
-            Number.isFinite(Number.parseFloat(homeLng))
-              ? {
-                  latitude: Number.parseFloat(homeLat),
-                  longitude: Number.parseFloat(homeLng),
-                }
-              : null
-          }
-          locateMoment="pin-pick"
-          onPick={(pin) => {
-            setHomeLat(String(pin.latitude));
-            setHomeLng(String(pin.longitude));
-          }}
-        />
-        <Text className="font-sans text-sm font-semibold text-text-high">
-          {t('worker:profile.sectors')}
-        </Text>
-        {sectors.length > 0 ? (
-          <TextField
-            inset
-            shape="capsule"
-            label={t('worker:profile.sectorSearch')}
-            onChangeText={setSectorQuery}
-            value={sectorQuery}
+    <ModulePage
+      back={step > 0 ? () => setStep(step - 1) : 'auto'}
+      scroll
+      testID="m.worker.profile.edit"
+      title={t('worker:profile.editTitle')}
+    >
+      <WizardShell
+        error={error}
+        heading={
+          step === 0
+            ? t('worker:profile.wizard.identity')
+            : step === 1
+              ? t('worker:profile.wizard.location')
+              : t('worker:profile.wizard.work')
+        }
+        hint={
+          step === 0
+            ? t('worker:profile.wizard.identityHint')
+            : step === 1
+              ? t('worker:profile.wizard.locationHint')
+              : t('worker:profile.wizard.workHint')
+        }
+        primaryDisabled={submitting}
+        primaryLabel={
+          step < 2
+            ? t('common:continue')
+            : submitting
+              ? t('common:loading')
+              : t('worker:profile.save')
+        }
+        step={step + 1}
+        total={3}
+        onPrimary={() => void onSave()}
+      >
+        {step === 0 ? (
+          <View className="gap-3">
+            <TextField
+              autoCapitalize="words"
+              label={t('worker:profile.firstName')}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+            <TextField
+              autoCapitalize="words"
+              label={t('worker:profile.lastName')}
+              value={lastName}
+              onChangeText={setLastName}
+            />
+            <BirthDateChips value={birthDate} onChange={setBirthDate} />
+            <View className="flex-row flex-wrap gap-2">
+              {(['female', 'male', 'other', 'unspecified'] as const).map((g) => (
+                <ClayChip
+                  key={g}
+                  accessibilityRole="radio"
+                  label={t(`worker:profile.gender.${g}`)}
+                  selected={gender === g}
+                  tone="accent"
+                  onPress={() => setGender(g)}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+        {step === 1 ? (
+          <LocationMap
+            pin={
+              Number.isFinite(lat) && Number.isFinite(lng)
+                ? { latitude: lat, longitude: lng }
+                : null
+            }
+            locateMoment="pin-pick"
+            onPick={(pin) => {
+              setHomeLat(String(pin.latitude));
+              setHomeLng(String(pin.longitude));
+            }}
           />
         ) : null}
-        <View className="flex-row flex-wrap gap-2">
-          {shownSectors.map((sector) => {
-            const on = sectorCodes.includes(sector.code);
-            return (
-              <Pressable
-                key={sector.code}
-                className={`rounded-full px-3 py-2 ${
-                  on ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
-                onPress={() => {
-                  setSectorCodes((current) =>
-                    current.includes(sector.code)
-                      ? current.filter((code) => code !== sector.code)
-                      : [...current, sector.code],
-                  );
-                  if (on) {
-                    const occupationSet = new Set(
-                      sector.occupations.map((row) => row.code),
-                    );
-                    setOccupationCodes((current) =>
-                      current.filter((code) => !occupationSet.has(code)),
-                    );
-                  }
-                }}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    on ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {sector.displayName}
-                </Text>
-              </Pressable>
-            );
-          })}
-          {sectors.length > 0 && shownSectors.length === 0 ? (
-            <Text className="font-sans text-sm text-text-medium">
-              {t('worker:profile.sectorSearchEmpty')}
+        {step === 2 ? (
+          <View className="gap-3">
+            <Text className="font-sans text-sm font-semibold text-text-high">
+              {t('worker:profile.sectors')}
             </Text>
-          ) : null}
-        </View>
-        <Text className="font-sans text-sm font-semibold text-text-high">
-          {t('worker:profile.occupations')}
-        </Text>
-        {occupations.length > 6 ? (
-          <TextField
-            inset
-            shape="capsule"
-            label={t('worker:profile.occupationSearch')}
-            onChangeText={setOccupationQuery}
-            value={occupationQuery}
-          />
-        ) : null}
-        <View className="flex-row flex-wrap gap-2">
-          {shownOccupations.map((occupation) => {
-              const on = occupationCodes.includes(occupation.code);
-              return (
-                <Pressable
+            {sectors.length > 0 ? (
+              <TextField
+                inset
+                shape="capsule"
+                label={t('worker:profile.sectorSearch')}
+                onChangeText={setSectorQuery}
+                value={sectorQuery}
+              />
+            ) : null}
+            <View className="flex-row flex-wrap gap-2">
+              {shownSectors.map((sector) => {
+                const on = sectorCodes.includes(sector.code);
+                return (
+                  <ClayChip
+                    key={sector.code}
+                    label={sector.displayName}
+                    selected={on}
+                    onPress={() => {
+                      setSectorCodes((current) =>
+                        current.includes(sector.code)
+                          ? current.filter((code) => code !== sector.code)
+                          : [...current, sector.code],
+                      );
+                      if (on) {
+                        const occupationSet = new Set(
+                          sector.occupations.map((row) => row.code),
+                        );
+                        setOccupationCodes((current) =>
+                          current.filter((code) => !occupationSet.has(code)),
+                        );
+                      }
+                    }}
+                  />
+                );
+              })}
+              {sectors.length > 0 && shownSectors.length === 0 ? (
+                <Text className="font-sans text-sm text-text-medium">
+                  {t('worker:profile.sectorSearchEmpty')}
+                </Text>
+              ) : null}
+            </View>
+            <Text className="font-sans text-sm font-semibold text-text-high">
+              {t('worker:profile.occupations')}
+            </Text>
+            {occupations.length > 6 ? (
+              <TextField
+                inset
+                shape="capsule"
+                label={t('worker:profile.occupationSearch')}
+                onChangeText={setOccupationQuery}
+                value={occupationQuery}
+              />
+            ) : null}
+            <View className="flex-row flex-wrap gap-2">
+              {shownOccupations.map((occupation) => (
+                <ClayChip
                   key={occupation.code}
-                  className={`rounded-full px-3 py-2 ${
-                    on ? 'bg-accent-mustard' : 'bg-surface-1'
-                  }`}
+                  label={occupation.title}
+                  selected={occupationCodes.includes(occupation.code)}
+                  tone="accent"
                   onPress={() =>
                     setOccupationCodes((current) =>
                       current.includes(occupation.code)
@@ -252,63 +310,33 @@ export function WorkerProfileEditScreen({ navigation }: Props) {
                         : [...current, occupation.code],
                     )
                   }
-                >
-                  <Text className="font-sans text-sm text-text-high">
-                    {occupation.title}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          {occupations.length > 0 && shownOccupations.length === 0 ? (
-            <Text className="font-sans text-sm text-text-medium">
-              {t('worker:profile.occupationSearchEmpty')}
-            </Text>
-          ) : null}
-        </View>
-        <Pressable
-          accessibilityRole="switch"
-          accessibilityState={{ checked: nightShift }}
-          className="flex-row items-center justify-between rounded-[22px] bg-surface-1 px-4 py-3"
-          style={clayCard}
-          onPress={() => setNightShift(!nightShift)}
-        >
-          <Text className="font-sans text-base text-text-high">
-            {t('worker:profile.nightShift')}
-          </Text>
-          <StatusBadge
-            label={nightShift ? t('common:yes') : t('common:no')}
-            tone={nightShift ? 'strong' : 'neutral'}
-          />
-        </Pressable>
-        <View className="flex-row flex-wrap gap-2">
-          {(['female', 'male', 'other', 'unspecified'] as const).map((g) => (
+                />
+              ))}
+              {occupations.length > 0 && shownOccupations.length === 0 ? (
+                <Text className="font-sans text-sm text-text-medium">
+                  {t('worker:profile.occupationSearchEmpty')}
+                </Text>
+              ) : null}
+            </View>
             <Pressable
-              key={g}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: gender === g }}
-              className={`rounded-full px-3 py-2 ${
-                gender === g ? 'bg-accent-mustard' : 'bg-surface-1'
-              }`}
-              onPress={() => setGender(g)}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: nightShift }}
+              className="flex-row items-center justify-between rounded-[22px] bg-surface-1 px-4 py-3"
+              style={clayCard}
+              onPress={() => setNightShift(!nightShift)}
             >
-              <Text className="font-sans text-text-high">
-                {t(`worker:profile.gender.${g}`)}
+              <Text className="font-sans text-base text-text-high">
+                {t('worker:profile.nightShift')}
               </Text>
+              <StatusBadge
+                label={nightShift ? t('common:yes') : t('common:no')}
+                tone={nightShift ? 'strong' : 'neutral'}
+              />
             </Pressable>
-          ))}
-        </View>
-      </View>
-      <AccountLinkSection />
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <View className="mt-4">
-        <Button
-          label={submitting ? t('common:loading') : t('worker:profile.save')}
-          onPress={() => void onSave()}
-          disabled={submitting}
-        />
-      </View>
+            <AccountLinkSection />
+          </View>
+        ) : null}
+      </WizardShell>
     </ModulePage>
   );
 }

@@ -33,12 +33,12 @@
     @apply border-border;
   }
   html {
-    color-scheme: light;
+    color-scheme: dark;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
   html.dark {
-    color-scheme: light;
+    color-scheme: dark;
   }
   @media (pointer: fine) {
     html {
@@ -72,26 +72,4 @@
   }
 }
 
-/* DESIGN-Light-full.md Colors + Components. */
-:root,
-.dark {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #0d9488;
-  --primary-foreground: #ffffff;
-  --secondary: #06b6d4;
-  --secondary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #10b981;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #cbd5e1;
-  --ring: #06b6d4;
-}
+/* Ops chrome uses design-tokens `.dark` (charcoal / forest / orange). */

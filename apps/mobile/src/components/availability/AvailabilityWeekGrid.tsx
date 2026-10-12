@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 
 import { DAY_NAMES_TR } from '../../shared/availability/time-minutes';
+import { clayChip } from '../ui/clay';
 import { Pressable } from '../ui/Pressable';
 
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
@@ -27,9 +28,10 @@ export function AvailabilityWeekGrid({
             accessibilityLabel={DAY_NAMES_TR[day]}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
-            className={`flex-1 items-center rounded-[14px] py-2 ${
-              active ? 'bg-action-primary' : 'bg-surface-2'
+            className={`flex-1 items-center rounded-[16px] py-2 ${
+              active ? 'bg-action-primary' : 'bg-surface-1'
             }`}
+            style={clayChip(active)}
             onPress={() => onSelect(day)}
           >
             <Text

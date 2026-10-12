@@ -10,7 +10,7 @@ import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { TextField } from '../../../components/ui/TextField';
 import { ModulePage } from '../../../components/ui/ScreenModules';
@@ -113,32 +113,20 @@ export function EmployerIndustryScreen({ navigation }: Props) {
         </View>
       ) : null}
       <View className="mt-4 flex-row flex-wrap gap-2">
-        {shownSectors.map((sector) => {
-          const on = codes.includes(sector.code);
-          return (
-            <Pressable
-              key={sector.code}
-              className={`rounded-full px-3 py-2 ${
-                on ? 'bg-action-primary' : 'bg-surface-1'
-              }`}
-              onPress={() =>
-                setCodes((current) =>
-                  current.includes(sector.code)
-                    ? current.filter((code) => code !== sector.code)
-                    : [...current, sector.code],
-                )
-              }
-            >
-              <Text
-                className={`font-sans text-sm ${
-                  on ? 'text-text-on' : 'text-text-high'
-                }`}
-              >
-                {sector.displayName}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {shownSectors.map((sector) => (
+          <ClayChip
+            key={sector.code}
+            label={sector.displayName}
+            selected={codes.includes(sector.code)}
+            onPress={() =>
+              setCodes((current) =>
+                current.includes(sector.code)
+                  ? current.filter((code) => code !== sector.code)
+                  : [...current, sector.code],
+              )
+            }
+          />
+        ))}
         {!loading && sectors.length > 0 && shownSectors.length === 0 ? (
           <EmptyState title={t('employer:industry.searchEmpty')} />
         ) : null}

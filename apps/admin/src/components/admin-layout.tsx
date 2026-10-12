@@ -21,8 +21,8 @@ function SideNav() {
                   [
                     "rounded-md px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isActive
-                      ? "bg-[#F0FDFA] font-semibold text-[#0F766E]"
-                      : "text-muted-foreground hover:bg-[#F8FAFC] hover:text-foreground",
+                      ? "bg-muted font-semibold text-foreground"
+                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
                   ].join(" ")
                 }
               >

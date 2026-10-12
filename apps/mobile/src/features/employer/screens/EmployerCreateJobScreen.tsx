@@ -1,14 +1,15 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
+import { ClayChip } from '../../../components/ui/ClayChip';
+import { clayCard, clayChip } from '../../../components/ui/clay';
 import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
 import { TokenCostPreview } from '../../../components/tokens/TokenCostPreview';
 import { Button } from '../../../components/ui/Button';
-import { WizardSteps } from '../../../components/ui/WizardSteps';
-import { clayCard } from '../../../components/ui/clay';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
@@ -69,7 +70,7 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const { contexts } = useAuth();
   const timeZone = useDisplayTimeZone();
   const days = nextIstanbulDayKeys(7, new Date(), timeZone);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [sectors, setSectors] = useState<CatalogSector[]>([]);
   const [branchId, setBranchId] = useState('');
@@ -164,9 +165,32 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const testID =
     step === 1
       ? 'm.employer.jobs.create.step1'
-      : step === 2
-        ? 'm.employer.jobs.create.step2'
-        : 'm.employer.jobs.create.step3';
+      : step === 4
+        ? 'm.employer.jobs.create.step3'
+        : 'm.employer.jobs.create.step2';
+
+  const goNext = () => {
+    setError(null);
+    if (step === 1) {
+      if (!branchId) {
+        setError(t('employer:jobs.branchRequired'));
+        return;
+      }
+      if (!sectorCode) {
+        setError(t('employer:jobs.sectorRequired'));
+        return;
+      }
+      setStep(2);
+      return;
+    }
+    if (step === 2) {
+      setStep(3);
+      return;
+    }
+    if (step === 3) {
+      setStep(4);
+    }
+  };
 
   const submit = async (publish: boolean) => {
     setSubmitting(true);
@@ -261,19 +285,69 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const when = wallToIso(dayKey, startHour, durationH, timeZone);
   const payAmountMinor = tryMajorToMinor(payTry);
 
+  const wizardCopy =
+    step === 1
+      ? {
+          heading: t('employer:jobs.wizard.place'),
+          hint: t('employer:jobs.wizard.placeHint'),
+        }
+      : step === 2
+        ? {
+            heading: t('employer:jobs.wizard.when'),
+            hint: t('employer:jobs.wizard.whenHint'),
+          }
+        : step === 3
+          ? {
+              heading: t('employer:jobs.wizard.audience'),
+              hint: t('employer:jobs.wizard.audienceHint'),
+            }
+          : {
+              heading: t('employer:jobs.wizard.review'),
+              hint: t('employer:jobs.wizard.reviewHint'),
+            };
+
   return (
-    <ModulePage title={t('employer:jobs.createTitle')} testID={testID} scroll>
-      <WizardSteps step={step} total={3} />
-      {error ? (
-        <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      {!canPublish && verificationStatus ? (
-        <Text className="font-sans mt-2 text-sm text-feedback-error">
-          {t('employer:verification.publishBlocked')}
-        </Text>
-      ) : null}
+    <ModulePage
+      back={step > 1 ? () => setStep((current) => (current - 1) as 1 | 2 | 3 | 4) : 'auto'}
+      scroll
+      testID={testID}
+      title={t('employer:jobs.createTitle')}
+    >
+      <WizardShell
+        error={
+          error ??
+          (!canPublish && verificationStatus
+            ? t('employer:verification.publishBlocked')
+            : null)
+        }
+        extraFooter={
+          step === 4 ? (
+            <Button
+              disabled={submitting}
+              label={t('employer:jobs.saveDraft')}
+              variant="secondary"
+              onPress={() => void submit(false)}
+            />
+          ) : null
+        }
+        heading={wizardCopy.heading}
+        hint={wizardCopy.hint}
+        primaryDisabled={step === 4 && (submitting || !canPublish)}
+        primaryLabel={
+          step === 4 ? t('employer:jobs.publish') : t('common:continue')
+        }
+        step={step}
+        total={4}
+        onPrimary={() => {
+          if (step < 4) {
+            goNext();
+            return;
+          }
+          void submit(true);
+        }}
+      >
       {step === 1 ? (
-        <View className="mt-6 gap-3">
+        <View className="gap-3">
           <Text className="font-sans text-sm font-semibold text-text-high">
             {t('employer:jobs.branchId')}
           </Text>
@@ -288,21 +362,12 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           ) : null}
           <View className="flex-row flex-wrap gap-2">
             {shownBranches.map((branch) => (
-              <Pressable
+              <ClayChip
                 key={branch.id}
-                className={`rounded-full px-3 py-2 ${
-                  branchId === branch.id ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={branch.name}
+                selected={branchId === branch.id}
                 onPress={() => setBranchId(branch.id)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    branchId === branch.id ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {branch.name}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
@@ -319,24 +384,15 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           ) : null}
           <View className="flex-row flex-wrap gap-2">
             {shownSectors.map((sector) => (
-              <Pressable
+              <ClayChip
                 key={sector.code}
-                className={`rounded-full px-3 py-2 ${
-                  sectorCode === sector.code ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={sector.displayName}
+                selected={sectorCode === sector.code}
                 onPress={() => {
                   setSectorCode(sector.code);
                   setOccupationCode(sector.occupations[0]?.code ?? '');
                 }}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    sectorCode === sector.code ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {sector.displayName}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
@@ -353,25 +409,12 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           ) : null}
           <View className="flex-row flex-wrap gap-2">
             {shownOccupations.map((occupation) => (
-              <Pressable
+              <ClayChip
                 key={occupation.code}
-                className={`rounded-full px-3 py-2 ${
-                  occupationCode === occupation.code
-                    ? 'bg-action-primary'
-                    : 'bg-surface-1'
-                }`}
+                label={occupation.title}
+                selected={occupationCode === occupation.code}
                 onPress={() => setOccupationCode(occupation.code)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    occupationCode === occupation.code
-                      ? 'text-text-on'
-                      : 'text-text-high'
-                  }`}
-                >
-                  {occupation.title}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
@@ -379,7 +422,8 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           </Text>
           <View className="flex-row items-center gap-3">
             <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              className="h-11 w-11 items-center justify-center rounded-full bg-surface-1"
+              style={clayChip(false)}
               onPress={() =>
                 setHeadcount(String(Math.max(1, (Number.parseInt(headcount, 10) || 1) - 1)))
               }
@@ -390,7 +434,8 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
               {Number.parseInt(headcount, 10) || 1}
             </Text>
             <Pressable
-              className="h-10 w-10 items-center justify-center rounded-full bg-surface-1"
+              className="h-11 w-11 items-center justify-center rounded-full bg-surface-1"
+              style={clayChip(false)}
               onPress={() =>
                 setHeadcount(String((Number.parseInt(headcount, 10) || 1) + 1))
               }
@@ -404,31 +449,21 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
             onChangeText={setPayTry}
             keyboardType="decimal-pad"
           />
-          <Button label={t('common:continue')} onPress={() => setStep(2)} />
         </View>
       ) : null}
       {step === 2 ? (
-        <View className="mt-6 gap-3">
+        <View className="gap-3">
           <Text className="font-sans text-sm font-semibold text-text-high">
             {t('employer:jobs.whenDay')}
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {days.map((key) => (
-              <Pressable
+              <ClayChip
                 key={key}
-                className={`rounded-full px-3 py-2 ${
-                  dayKey === key ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={dayChipLabel(key, timeZone)}
+                selected={dayKey === key}
                 onPress={() => setDayKey(key)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    dayKey === key ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {dayChipLabel(key, timeZone)}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
@@ -436,21 +471,12 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {SHIFT_START_HOURS.map((hour) => (
-              <Pressable
+              <ClayChip
                 key={hour}
-                className={`rounded-full px-3 py-2 ${
-                  startHour === hour ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={t('employer:jobs.hour', { hour })}
+                selected={startHour === hour}
                 onPress={() => setStartHour(hour)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    startHour === hour ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {t('employer:jobs.hour', { hour })}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
@@ -458,27 +484,22 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {SHIFT_DURATIONS_H.map((hours) => (
-              <Pressable
+              <ClayChip
                 key={hours}
-                className={`rounded-full px-3 py-2 ${
-                  durationH === hours ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={t('employer:jobs.hours', { hours })}
+                selected={durationH === hours}
                 onPress={() => setDurationH(hours)}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    durationH === hours ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {t('employer:jobs.hours', { hours })}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm text-text-medium">
             {formatIstanbul(when.startsAt, timeZone)} –{' '}
             {formatIstanbul(when.endsAt, timeZone)}
           </Text>
+        </View>
+      ) : null}
+      {step === 3 ? (
+        <View className="gap-3">
           <Pressable
             accessibilityRole="switch"
             accessibilityState={{ checked: favoritesOnly }}
@@ -518,160 +539,93 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
             {t('employer:jobs.amenities')}
           </Text>
           <View className="flex-row flex-wrap gap-2">
-            {AMENITIES.map((value) => {
-              const on = amenities.includes(value);
-              return (
-                <Pressable
-                  key={value}
-                  className={`rounded-full px-3 py-2 ${
-                    on ? 'bg-accent-mustard' : 'bg-surface-1'
-                  }`}
-                  onPress={() =>
-                    setAmenities((current) =>
-                      current.includes(value)
-                        ? current.filter((item) => item !== value)
-                        : [...current, value],
-                    )
-                  }
-                >
-                  <Text className="font-sans text-sm text-text-high">
-                    {t(`employer:jobs.amenity.${value}`)}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {AMENITIES.map((value) => (
+              <ClayChip
+                key={value}
+                label={t(`employer:jobs.amenity.${value}`)}
+                selected={amenities.includes(value)}
+                tone="accent"
+                onPress={() =>
+                  setAmenities((current) =>
+                    current.includes(value)
+                      ? current.filter((item) => item !== value)
+                      : [...current, value],
+                  )
+                }
+              />
+            ))}
           </View>
           <View className="flex-row flex-wrap gap-2">
             {(['none', 'female', 'male'] as const).map((value) => (
-              <Pressable
+              <ClayChip
                 key={value}
-                className={`rounded-full px-3 py-2 ${
-                  genderFilter === value ? 'bg-accent-mustard' : 'bg-surface-1'
-                }`}
+                label={t(`employer:jobs.genderFilter.${value}`)}
+                selected={genderFilter === value}
+                tone="accent"
                 onPress={() => setGenderFilter(value)}
-              >
-                <Text className="font-sans text-sm text-text-high">
-                  {t(`employer:jobs.genderFilter.${value}`)}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
             {t('employer:jobs.minAge')}
           </Text>
           <View className="flex-row flex-wrap gap-2">
-            <Pressable
-              className={`rounded-full px-3 py-2 ${
-                minAge === '' ? 'bg-action-primary' : 'bg-surface-1'
-              }`}
+            <ClayChip
+              label={t('employer:jobs.ageAny')}
+              selected={minAge === ''}
               onPress={() => setMinAge('')}
-            >
-              <Text
-                className={`font-sans text-sm ${
-                  minAge === '' ? 'text-text-on' : 'text-text-high'
-                }`}
-              >
-                {t('employer:jobs.ageAny')}
-              </Text>
-            </Pressable>
+            />
             {([18, 21, 25, 30] as const).map((age) => (
-              <Pressable
+              <ClayChip
                 key={`min-${age}`}
-                className={`rounded-full px-3 py-2 ${
-                  minAge === String(age) ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={String(age)}
+                selected={minAge === String(age)}
                 onPress={() => setMinAge(String(age))}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    minAge === String(age) ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {age}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
             {t('employer:jobs.maxAge')}
           </Text>
           <View className="flex-row flex-wrap gap-2">
-            <Pressable
-              className={`rounded-full px-3 py-2 ${
-                maxAge === '' ? 'bg-action-primary' : 'bg-surface-1'
-              }`}
+            <ClayChip
+              label={t('employer:jobs.ageAny')}
+              selected={maxAge === ''}
               onPress={() => setMaxAge('')}
-            >
-              <Text
-                className={`font-sans text-sm ${
-                  maxAge === '' ? 'text-text-on' : 'text-text-high'
-                }`}
-              >
-                {t('employer:jobs.ageAny')}
-              </Text>
-            </Pressable>
+            />
             {([35, 45, 55, 65] as const).map((age) => (
-              <Pressable
+              <ClayChip
                 key={`max-${age}`}
-                className={`rounded-full px-3 py-2 ${
-                  maxAge === String(age) ? 'bg-action-primary' : 'bg-surface-1'
-                }`}
+                label={String(age)}
+                selected={maxAge === String(age)}
                 onPress={() => setMaxAge(String(age))}
-              >
-                <Text
-                  className={`font-sans text-sm ${
-                    maxAge === String(age) ? 'text-text-on' : 'text-text-high'
-                  }`}
-                >
-                  {age}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
           <Text className="font-sans text-sm font-semibold text-text-high">
             {t('employer:jobs.requiredDocuments')}
           </Text>
           <View className="flex-row flex-wrap gap-2">
-            {DOC_TYPES.map((type) => {
-              const on = requiredDocumentTypes.includes(type);
-              return (
-                <Pressable
-                  key={type}
-                  className={`rounded-full px-3 py-2 ${
-                    on ? 'bg-accent-mustard' : 'bg-surface-1'
-                  }`}
-                  onPress={() =>
-                    setRequiredDocumentTypes((current) =>
-                      current.includes(type)
-                        ? current.filter((item) => item !== type)
-                        : [...current, type],
-                    )
-                  }
-                >
-                  <Text className="font-sans text-sm text-text-high">
-                    {t(`worker:documents.types.${type}`)}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {DOC_TYPES.map((type) => (
+              <ClayChip
+                key={type}
+                label={t(`worker:documents.types.${type}`)}
+                selected={requiredDocumentTypes.includes(type)}
+                tone="accent"
+                onPress={() =>
+                  setRequiredDocumentTypes((current) =>
+                    current.includes(type)
+                      ? current.filter((item) => item !== type)
+                      : [...current, type],
+                  )
+                }
+              />
+            ))}
           </View>
-          <TextField
-            label={t('employer:jobs.notes')}
-            multiline
-            numberOfLines={3}
-            onChangeText={setNotes}
-            value={notes}
-          />
-          <Button label={t('common:continue')} onPress={() => setStep(3)} />
-          <Button
-            label={t('common:back')}
-            variant="secondary"
-            onPress={() => setStep(1)}
-          />
         </View>
       ) : null}
-      {step === 3 ? (
-        <View className="mt-6 gap-3">
+      {step === 4 ? (
+        <View className="gap-3">
           <StatStrip
             items={[
               {
@@ -726,24 +680,16 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
             available={tokenAvailable}
             need={Number.parseInt(headcount, 10) || 0}
           />
-          <Button
-            disabled={submitting || !canPublish}
-            label={t('employer:jobs.publish')}
-            onPress={() => void submit(true)}
-          />
-          <Button
-            disabled={submitting}
-            label={t('employer:jobs.saveDraft')}
-            variant="secondary"
-            onPress={() => void submit(false)}
-          />
-          <Button
-            label={t('common:back')}
-            variant="ghost"
-            onPress={() => setStep(2)}
+          <TextField
+            label={t('employer:jobs.notes')}
+            multiline
+            numberOfLines={3}
+            onChangeText={setNotes}
+            value={notes}
           />
         </View>
       ) : null}
+      </WizardShell>
     </ModulePage>
   );
 }

@@ -61,6 +61,8 @@ export class TokensController {
         packageId: resolved.packageId,
         bonus: resolved.bonus,
         base: resolved.base,
+        userId: req.userId,
+        adaptyTransactionId: parsed.adaptyTransactionId,
       },
     );
     return successResponse(req.requestId ?? '', data);

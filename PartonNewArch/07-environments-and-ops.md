@@ -13,10 +13,10 @@
 
 | Env | Purpose | Data | Push / SMS |
 | --- | --- | --- | --- |
-| **local** | Dev | Docker Postgres (+ Redis if Stage B; **MinIO** for docs) | **Real SMS/FCM sandbox** — no Noop ([agents/08](agents/08-no-mocks-fully-functional.md)) |
-| **ci** | Automated tests | Ephemeral Postgres | SMS/FCM **sandbox/test mode** (no Noop app providers) |
-| **staging** | QA / E2E | Anonymized or synthetic | FCM staging project; SMS sandbox |
-| **production** | Live | Real | FCM prod; SMS prod |
+| **local** | Dev | Docker Postgres (+ Redis if Stage B; **MinIO** for docs) | Verimor via xadmin (off → OTP `290821`); FCM sandbox — no Noop ([agents/08](agents/08-no-mocks-fully-functional.md)) |
+| **ci** | Automated tests | Ephemeral Postgres | Verimor off (`290821`) or sandbox; FCM sandbox — no Noop app providers |
+| **staging** | QA / E2E | Anonymized or synthetic | FCM staging; Verimor sandbox via xadmin |
+| **production** | Live | Real | FCM prod; Verimor prod via xadmin |
 
 No shared credentials across envs. Staging must not point at prod FCM/SMS.
 
@@ -45,7 +45,7 @@ Mobile ≠ backend deploy cadence (AO-1 path filters / separate pipelines). CI i
 | PostgreSQL 18 | SoR | Managed preferred; migrations via Prisma |
 | Redis (Stage B) | BullMQ | Managed; `noeviction` + AOF; not cache-mixed |
 | FCM | Push | HTTP v1 service account |
-| SMS provider | OTP | Subprocessor register |
+| Verimor SMS | OTP | xadmin `w.admin.config.sms`; subprocessor register |
 | Object storage | Documents | Signed URLs; private buckets |
 
 ---

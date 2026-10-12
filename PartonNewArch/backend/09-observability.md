@@ -59,7 +59,7 @@ Detail: [`../web/09-admin-devops.md`](../web/09-admin-devops.md) · ADR-0035.
 | `REDIS_CACHE_URL` | Optional separate cache Redis (eviction OK) |
 | `JWT_ACCESS_SECRET` | Access tokens |
 | `JWT_REFRESH_SECRET` | Refresh tokens |
-| `SMS_*` | Provider |
+| (none) | Verimor SMS credentials are not env; xadmin `w.admin.config.sms` |
 | `FIREBASE_PROJECT_ID` + service account | FCM Admin SDK (HTTP v1) — [20](20-fcm-messaging.md) |
 | APNs | Configured in Firebase console (iOS via FCM), not raw Nest APNs SDK |
 | `LOG_LEVEL` | verbosity |

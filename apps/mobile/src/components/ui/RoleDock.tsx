@@ -8,6 +8,7 @@ import { useDeepLink } from '../../app/navigation/use-deep-link';
 import { dockHidden } from '../../app/navigation/dock-routes';
 import { listNotifications } from '../../api/notifications-api';
 import { getAccessToken } from '../../shared/auth/session-memory';
+import { clayButton, clayCard } from './clay';
 import { DockIcon, type DockIconName } from './DockIcon';
 import { Pressable } from './Pressable';
 
@@ -68,6 +69,13 @@ export function RoleDock({ items, activeKey, onPress, bottomInset }: DockProps) 
           overflow: 'hidden',
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
+          borderTopWidth: 2,
+          borderTopColor: CREAM,
+          shadowColor: CHARCOAL,
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 12,
+          elevation: 8,
           paddingTop: 10,
           paddingBottom: Math.max(bottomInset, 8),
           paddingHorizontal: 8,
@@ -154,19 +162,20 @@ export function RoleDock({ items, activeKey, onPress, bottomInset }: DockProps) 
             accessibilityRole="tab"
             accessibilityState={{ selected: raised.key === activeKey }}
             onPress={() => onPress(raised.key)}
-            style={{
-              position: 'absolute',
-              left: 20,
-              top: 8,
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: raised.key === activeKey ? FOREST : CANVAS,
-              borderWidth: 1.5,
-              borderColor: FOREST,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            style={[
+              raised.key === activeKey ? clayButton('forest') : clayCard,
+              {
+                position: 'absolute',
+                left: 20,
+                top: 8,
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: raised.key === activeKey ? FOREST : CANVAS,
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+            ]}
           >
             <DockIcon
               color={raised.key === activeKey ? CREAM : FOREST}

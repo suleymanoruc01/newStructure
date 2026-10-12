@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "adapty-integration": {
+      "source": "adaptyteam/adapty-skills",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/adapty-integration/SKILL.md",
+      "computedHash": "ee0c393e7cb7d71652965b6304bf8cce2e70e187dc7e16841d522492c2c5d9ae"
+    }
+  }
+}

@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiClientError } from '../../api/client';
 import { Button } from '../ui/Button';
-import { clayCard } from '../ui/clay';
+import { clayCard, claySheet } from '../ui/clay';
 import { readDeviceCoordinates } from '../../shared/location/device-coordinates';
 import {
   ISTANBUL_PIN,
@@ -176,9 +176,9 @@ export function LocationMap({
         onRequestClose={() => setExpanded(false)}
         visible={expanded}
       >
-        <SafeAreaView className="flex-1 bg-surface-base" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="flex-1 bg-action-secondary" edges={['top', 'left', 'right']}>
           <View className="flex-1">{map('full')}</View>
-          <View className="gap-3 px-4 py-4">
+          <View className="gap-3 px-5 pb-8 pt-6" style={claySheet}>
             {locateMoment && onPick ? (
               <Button
                 label={

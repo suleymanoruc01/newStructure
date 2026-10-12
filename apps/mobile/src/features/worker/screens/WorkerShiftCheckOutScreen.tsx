@@ -12,7 +12,7 @@ import { Button } from '../../../components/ui/Button';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { durationHours, elapsedLabel } from '../../../shared/datetime/countdown';
@@ -130,21 +130,12 @@ export function WorkerShiftCheckOutScreen({ route, navigation }: Props) {
             ['checkOutChipLate', t('worker:shift.checkOutChipLate')],
           ] as const
         ).map(([key, label]) => (
-          <Pressable
+          <ClayChip
             key={key}
-            className={`rounded-full px-3 py-2 ${
-              notes === label ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={label}
+            selected={notes === label}
             onPress={() => setNotes(label)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                notes === label ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {label}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       <View className="mt-3">

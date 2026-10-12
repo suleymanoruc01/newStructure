@@ -21,6 +21,11 @@ export const platformRemoteConfigDataSchema = z.object({
   checkinEarlyMinutes: z.number().int().nonnegative(),
   checkinLateMinutes: z.number().int().nonnegative(),
   timeZone: ianaTimeZoneSchema,
+  adaptyEnabled: z.boolean(),
+  adaptyPublicSdkKey: z.string(),
+  adaptyPlacementId: z.string(),
+  appleStoreConnected: z.boolean(),
+  googleStoreConnected: z.boolean(),
 });
 
 export const platformRemoteConfigResponseSchema = successEnvelopeSchema(

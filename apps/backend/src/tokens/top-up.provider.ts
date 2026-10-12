@@ -3,20 +3,34 @@ import { ErrorCode } from '@parton/api-contracts';
 
 import { ApiException } from '../common/api.exception.js';
 import { AppConfigService } from '../config/app-config.service.js';
+import { AdaptyService } from './adapty.service.js';
 
 export type TopUpPaymentOutcome = 'approve' | 'decline' | 'cancel';
 
 @Injectable()
 export class TopUpProvider {
-  constructor(private readonly config: AppConfigService) {}
+  constructor(
+    private readonly config: AppConfigService,
+    private readonly adapty: AdaptyService,
+  ) {}
 
-  /**
-   * Validates sandbox PSP outcome. Direct ledger credit skips PSP when enabled.
-   */
-  assertPaymentAllowed(paymentOutcome?: TopUpPaymentOutcome): void {
+  async assertPaymentAllowed(input: {
+    paymentOutcome?: TopUpPaymentOutcome;
+    adaptyTransactionId?: string;
+  }): Promise<void> {
+    if (await this.adapty.isActive()) {
+      if (!input.adaptyTransactionId) {
+        throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          ErrorCode.VALIDATION_FAILED,
+          'Adapty işlem kimliği gerekli.',
+        );
+      }
+      return;
+    }
     const ledgerDirect = this.config.env.TOKEN_TOPUP_LEDGER_CREDIT;
     if (ledgerDirect) {
-      if (paymentOutcome && paymentOutcome !== 'approve') {
+      if (input.paymentOutcome && input.paymentOutcome !== 'approve') {
         throw new ApiException(
           HttpStatus.UNPROCESSABLE_ENTITY,
           ErrorCode.PAYMENT_DECLINED,
@@ -26,18 +40,18 @@ export class TopUpProvider {
       return;
     }
 
-    if (!paymentOutcome) {
+    if (!input.paymentOutcome) {
       throw new ApiException(
         HttpStatus.BAD_REQUEST,
         ErrorCode.VALIDATION_FAILED,
-        'Ödeme sonucu gerekli (sandbox PSP).',
+        'Ödeme sonucu gerekli.',
       );
     }
-    if (paymentOutcome !== 'approve') {
+    if (input.paymentOutcome !== 'approve') {
       throw new ApiException(
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorCode.PAYMENT_DECLINED,
-        paymentOutcome === 'cancel'
+        input.paymentOutcome === 'cancel'
           ? 'Ödeme iptal edildi.'
           : 'Ödeme reddedildi.',
       );

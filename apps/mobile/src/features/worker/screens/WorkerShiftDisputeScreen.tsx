@@ -9,7 +9,7 @@ import { createShiftDispute, fetchShift } from '../../../api/shifts-api';
 import { JobCard } from '../../../components/job/JobCard';
 import { ShiftFacts } from '../../../components/job/ShiftFacts';
 import { Button } from '../../../components/ui/Button';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
@@ -88,21 +88,12 @@ export function WorkerShiftDisputeScreen({ route, navigation }: Props) {
             t('worker:dispute.chipLate'),
           ] as const
         ).map((label) => (
-          <Pressable
+          <ClayChip
             key={label}
-            className={`rounded-full px-3 py-2 ${
-              note === label ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={label}
+            selected={note === label}
             onPress={() => setNote(label)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                note === label ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {label}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       <View className="mt-3">

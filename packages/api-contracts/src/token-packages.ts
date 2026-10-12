@@ -11,6 +11,9 @@ export const tokenPackageSchema = z.object({
   isPopular: z.boolean(),
   isActive: z.boolean(),
   sortOrder: z.number().int(),
+  iosProductId: z.string(),
+  androidProductId: z.string(),
+  adaptyProductId: z.string(),
 });
 
 export const tokenPackagePublicSchema = tokenPackageSchema.omit({ isActive: true });
@@ -35,6 +38,9 @@ export const adminTokenPackageCreateSchema = z.object({
   isPopular: z.boolean().optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().nonnegative().optional(),
+  iosProductId: z.string().trim().max(120).optional(),
+  androidProductId: z.string().trim().max(120).optional(),
+  adaptyProductId: z.string().trim().max(120).optional(),
 });
 
 export type AdminTokenPackageCreateBody = z.infer<

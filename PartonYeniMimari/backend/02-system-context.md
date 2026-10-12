@@ -13,7 +13,7 @@
 | Şube yöneticisi | React Native (üründe rol korunursa — AO-11) | JWT + `manager` rolü (+ şube kapsamı) |
 | Platform yöneticisi | Nest uygulamasındaki yönetim arayüzü | JWT + `admin` rolü |
 | Arka plan işleme | Başlangıçta süreç içi / outbox; ayrı işçi ertelendi | Genel internete açık değil |
-| Harici sağlayıcılar | SMS, push, depolama | Yalnızca giden bağlantı; sırlar ortam değişkenlerinde |
+| Harici sağlayıcılar | SMS (Verimor), push, depolama | Yalnızca giden bağlantı. Verimor kimliği xadmin’de (`w.admin.config.sms`); FCM/depolama sırları ortamda. |
 
 Başlangıç pazarı: **Türkiye**. Dağıtım bölgesi belirlenecek.
 
@@ -27,7 +27,7 @@ C4Context
   Person(admin, "Platform yöneticisi")
   System(api, "PartOn NestJS", "REST /api/v1 + yönetim")
   SystemDb(pg, "PostgreSQL", "PartOn'a ait")
-  System_Ext(sms, "OTP / SMS")
+  System_Ext(sms, "Verimor OTP SMS")
   System_Ext(push, "Push (FCM/APNs)")
   System_Ext(store, "Nesne depolama")
   Rel(worker, api, "REST HTTPS + JWT")

@@ -1,15 +1,14 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { AuthStackParamList } from '../../../app/navigation/types';
 import { LocationMap } from '../../../components/map/LocationMap';
-import { Button } from '../../../components/ui/Button';
 import { CityChips } from '../../../components/ui/CityChips';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
-import { WizardSteps } from '../../../components/ui/WizardSteps';
+import { WizardShell } from '../../../components/ui/WizardShell';
 import { ApiClientError } from '../../../api/client';
 import { createBranch } from '../../../api/branches-api';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -25,6 +24,7 @@ type Props = NativeStackScreenProps<
 export function EmployerOnboardingBranchScreen({ navigation }: Props) {
   const { t } = useTranslation(['onboarding', 'common', 'errors']);
   const { completeOnboarding } = useAuth();
+  const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [city, setCity] = useState('');
@@ -33,7 +33,19 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const lat = Number.parseFloat(latitude);
+  const lng = Number.parseFloat(longitude);
+
   const onSubmit = async () => {
+    if (step === 0) {
+      if (!name.trim() || !addressLine1.trim() || !city.trim()) {
+        setError(t('onboarding:employer.branchIncomplete'));
+        return;
+      }
+      setError(null);
+      setStep(1);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -41,8 +53,6 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      const lat = Number.parseFloat(latitude);
-      const lng = Number.parseFloat(longitude);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
         throw new ApiClientError(
           t('onboarding:employer.invalidCoords'),
@@ -73,51 +83,68 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
   };
 
   return (
-    <ModulePage title={t('onboarding:employer.branchTitle')} testID={ONBOARDING_SCREEN_IDS.employerBranch} scroll>
-      <WizardSteps step={2} total={2} />
-      <Text className="font-sans mt-2 text-base text-text-medium">
-        {t('onboarding:employer.branchSubtitle')}
-      </Text>
-      <View className="mt-6 gap-3">
-        <TextField label={t('onboarding:employer.branchName')} value={name} onChangeText={setName} />
-        <TextField
-          label={t('onboarding:employer.address')}
-          value={addressLine1}
-          onChangeText={setAddressLine1}
-        />
-        <CityChips
-          label={t('onboarding:employer.city')}
-          value={city}
-          onChange={setCity}
-        />
-        <LocationMap
-          pin={
-            Number.isFinite(Number.parseFloat(latitude)) &&
-            Number.isFinite(Number.parseFloat(longitude))
-              ? {
-                  latitude: Number.parseFloat(latitude),
-                  longitude: Number.parseFloat(longitude),
-                }
-              : null
-          }
-          pinLabel={name || undefined}
-          locateMoment="pin-pick"
-          onPick={(pin) => {
-            setLatitude(String(pin.latitude));
-            setLongitude(String(pin.longitude));
-          }}
-        />
-      </View>
-      {error ? (
-        <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
-      ) : null}
-      <View className="mt-6">
-        <Button
-          disabled={submitting}
-          label={t('onboarding:employer.finish')}
-          onPress={() => void onSubmit()}
-        />
-      </View>
+    <ModulePage
+      back={step > 0 ? () => setStep(0) : 'auto'}
+      scroll
+      testID={ONBOARDING_SCREEN_IDS.employerBranch}
+      title={t('onboarding:employer.branchTitle')}
+    >
+      <WizardShell
+        error={error}
+        heading={
+          step === 0
+            ? t('onboarding:employer.wizard.branch')
+            : t('onboarding:employer.wizard.pin')
+        }
+        hint={
+          step === 0
+            ? t('onboarding:employer.wizard.branchHint')
+            : t('onboarding:employer.wizard.pinHint')
+        }
+        primaryDisabled={submitting}
+        primaryLabel={
+          step === 0
+            ? t('common:continue')
+            : t('onboarding:employer.finish')
+        }
+        step={step + 3}
+        total={4}
+        onPrimary={() => void onSubmit()}
+      >
+        {step === 0 ? (
+          <View className="gap-3">
+            <TextField
+              label={t('onboarding:employer.branchName')}
+              value={name}
+              onChangeText={setName}
+            />
+            <TextField
+              label={t('onboarding:employer.address')}
+              value={addressLine1}
+              onChangeText={setAddressLine1}
+            />
+            <CityChips
+              label={t('onboarding:employer.city')}
+              value={city}
+              onChange={setCity}
+            />
+          </View>
+        ) : (
+          <LocationMap
+            pin={
+              Number.isFinite(lat) && Number.isFinite(lng)
+                ? { latitude: lat, longitude: lng }
+                : null
+            }
+            pinLabel={name || undefined}
+            locateMoment="pin-pick"
+            onPick={(pin) => {
+              setLatitude(String(pin.latitude));
+              setLongitude(String(pin.longitude));
+            }}
+          />
+        )}
+      </WizardShell>
     </ModulePage>
   );
 }

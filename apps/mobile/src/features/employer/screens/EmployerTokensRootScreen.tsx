@@ -9,7 +9,7 @@ import { ApiClientError } from '../../../api/client';
 import { fetchTokenBalance, fetchTokenLedger } from '../../../api/tokens-api';
 import { JobCard } from '../../../components/job/JobCard';
 import { Button } from '../../../components/ui/Button';
-import { Pressable } from '../../../components/ui/Pressable';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
@@ -122,38 +122,20 @@ export function EmployerTokensRootScreen({ navigation }: Props) {
       ) : null}
       {ledger.length > 0 ? (
         <View className="mt-3 flex-row flex-wrap gap-2">
-          <Pressable
-            className={`rounded-full px-3 py-2 ${
-              typeFilter == null ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+          <ClayChip
+            label={t('employer:tokens.filterAll')}
+            selected={typeFilter == null}
             onPress={() => setTypeFilter(null)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                typeFilter == null ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {t('employer:tokens.filterAll')}
-            </Text>
-          </Pressable>
+          />
           {[...new Set(ledger.map((row) => row.type))].map((type) => (
-            <Pressable
+            <ClayChip
               key={type}
-              className={`rounded-full px-3 py-2 ${
-                typeFilter === type ? 'bg-action-primary' : 'bg-surface-1'
-              }`}
+              label={t(`employer:tokens.ledgerType.${type}`, { defaultValue: type })}
+              selected={typeFilter === type}
               onPress={() =>
                 setTypeFilter((current) => (current === type ? null : type))
               }
-            >
-              <Text
-                className={`font-sans text-sm ${
-                  typeFilter === type ? 'text-text-on' : 'text-text-high'
-                }`}
-              >
-                {t(`employer:tokens.ledgerType.${type}`, { defaultValue: type })}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
       ) : null}

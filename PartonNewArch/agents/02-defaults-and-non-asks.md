@@ -37,7 +37,7 @@ Do **not** ask the user about:
 | `gap-3h-no-response` | After confirm window: notify employer + worker; **auto-release seat** after **30 minutes** no-response (config `AVAILABILITY_NO_RESPONSE_RELEASE_MINUTES=30`) | shifts + notifications |
 | `gap-application-snapshot` | **Freeze** worker profile snapshot JSON on apply | applications |
 | `gap-overlap-apply` | **Soft warn** on apply if overlap; **hard block** second **accept** that overlaps | applications |
-| `gap-payments` | v1: **admin/manual credit** that **writes the real ledger** + `TopUpProvider` wired to a **sandbox PSP** when env set (no fake success); pick Twilio-style sandbox or admin-credit-only until PSP chosen — still **fully functional** balance changes | tokens |
+| `gap-payments` | **Adapty** IAP (App Store + Google Play), credentials on `w.admin.config.adapty`. Off → no store sale; admin credit + test ledger still write the real ledger. Failed pay leaves job draft (T-161). | tokens |
 | `gap-wifi-location` | **GPS-only** for hard geofence; network location **not** used for pass/fail | location |
 | `gap-documents` | Implement upload + typed docs + signed GET; MIME/size limits in config | workers |
 | `gap-profile-demographics` | Store age/gender; job filters optional; validate ranges | workers + matching |
@@ -80,7 +80,7 @@ Do **not** ask the user about:
 
 | Need | Agent default |
 | --- | --- |
-| SMS | Real sandbox provider (e.g. Twilio/Netgsm test) — **required**; boot fails if unset |
+| SMS | Verimor `POST /v2/otp`, credentials on `w.admin.config.sms`. Off → OTP `290821`, no SMS. On → real Verimor send (fail the request if Verimor errors). |
 | FCM | Real Firebase project + HTTP v1 — **required**; boot fails if unset |
 | Object storage | **MinIO** in Compose (real S3 API) or cloud bucket |
 | JWT secrets | Generate into `.env` locally; document in `.env.example` |

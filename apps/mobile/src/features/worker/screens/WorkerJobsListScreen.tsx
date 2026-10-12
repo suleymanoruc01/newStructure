@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
-import { Pressable } from '../../../components/ui/Pressable';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -10,6 +9,7 @@ import { JobFacts } from '../../../components/job/JobFacts';
 import { ShiftFacts } from '../../../components/job/ShiftFacts';
 import { sortFeed, type FeedSort } from '../../../components/job/sort-feed';
 import { JobsMap } from '../../../components/map/JobsMap';
+import { ClayChip } from '../../../components/ui/ClayChip';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
@@ -185,97 +185,52 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
     >
       <View className="mt-2 flex-row flex-wrap gap-2">
         {TABS.map((value) => (
-          <Pressable
+          <ClayChip
             key={value}
-            className={`rounded-full px-3 py-2 ${
-              tab === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={t(`worker:jobs.${TAB_LABEL[value]}`)}
+            selected={tab === value}
             onPress={() => {
               setTab(value);
               if (value !== 'feed') {
                 setView('list');
               }
             }}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                tab === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {t(`worker:jobs.${TAB_LABEL[value]}`)}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       {tab === 'feed' ? (
       <View className="mt-2 flex-row flex-wrap gap-2">
         {(['list', 'map'] as const).map((mode) => (
-          <Pressable
+          <ClayChip
             key={mode}
-            className={`rounded-full px-3 py-2 ${
-              view === mode ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={mode === 'list' ? t('worker:jobs.viewList') : t('worker:jobs.viewMap')}
+            selected={view === mode}
             onPress={() => setView(mode)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                view === mode ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {mode === 'list' ? t('worker:jobs.viewList') : t('worker:jobs.viewMap')}
-            </Text>
-          </Pressable>
+          />
         ))}
-        <Pressable
-          className={`rounded-full px-3 py-2 ${
-            onlyFavorites ? 'bg-action-primary' : 'bg-surface-1'
-          }`}
+        <ClayChip
+          label={t('worker:jobs.filterFavorites')}
+          selected={onlyFavorites}
           onPress={() => setOnlyFavorites((value) => !value)}
-        >
-          <Text
-            className={`font-sans text-sm ${
-              onlyFavorites ? 'text-text-on' : 'text-text-high'
-            }`}
-          >
-            {t('worker:jobs.filterFavorites')}
-          </Text>
-        </Pressable>
-        <Pressable
-          className={`rounded-full px-3 py-2 ${
-            onlyInstantApproval ? 'bg-action-primary' : 'bg-surface-1'
-          }`}
+        />
+        <ClayChip
+          label={t('worker:jobs.filterInstant')}
+          selected={onlyInstantApproval}
           onPress={() => setOnlyInstantApproval((value) => !value)}
-        >
-          <Text
-            className={`font-sans text-sm ${
-              onlyInstantApproval ? 'text-text-on' : 'text-text-high'
-            }`}
-          >
-            {t('worker:jobs.filterInstant')}
-          </Text>
-        </Pressable>
+        />
         {(['start', 'distance', 'pay'] as const).map((value) => (
-          <Pressable
+          <ClayChip
             key={value}
-            className={`rounded-full px-3 py-2 ${
-              sort === value ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={t(
+              value === 'start'
+                ? 'worker:jobs.sortStart'
+                : value === 'distance'
+                  ? 'worker:jobs.sortDistance'
+                  : 'worker:jobs.sortPay',
+            )}
+            selected={sort === value}
             onPress={() => setSort(value)}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                sort === value ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {t(
-                value === 'start'
-                  ? 'worker:jobs.sortStart'
-                  : value === 'distance'
-                    ? 'worker:jobs.sortDistance'
-                    : 'worker:jobs.sortPay',
-              )}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
       ) : null}
@@ -312,46 +267,31 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
       {tab === 'feed' ? (
       <View className="mt-2 flex-row flex-wrap gap-2">
         {shownSectors.map((sector) => (
-          <Pressable
+          <ClayChip
             key={sector.code}
-            className={`rounded-full px-3 py-2 ${
-              sectorCode === sector.code ? 'bg-action-primary' : 'bg-surface-1'
-            }`}
+            label={sector.displayName}
+            selected={sectorCode === sector.code}
             onPress={() => {
               setOccupationCode(null);
               setSectorCode((current) =>
                 current === sector.code ? null : sector.code,
               );
             }}
-          >
-            <Text
-              className={`font-sans text-sm ${
-                sectorCode === sector.code ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {sector.displayName}
-            </Text>
-          </Pressable>
+          />
         ))}
         {(sectors.find((sector) => sector.code === sectorCode)?.occupations ?? []).map(
           (occupation) => (
-            <Pressable
+            <ClayChip
               key={occupation.code}
-              className={`rounded-full px-3 py-2 ${
-                occupationCode === occupation.code
-                  ? 'bg-accent-mustard'
-                  : 'bg-surface-1'
-              }`}
+              label={occupation.title}
+              selected={occupationCode === occupation.code}
+              tone="accent"
               onPress={() =>
                 setOccupationCode((current) =>
                   current === occupation.code ? null : occupation.code,
                 )
               }
-            >
-              <Text className="font-sans text-sm text-text-high">
-                {occupation.title}
-              </Text>
-            </Pressable>
+            />
           ),
         )}
       </View>
