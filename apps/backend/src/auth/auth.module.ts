@@ -49,6 +49,7 @@ import { TokenService } from './token.service.js';
     SessionService,
     MembershipService,
     AuthService,
+    SmsService,
   ],
 })
 export class AuthModule {}

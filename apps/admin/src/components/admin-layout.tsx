@@ -6,10 +6,12 @@ import { useAuth } from "@/features/auth/auth-context";
 
 function SideNav() {
   return (
-    <nav className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-3 pb-4" aria-label="Ana menü">
+    <nav className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-3 pb-4" aria-label="Ana menü">
       {adminNavSections.map((section) => (
         <div key={section.title}>
-          <p className="mb-1 px-2 text-xs text-muted-foreground">{section.title}</p>
+          <p className="mb-1 px-2 text-[11px] font-medium tracking-[0.02em] text-muted-foreground">
+            {section.title}
+          </p>
           <div className="flex flex-col">
             {section.items.map((item) => (
               <NavLink
@@ -19,10 +21,10 @@ function SideNav() {
                 title={item.screenId}
                 className={({ isActive }) =>
                   [
-                    "rounded-md px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "rounded-md px-2 py-2 text-sm transition-[background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isActive
-                      ? "bg-muted font-semibold text-foreground"
-                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                      ? "bg-primary/10 font-semibold text-primary"
+                      : "text-muted-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground",
                   ].join(" ")
                 }
               >
@@ -43,7 +45,7 @@ function OperatorBar() {
   return (
     <div className="border-t border-border px-3 py-3">
       {user ? (
-        <p className="mb-2 truncate text-xs tabular-nums text-foreground" translate="no">
+        <p className="mb-2 truncate font-mono text-xs tabular-nums text-foreground" translate="no">
           {user.phone}
         </p>
       ) : null}
@@ -73,7 +75,7 @@ export function AdminLayout() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
         <div className="px-5 pb-4 pt-5">
           <p className="font-display text-xl font-semibold tracking-tight text-foreground">PartOn</p>
-          <p className="text-xs text-muted-foreground">Operasyon</p>
+          <p className="text-xs tracking-[0.02em] text-muted-foreground">Operasyon</p>
         </div>
         <SideNav />
         <OperatorBar />
@@ -86,7 +88,7 @@ export function AdminLayout() {
           </Button>
         </header>
         {menuOpen ? (
-          <div className="fixed inset-0 z-30 flex flex-col bg-card pt-14 md:hidden">
+          <div className="fixed inset-0 z-30 flex flex-col overflow-y-auto overscroll-contain bg-card pt-14 md:hidden">
             <SideNav />
             <OperatorBar />
           </div>

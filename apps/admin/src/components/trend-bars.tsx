@@ -13,7 +13,7 @@ function shortDayLabel(dayKey: string): string {
 export function TrendBars({ labels, values, title, valueLabel }: TrendBarsProps) {
   const max = Math.max(1, ...values);
   return (
-    <div className="rounded-2xl border border-border bg-card px-4 py-4">
+    <div className="elev rounded-lg border border-border bg-card px-4 py-4">
       <p className="text-sm font-medium text-foreground">{title}</p>
       <div className="mt-4 flex h-28 items-end gap-2" role="img" aria-label={title}>
         {labels.map((label, index) => {

@@ -79,7 +79,7 @@ export function DashboardPage() {
         <div className="flex flex-col gap-8">
           <section>
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-base font-semibold text-foreground">Operasyon kuyrukları</h2>
+              <h2 className="font-display text-xl font-semibold text-foreground">Operasyon kuyrukları</h2>
               <Link to="/ops/perf" className="text-sm text-primary underline">
                 Performans metrikleri
               </Link>
@@ -91,7 +91,7 @@ export function DashboardPage() {
                   <Link
                     key={item.key}
                     to={item.to}
-                    className="rounded-2xl border border-border bg-card px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_16px_rgba(13,148,136,0.08)]"
+                    className="elev rounded-lg border border-border bg-card px-4 py-4"
                   >
                     <p className="font-sans text-[2rem] font-semibold leading-none tabular-nums text-foreground">
                       {metrics[item.key]}
@@ -107,7 +107,7 @@ export function DashboardPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-foreground">Platform özeti</h2>
+            <h2 className="mb-3 font-display text-xl font-semibold text-foreground">Platform özeti</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {businessCards.map((item) => {
                 const raw = metrics.business[item.key];
@@ -115,7 +115,7 @@ export function DashboardPage() {
                 return (
                   <div
                     key={item.key}
-                    className="rounded-2xl border border-border bg-card px-4 py-4"
+                    className="elev rounded-lg border border-border bg-card px-4 py-4"
                   >
                     <p className="font-sans text-xl font-semibold tabular-nums text-foreground">
                       {display}
@@ -131,7 +131,7 @@ export function DashboardPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-foreground">Son 7 gün (İstanbul)</h2>
+            <h2 className="mb-3 font-display text-xl font-semibold text-foreground">Son 7 gün (İstanbul)</h2>
             <div className="grid gap-3 lg:grid-cols-3">
               <TrendBars
                 title="Yeni kullanıcı"

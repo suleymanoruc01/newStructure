@@ -27,6 +27,8 @@ import { FavoritesService } from '../favorites/favorites.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PlatformService } from '../platform/platform.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { SmsService, verimorActive } from '../auth/sms.service.js';
+import { AdaptyService, adaptyActive } from '../tokens/adapty.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
 import { WorkerDocumentsService } from '../workers/worker-documents.service.js';
 import { LegalAuditLogger } from '../audit/legal-audit.logger.js';
@@ -78,6 +80,8 @@ export class AdminOpsService {
     private readonly applications: ApplicationsService,
     private readonly shifts: ShiftsService,
     private readonly membership: MembershipService,
+    private readonly sms: SmsService,
+    private readonly adapty: AdaptyService,
   ) {}
 
   async dashboard() {
@@ -1799,10 +1803,20 @@ export class AdminOpsService {
   }
 
   async getRemoteConfig() {
-    const row = await this.prisma.remoteConfig.findUnique({
+    return this.prisma.remoteConfig.upsert({
       where: { id: 'default' },
+      create: {
+        id: 'default',
+        geofenceRadiusM: 100,
+        geofenceSoftRadiusM: 150,
+        geofenceMaxAccuracyM: 30,
+        checkinEarlyMinutes: 15,
+        checkinLateMinutes: 30,
+        maintenanceMode: false,
+        timeZone: 'Europe/Istanbul',
+      },
+      update: {},
     });
-    return row;
   }
 
   async patchRemoteConfig(
@@ -1810,9 +1824,13 @@ export class AdminOpsService {
     body: AdminRemoteConfigBody,
     requestId: string,
   ) {
-    const updated = await this.prisma.remoteConfig.update({
+    const updated = await this.prisma.remoteConfig.upsert({
       where: { id: 'default' },
-      data: body,
+      create: {
+        id: 'default',
+        ...body,
+      },
+      update: body,
     });
     await this.audit.append({
       category: 'admin_action',
@@ -1837,7 +1855,12 @@ export class AdminOpsService {
       header: row.header,
       passwordSet: row.password.length > 0,
       fallbackOtp: '290821' as const,
+      active: verimorActive(row),
     };
+  }
+
+  async probeSmsSettings() {
+    return this.sms.probe();
   }
 
   async getSmsSettings() {
@@ -1915,7 +1938,12 @@ export class AdminOpsService {
       secretSet: row.secretKey.length > 0,
       webhookAuthorizationSet: row.webhookAuthorization.length > 0,
       webhookPath: '/api/v1/webhooks/adapty' as const,
+      active: adaptyActive(row),
     };
+  }
+
+  async probeAdaptySettings() {
+    return this.adapty.probe();
   }
 
   async getAdaptySettings() {

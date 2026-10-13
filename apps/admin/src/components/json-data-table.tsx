@@ -59,9 +59,9 @@ export function JsonDataTable({
     .slice(0, 8);
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <div className="elev overflow-x-auto rounded-lg border border-border bg-card">
       <table className="w-full min-w-[640px] text-left text-sm">
-        <thead className="bg-background">
+        <thead className="bg-muted">
           <tr>
             {columns.map((col) => (
               <th key={col} className="h-10 px-3 text-xs font-medium text-muted-foreground">
@@ -81,13 +81,13 @@ export function JsonDataTable({
             return (
               <tr
                 key={typeof rowId === "string" ? rowId : index}
-                className="border-t border-background/50 hover:bg-background/30"
+                className="border-t border-border hover:bg-muted"
               >
                 {columns.map((col) => {
                   const mono = col === idKey || col === "fingerprint" || col.endsWith("Id");
                   const text = cellValue(record[col]);
                   return (
-                    <td key={col} className={mono ? "h-10 px-3 font-sans text-sm tabular-nums text-foreground" : "h-10 px-3 text-foreground"}>
+                    <td key={col} className={mono ? "h-10 px-3 font-mono text-sm tabular-nums text-foreground" : "h-10 px-3 text-foreground"}>
                       {col === idKey && to ? (
                         <Link to={to} className="underline-offset-2 hover:underline">
                           {text}

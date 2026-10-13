@@ -76,6 +76,33 @@ export class SmsService {
     return verimorActive(await this.loadSettings());
   }
 
+  async probe(): Promise<{
+    name: 'verimor';
+    status: 'up' | 'degraded' | 'down';
+    detail: string;
+  }> {
+    const settings = await this.loadSettings();
+    if (!settings.verimorEnabled) {
+      return {
+        name: 'verimor',
+        status: 'degraded',
+        detail: `Kapalı — OTP ${FALLBACK_OTP}, SMS yok`,
+      };
+    }
+    if (!verimorActive(settings)) {
+      return {
+        name: 'verimor',
+        status: 'down',
+        detail: 'Açık ama kullanıcı adı veya şifre eksik',
+      };
+    }
+    return {
+      name: 'verimor',
+      status: 'up',
+      detail: 'Verimor /v2/otp yapılandırıldı',
+    };
+  }
+
   async sendOtp(
     phoneE164: string,
     code: string,

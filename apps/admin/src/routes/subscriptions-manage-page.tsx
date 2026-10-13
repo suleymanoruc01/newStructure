@@ -92,7 +92,7 @@ export function SubscriptionsManagePage() {
         {items.map((plan) => (
           <div
             key={plan.id}
-            className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+            className="elev rounded-lg border border-border bg-card p-4"
           >
             <p className="text-sm font-semibold text-foreground">
               {plan.planCode} · {plan.displayName}

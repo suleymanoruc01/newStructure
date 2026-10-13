@@ -59,6 +59,12 @@ describe('S8 admin devops and audit (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccess}`);
     expect(res.status).toBe(200);
     expect(res.body.data.services).toBeInstanceOf(Array);
+    const names = (res.body.data.services as { name: string }[]).map(
+      (row) => row.name,
+    );
+    expect(names).toEqual(
+      expect.arrayContaining(['verimor', 'adapty', 'fcm']),
+    );
     expect(typeof res.body.data.outboxPending).toBe('number');
   });
 

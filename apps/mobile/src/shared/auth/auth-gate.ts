@@ -22,13 +22,10 @@ export function primaryRole(
   );
 }
 
-export type EmployerOnboardingStep = 'business' | 'branch';
+export type EmployerOnboardingStep = 'business';
 
-export function employerSetupStep(missing: string[]): EmployerOnboardingStep {
-  if (missing.includes('employer') || missing.includes('industries')) {
-    return 'business';
-  }
-  return 'branch';
+export function employerSetupStep(): EmployerOnboardingStep {
+  return 'business';
 }
 
 export type PostLoginRoute =
@@ -36,7 +33,6 @@ export type PostLoginRoute =
   | 'AuthPolicies'
   | 'WorkerOnboardingProfile'
   | 'EmployerOnboardingBusiness'
-  | 'EmployerOnboardingBranch'
   | 'ManagerOnboardingJoin';
 
 export function continueAfterGate(
@@ -71,9 +67,7 @@ export function postLoginRoute(gate: {
     return 'ManagerOnboardingJoin';
   }
   if (gate.phase === 'needs_onboarding' && gate.onboardingKind === 'employer') {
-    return gate.employerStep === 'branch'
-      ? 'EmployerOnboardingBranch'
-      : 'EmployerOnboardingBusiness';
+    return 'EmployerOnboardingBusiness';
   }
   return null;
 }
@@ -120,7 +114,7 @@ export async function resolveAuthPhase(
   } else if (role === 'employer') {
     const status = await fetchEmployerSetupStatus(accessToken);
     if (!status.complete) {
-      const employerStep = employerSetupStep(status.missing ?? []);
+      const employerStep = employerSetupStep();
       return {
         phase: 'needs_onboarding',
         onboardingKind: 'employer',

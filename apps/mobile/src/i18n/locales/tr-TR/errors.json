@@ -14,6 +14,7 @@
   "EMPLOYER_UNVERIFIED": "İşveren doğrulaması tamamlanmadı.",
   "FAVORITES_AUDIENCE_EMPTY": "Favori çalışan listenizde bu ilana uygun kimse yok. Önce favori ekleyin veya ilanı herkese açın.",
   "INVALID_MANAGER_CODE": "Geçersiz yönetici kodu.",
+  "ONBOARDING_REQUIRED": "Önce işyeri oluşturun.",
   "PROFILE_INCOMPLETE": "Profilinizi tamamlayın.",
   "ALREADY_APPLIED": "Bu ilana zaten başvurdunuz.",
   "JOB_NOT_APPLICABLE": "Bu ilana başvuru yapılamaz.",

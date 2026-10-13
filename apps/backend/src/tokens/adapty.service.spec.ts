@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { adaptyActive, profileHasTransaction } from './adapty.service.js';
+import {
+  AdaptyService,
+  adaptyActive,
+  profileHasTransaction,
+} from './adapty.service.js';
 
 describe('Adapty helpers', () => {
   it('is inactive without keys', () => {
@@ -28,5 +32,45 @@ describe('Adapty helpers', () => {
     expect(profileHasTransaction(profile, 'txn-other', ['parton_tokens_10'])).toBe(
       false,
     );
+  });
+});
+
+describe('AdaptyService.probe', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('is degraded when Adapty is off', async () => {
+    const service = new AdaptyService({
+      adaptySettings: {
+        findUnique: vi.fn().mockResolvedValue({
+          enabled: false,
+          publicSdkKey: '',
+          secretKey: '',
+        }),
+      },
+    } as never);
+    const probe = await service.probe();
+    expect(probe.status).toBe('degraded');
+  });
+
+  it('is down when the secret is rejected', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ status: 401, ok: false }),
+    );
+    const service = new AdaptyService({
+      adaptySettings: {
+        findUnique: vi.fn().mockResolvedValue({
+          enabled: true,
+          publicSdkKey: 'pub',
+          secretKey: 'bad',
+        }),
+      },
+    } as never);
+    const probe = await service.probe();
+    expect(probe.status).toBe('down');
+    expect(probe.detail).toContain('401');
   });
 });

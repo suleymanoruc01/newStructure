@@ -275,7 +275,7 @@
 | **Route** | `/config/sms` |
 | **MVP** | P0 |
 | **Cases** | `CASE-AUTH` |
-| **Components** | Verimor enable toggle, username, password (write-only), sender `header`. When Verimor is off, OTP is `290821` and no SMS is sent. Password is never returned by `GET /admin/config/sms`. |
+| **Components** | Verimor enable toggle, username, password (write-only), sender `header`, status probe. When Verimor is off, OTP is `290821` and no SMS is sent. Password is never returned by `GET /admin/config/sms`. |
 
 ### `w.admin.config.adapty`
 
@@ -284,7 +284,7 @@
 | **Route** | `/config/adapty` |
 | **MVP** | P0 |
 | **Cases** | `CASE-TOKEN` |
-| **Components** | Adapty enable, public SDK key, secret (write-only), webhook Authorization, placement ID, App Store / Play connected checkboxes. Webhook `POST /api/v1/webhooks/adapty`. Token packages carry iOS/Android/Adapty product IDs. |
+| **Components** | Adapty enable, public SDK key, secret (write-only), webhook Authorization, placement ID, App Store / Play connected checkboxes, live secret probe. Webhook `POST /api/v1/webhooks/adapty`. Token packages carry iOS/Android/Adapty product IDs. |
 
 ### `w.admin.audit.log`
 

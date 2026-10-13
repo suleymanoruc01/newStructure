@@ -148,12 +148,27 @@ export const adminBroadcastSchema = z.object({
   audience: z.enum(['all_workers', 'all_employers']),
 });
 
+export const integrationStatusSchema = z.enum(['up', 'degraded', 'down']);
+
+export const integrationProbeDataSchema = z.object({
+  name: z.string(),
+  status: integrationStatusSchema,
+  detail: z.string(),
+});
+
+export type IntegrationProbeData = z.infer<typeof integrationProbeDataSchema>;
+
+export const integrationProbeResponseSchema = successEnvelopeSchema(
+  integrationProbeDataSchema,
+);
+
 export const adminSmsSettingsDataSchema = z.object({
   verimorEnabled: z.boolean(),
   username: z.string(),
   header: z.string(),
   passwordSet: z.boolean(),
   fallbackOtp: z.literal('290821'),
+  active: z.boolean(),
 });
 
 export const adminSmsSettingsPatchSchema = z.object({
@@ -176,6 +191,7 @@ export const adminAdaptySettingsDataSchema = z.object({
   secretSet: z.boolean(),
   webhookAuthorizationSet: z.boolean(),
   webhookPath: z.literal('/api/v1/webhooks/adapty'),
+  active: z.boolean(),
 });
 
 export const adminAdaptySettingsPatchSchema = z.object({

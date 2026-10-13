@@ -71,9 +71,9 @@ server {
     return 302 /admin/;
   }
 
-  location /admin/ {
-    root /var/www/parton;
-    try_files $uri $uri/ /admin/index.html;
+  location /admin {
+    include snippets/proxy-params.conf;
+    proxy_pass http://parton_api;
   }
 
   location /api/ {
@@ -98,9 +98,9 @@ server {
     return 302 /admin/devops;
   }
 
-  location /admin/ {
-    root /var/www/parton;
-    try_files $uri $uri/ /admin/index.html;
+  location /admin {
+    include snippets/proxy-params.conf;
+    proxy_pass http://parton_api;
   }
 
   location /api/ {

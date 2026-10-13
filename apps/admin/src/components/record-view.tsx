@@ -37,7 +37,7 @@ export function RecordView({ value }: { value: unknown }) {
   }
   const entries = Object.entries(value).filter(([key]) => !isHiddenField(key));
   return (
-    <dl className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <dl className="elev overflow-hidden rounded-lg border border-border bg-card">
       {entries.map(([key, entry]) => (
         <div key={key} className="grid gap-1 border-t border-background/40 px-4 py-3 first:border-t-0">
           <dt className="text-xs text-muted-foreground">{fieldLabel(key)}</dt>

@@ -126,6 +126,7 @@
   "branches": {
     "title": "Şubeler",
     "empty": "Bu işyerine henüz şube eklenmedi.",
+    "workplaceRequired": "Önce işyeri oluşturun. Şube ancak işyeri altında açılır.",
     "search": "Şube veya şehir ara",
     "searchEmpty": "Bu aramaya uyan şube yok.",
     "createTitle": "Şube ekle",
@@ -236,6 +237,7 @@
     "inviteCta": "Yönetici kodu oluştur",
     "inviteRotate": "Kodu yenile",
     "addWorkplace": "Başka işyeri ekle",
+    "createWorkplace": "İşyeri oluştur",
     "coordsInvalid": "Geçerli enlem ve boylam girin."
   },
   "industry": {
@@ -253,7 +255,7 @@
     "missing": {
       "employer": "İşletme kaydı",
       "industries": "Sektör seçimi",
-      "branch": "En az bir şube"
+      "branch": "Şube (isteğe bağlı)"
     }
   },
   "ops": {

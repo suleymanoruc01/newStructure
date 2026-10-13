@@ -35,7 +35,7 @@
 | `w.admin.devops.errors.list` | `/devops/errors` | Fingerprinted issues; filter by app/release/status | `CASE-PERF`, `CASE-SECURITY` (no PII leak) |
 | `w.admin.devops.errors.detail` | `/devops/errors/:fingerprint` | Stack, samples, `requestId`s, assign, resolve/ignore | same |
 | `w.admin.devops.releases` | `/devops/releases` | Per-app version, git SHA, built_at, environment | deploy ops |
-| `w.admin.devops.services` | `/devops/services` | Live/ready, Postgres, Redis, queue lag, SMS/FCM probe status | `CASE-PERF` |
+| `w.admin.devops.services` | `/devops/services` | Live/ready, Postgres, Redis, queue lag, Verimor / Adapty / FCM probe status | `CASE-PERF` |
 | `w.admin.devops.clients` | `/devops/clients` | Mobile/admin/marketing min versions; crash/error rates by build | AO-12 force-update ties |
 
 All **P0**. Recipe **R7**. Specs in [`screens/admin-console.md`](screens/admin-console.md).

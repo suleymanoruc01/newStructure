@@ -76,7 +76,7 @@ function CatalogModal({
         onClick={onClose}
       />
       <div
-        className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
+        className="elev relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-border bg-card"
         role="dialog"
         aria-modal="true"
       >
@@ -413,7 +413,7 @@ export function CatalogManagePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+        <div className="elev overflow-hidden rounded-lg border border-border bg-card">
           <div className="flex items-center justify-between border-b border-border px-6 py-4">
             <h2 className="text-lg font-semibold text-foreground">Sektörler</h2>
             <Button type="button" size="sm" onClick={openAddSector}>
@@ -491,7 +491,7 @@ export function CatalogManagePage() {
           )}
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+        <div className="elev overflow-hidden rounded-lg border border-border bg-card">
           <div className="flex items-center justify-between border-b border-border px-6 py-4">
             <h2 className="text-lg font-semibold text-foreground">
               {selectedSector

@@ -9,11 +9,13 @@ import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
 import { JobCard } from '../../../components/job/JobCard';
 import { LocationMap } from '../../../components/map/LocationMap';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { CityChips } from '../../../components/ui/CityChips';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { WizardShell } from '../../../components/ui/WizardShell';
 import { TextField } from '../../../components/ui/TextField';
+import { useAuth } from '../../../shared/auth/AuthProvider';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
 import { type GeofenceRadii } from '../../../shared/location/geofence';
@@ -23,6 +25,10 @@ type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerBranchForm'
 export function EmployerBranchFormScreen({ route, navigation }: Props) {
   const branchId = route.params?.branchId;
   const { t } = useTranslation(['employer', 'common', 'errors']);
+  const { contexts } = useAuth();
+  const workplaceId = contexts.find(
+    (item) => item.role === 'employer' || item.role === 'manager',
+  )?.employerId;
   const [name, setName] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [city, setCity] = useState('');
@@ -97,6 +103,13 @@ export function EmployerBranchFormScreen({ route, navigation }: Props) {
       if (branchId) {
         await patchBranch(branchId, body, token);
       } else {
+        if (!workplaceId) {
+          throw new ApiClientError(
+            t('employer:branches.workplaceRequired'),
+            422,
+            'ONBOARDING_REQUIRED',
+          );
+        }
         await createBranch(body, token);
       }
       navigation.goBack();
@@ -109,6 +122,23 @@ export function EmployerBranchFormScreen({ route, navigation }: Props) {
 
   const lat = Number.parseFloat(latitude);
   const lng = Number.parseFloat(longitude);
+
+  if (!branchId && !workplaceId) {
+    return (
+      <ModulePage
+        back="auto"
+        scroll
+        testID="m.employer.branches.form"
+        title={t('employer:branches.createTitle')}
+      >
+        <EmptyState
+          title={t('employer:branches.workplaceRequired')}
+          actionLabel={t('employer:business.createWorkplace')}
+          onAction={() => navigation.navigate('EmployerCreateWorkplace')}
+        />
+      </ModulePage>
+    );
+  }
 
   return (
     <ModulePage

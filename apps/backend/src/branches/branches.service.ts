@@ -86,7 +86,31 @@ export class BranchesService {
     userId: string,
     ctx: AuthContext,
   ): Promise<string> {
-    if (ctx.role === 'employer' && ctx.employerId) {
+    if (!ctx.employerId) {
+      throw new ApiException(
+        ctx.role === 'employer'
+          ? HttpStatus.UNPROCESSABLE_ENTITY
+          : HttpStatus.FORBIDDEN,
+        ctx.role === 'employer'
+          ? ErrorCode.ONBOARDING_REQUIRED
+          : ErrorCode.FORBIDDEN,
+        ctx.role === 'employer'
+          ? 'Önce işyeri oluşturun.'
+          : 'Şube işlemi için işyeri bağlamı gerekli.',
+      );
+    }
+    const workplace = await this.prisma.employer.findUnique({
+      where: { id: ctx.employerId },
+      select: { id: true },
+    });
+    if (!workplace) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İşyeri bulunamadı.',
+      );
+    }
+    if (ctx.role === 'employer') {
       const membership = await this.prisma.employerMembership.findFirst({
         where: {
           userId,
@@ -103,13 +127,13 @@ export class BranchesService {
       }
       return ctx.employerId;
     }
-    if (ctx.role === 'manager' && ctx.employerId) {
+    if (ctx.role === 'manager') {
       return ctx.employerId;
     }
     throw new ApiException(
       HttpStatus.FORBIDDEN,
       ErrorCode.FORBIDDEN,
-      'Şube işlemi için işveren bağlamı gerekli.',
+      'Şube işlemi için işyeri bağlamı gerekli.',
     );
   }
 
@@ -778,7 +802,7 @@ export class BranchesService {
       throw new ApiException(
         HttpStatus.NOT_FOUND,
         ErrorCode.NOT_FOUND,
-        'İşveren bulunamadı.',
+        'İşyeri bulunamadı.',
       );
     }
     const owner = await this.prisma.employerMembership.findFirst({

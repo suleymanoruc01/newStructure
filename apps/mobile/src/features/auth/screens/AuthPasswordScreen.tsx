@@ -17,7 +17,6 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'AuthPassword'>;
 export function AuthPasswordScreen({ navigation, route }: Props) {
   const { t } = useTranslation(['auth', 'common', 'errors']);
   const {
-    employerOnboardingStep,
     loginWithPassword,
     onboardingKind,
     phase,
@@ -52,17 +51,13 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
         return;
       }
       if (onboardingKind === 'employer') {
-        navigation.replace(
-          employerOnboardingStep === 'branch'
-            ? 'EmployerOnboardingBranch'
-            : 'EmployerOnboardingBusiness',
-        );
+        navigation.replace('EmployerOnboardingBusiness');
       }
       return;
     }
     const unreachable: never = phase;
     return unreachable;
-  }, [employerOnboardingStep, navigation, onboardingKind, phase]);
+  }, [navigation, onboardingKind, phase]);
 
   const onSubmit = async () => {
     setError(null);

@@ -67,6 +67,74 @@ export class AdaptyService {
     return adaptyActive(await this.loadSettings());
   }
 
+  async health(): Promise<{
+    name: 'adapty';
+    status: 'up' | 'degraded' | 'down';
+    detail: string;
+  }> {
+    const settings = await this.loadSettings();
+    if (!settings.enabled) {
+      return {
+        name: 'adapty',
+        status: 'degraded',
+        detail: 'Kapalı — mağaza satışı yok; admin/test kredisi çalışır',
+      };
+    }
+    if (!adaptyActive(settings)) {
+      return {
+        name: 'adapty',
+        status: 'down',
+        detail: 'Açık ama public SDK veya secret eksik',
+      };
+    }
+    return {
+      name: 'adapty',
+      status: 'up',
+      detail: 'Adapty anahtarları kayıtlı',
+    };
+  }
+
+  async probe(): Promise<{
+    name: 'adapty';
+    status: 'up' | 'degraded' | 'down';
+    detail: string;
+  }> {
+    const local = await this.health();
+    if (local.status !== 'up') {
+      return local;
+    }
+    const settings = await this.loadSettings();
+    try {
+      const url = new URL(ADAPTY_PROFILE_URL);
+      url.searchParams.set('customer_user_id', 'parton-admin-probe');
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Api-Key ${settings.secretKey}`,
+          Accept: 'application/json',
+        },
+      });
+      if (response.status === 401 || response.status === 403) {
+        return {
+          name: 'adapty',
+          status: 'down',
+          detail: `Secret reddedildi (HTTP ${response.status})`,
+        };
+      }
+      return {
+        name: 'adapty',
+        status: 'up',
+        detail: `Adapty API yanıtı HTTP ${response.status}`,
+      };
+    } catch (error) {
+      return {
+        name: 'adapty',
+        status: 'down',
+        detail:
+          error instanceof Error ? error.message : 'Adapty erişilemedi',
+      };
+    }
+  }
+
   publicSnapshot(settings: {
     enabled: boolean;
     publicSdkKey: string;

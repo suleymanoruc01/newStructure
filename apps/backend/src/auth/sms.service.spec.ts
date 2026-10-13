@@ -37,6 +37,22 @@ describe('SmsService.sendOtp', () => {
     vi.restoreAllMocks();
   });
 
+  it('probe reports fallback when Verimor is off', async () => {
+    const sms = new SmsService({
+      smsSettings: {
+        findUnique: vi.fn().mockResolvedValue({
+          verimorEnabled: false,
+          username: '',
+          password: '',
+          header: '',
+        }),
+      },
+    } as never);
+    const probe = await sms.probe();
+    expect(probe.status).toBe('degraded');
+    expect(probe.detail).toContain('290821');
+  });
+
   it('does not call Verimor when disabled', async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);

@@ -16,12 +16,17 @@ import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
+import { useAuth } from '../../../shared/auth/AuthProvider';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerBranchesRoot'>;
 
 export function EmployerBranchesScreen({ route, navigation }: Props) {
   const { t } = useTranslation(['employer', 'common', 'errors']);
+  const { contexts } = useAuth();
+  const workplaceId = contexts.find(
+    (item) => item.role === 'employer' || item.role === 'manager',
+  )?.employerId;
   const testID = route.params?.screenId ?? 'm.employer.branches.list';
   const [items, setItems] = useState<Branch[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +57,8 @@ export function EmployerBranchesScreen({ route, navigation }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const canCreateBranch = Boolean(workplaceId) && hasManagerPermission('branches.create');
 
   const shown = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase('tr-TR');
@@ -120,7 +127,7 @@ export function EmployerBranchesScreen({ route, navigation }: Props) {
           />
         </View>
       ) : null}
-      {hasManagerPermission('branches.create') ? (
+      {canCreateBranch ? (
         <View className="mt-4">
           <Button
             label={t('employer:branches.createTitle')}
@@ -147,16 +154,24 @@ export function EmployerBranchesScreen({ route, navigation }: Props) {
         ))}
         {!loading && items.length === 0 ? (
           <EmptyState
-            title={t('employer:branches.empty')}
+            title={
+              workplaceId
+                ? t('employer:branches.empty')
+                : t('employer:branches.workplaceRequired')
+            }
             actionLabel={
-              hasManagerPermission('branches.create')
-                ? t('employer:branches.createTitle')
-                : undefined
+              workplaceId
+                ? canCreateBranch
+                  ? t('employer:branches.createTitle')
+                  : undefined
+                : t('employer:business.createWorkplace')
             }
             onAction={
-              hasManagerPermission('branches.create')
-                ? () => navigation.navigate('EmployerBranchForm')
-                : undefined
+              workplaceId
+                ? canCreateBranch
+                  ? () => navigation.navigate('EmployerBranchForm')
+                  : undefined
+                : () => navigation.navigate('EmployerCreateWorkplace')
             }
           />
         ) : null}

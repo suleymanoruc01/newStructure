@@ -20,7 +20,7 @@ import type { AuthStackParamList } from './types';
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export function AuthStackNavigator() {
-  const { phase, onboardingKind, employerOnboardingStep } = useAuth();
+  const { phase, onboardingKind } = useAuth();
   const [initialRoute, setInitialRoute] =
     useState<keyof AuthStackParamList>('AuthPhone');
   const [ready, setReady] = useState(false);
@@ -53,9 +53,7 @@ export function AuthStackNavigator() {
           : phase === 'needs_onboarding' && onboardingKind === 'manager'
           ? 'ManagerOnboardingJoin'
           : phase === 'needs_onboarding' && onboardingKind === 'employer'
-            ? employerOnboardingStep === 'branch'
-              ? 'EmployerOnboardingBranch'
-              : 'EmployerOnboardingBusiness'
+            ? 'EmployerOnboardingBusiness'
             : initialRoute;
 
   return (

@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
+import { SmsService } from '../auth/sms.service.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ObjectStorageService } from '../storage/object-storage.service.js';
+import { AdaptyService } from '../tokens/adapty.service.js';
 
 @Injectable()
 export class DevopsServicesService {
@@ -10,6 +12,8 @@ export class DevopsServicesService {
     private readonly prisma: PrismaService,
     private readonly config: AppConfigService,
     private readonly storage: ObjectStorageService,
+    private readonly sms: SmsService,
+    private readonly adapty: AdaptyService,
   ) {}
 
   async aggregate() {
@@ -46,6 +50,49 @@ export class DevopsServicesService {
       status: 'up',
       detail: `release=${this.config.env.PARTON_RELEASE}`,
     });
+
+    const verimor = await this.sms.probe();
+    services.push({
+      name: verimor.name,
+      status: verimor.status,
+      detail: verimor.detail,
+    });
+
+    const adapty = await this.adapty.health();
+    services.push({
+      name: adapty.name,
+      status: adapty.status,
+      detail: adapty.detail,
+    });
+
+    try {
+      const firebase = this.config.firebaseServiceAccount();
+      services.push({
+        name: 'fcm',
+        status: 'up',
+        detail: `project=${firebase.projectId}`,
+      });
+    } catch (error) {
+      services.push({
+        name: 'fcm',
+        status: 'down',
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    if (this.config.env.BULLMQ_ENABLED && this.config.env.REDIS_QUEUE_URL) {
+      services.push({
+        name: 'redis',
+        status: 'up',
+        detail: 'BullMQ açık',
+      });
+    } else {
+      services.push({
+        name: 'redis',
+        status: 'degraded',
+        detail: 'BullMQ kapalı — Stage A outbox',
+      });
+    }
 
     const outboxPending = await this.prisma.outboxEvent.count({
       where: { status: 'pending' },

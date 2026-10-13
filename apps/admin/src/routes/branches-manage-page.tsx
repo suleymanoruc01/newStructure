@@ -53,7 +53,7 @@ export function BranchesManagePage() {
 
   return (
     <PageShell title="Şubeler" screenId="w.admin.branches.list">
-      <div className="mb-8 rounded-2xl border border-border bg-card p-4">
+      <div className="elev mb-8 rounded-lg border border-border bg-card p-4">
         <p className="text-sm font-semibold text-foreground">Yeni şube (ops)</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Abonelik şube limiti admin oluşturmasında atlanır; işlem denetim günlüğüne yazılır.

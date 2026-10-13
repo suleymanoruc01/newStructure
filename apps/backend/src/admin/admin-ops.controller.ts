@@ -599,6 +599,12 @@ export class AdminOpsController {
     return successResponse(req.requestId ?? '', data);
   }
 
+  @Post('config/sms/probe')
+  async probeSmsSettings(@Req() req: Request) {
+    const data = await this.ops.probeSmsSettings();
+    return successResponse(req.requestId ?? '', data);
+  }
+
   @Get('config/adapty')
   async adaptySettings(@Req() req: Request) {
     const data = await this.ops.getAdaptySettings();
@@ -616,6 +622,12 @@ export class AdminOpsController {
       parsed,
       req.requestId ?? '',
     );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post('config/adapty/probe')
+  async probeAdaptySettings(@Req() req: Request) {
+    const data = await this.ops.probeAdaptySettings();
     return successResponse(req.requestId ?? '', data);
   }
 

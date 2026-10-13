@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -23,7 +23,15 @@ type Props = NativeStackScreenProps<
 
 export function EmployerOnboardingBranchScreen({ navigation }: Props) {
   const { t } = useTranslation(['onboarding', 'common', 'errors']);
-  const { completeOnboarding } = useAuth();
+  const { completeOnboarding, contexts } = useAuth();
+  const employerId = contexts.find((item) => item.role === 'employer')
+    ?.employerId;
+
+  useEffect(() => {
+    if (!employerId) {
+      navigation.replace('EmployerOnboardingBusiness');
+    }
+  }, [employerId, navigation]);
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
@@ -59,6 +67,10 @@ export function EmployerOnboardingBranchScreen({ navigation }: Props) {
           400,
           'VALIDATION_FAILED',
         );
+      }
+      if (!employerId) {
+        navigation.replace('EmployerOnboardingBusiness');
+        return;
       }
       await createBranch(
         {

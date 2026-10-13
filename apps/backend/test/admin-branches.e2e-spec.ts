@@ -85,4 +85,19 @@ describe('Admin branches (e2e)', () => {
     expect(patch.status).toBe(200);
     expect(patch.body.data.name).toBe('Merkez Şube');
   });
+
+  it('POST /admin/branches rejects a missing workplace', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/admin/branches')
+      .set('Authorization', `Bearer ${adminAccess}`)
+      .send({
+        employerId: '00000000-0000-4000-8000-000000000001',
+        name: 'Merkez',
+        city: 'İstanbul',
+        latitude: 41.01,
+        longitude: 28.97,
+      });
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('NOT_FOUND');
+  });
 });

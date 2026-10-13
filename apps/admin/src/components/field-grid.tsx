@@ -35,7 +35,7 @@ export function opsText(value: unknown): string {
 
 export function FieldGrid({ fields }: { fields: FieldItem[] }) {
   return (
-    <dl className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+    <dl className="elev overflow-hidden rounded-lg border border-border bg-card">
       {fields.map((field) => (
         <div
           key={field.label}

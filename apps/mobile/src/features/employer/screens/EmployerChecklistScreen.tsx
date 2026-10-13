@@ -12,12 +12,17 @@ import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { WizardSteps } from '../../../components/ui/WizardSteps';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { useAuth } from '../../../shared/auth/AuthProvider';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerChecklist'>;
 
 export function EmployerChecklistScreen({ navigation }: Props) {
   const { t } = useTranslation(['employer', 'common', 'errors']);
+  const { contexts } = useAuth();
+  const workplaceId = contexts.find(
+    (item) => item.role === 'employer' || item.role === 'manager',
+  )?.employerId;
   const [complete, setComplete] = useState(false);
   const [missing, setMissing] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +48,10 @@ export function EmployerChecklistScreen({ navigation }: Props) {
     void load();
   }, [load]);
 
+  const requiredMissing = missing.filter(
+    (key) => key === 'employer' || key === 'industries',
+  );
+
   return (
     <ModulePage
       title={t('employer:checklist.title')}
@@ -53,7 +62,7 @@ export function EmployerChecklistScreen({ navigation }: Props) {
         <Text className="font-sans mt-2 text-sm text-feedback-error">{error}</Text>
       ) : null}
       {loaded ? (
-        <WizardSteps step={Math.max(0, 3 - missing.length)} total={3} />
+        <WizardSteps step={Math.max(0, 2 - requiredMissing.length)} total={2} />
       ) : null}
       <View className="mt-3">
         <StatusBadge
@@ -70,31 +79,27 @@ export function EmployerChecklistScreen({ navigation }: Props) {
           items={[
             {
               label: t('employer:checklist.statDone'),
-              value: String(Math.max(0, 3 - missing.length)),
+              value: String(Math.max(0, 2 - requiredMissing.length)),
             },
             {
               label: t('employer:checklist.statMissing'),
-              value: String(missing.length),
+              value: String(requiredMissing.length),
             },
           ]}
         />
       </View>
       <View className="mt-4 gap-2">
-        {missing.map((key) => (
+        {requiredMissing.map((key) => (
           <JobCard
             key={key}
             title={t(`employer:checklist.missing.${key}`, { defaultValue: key })}
             onPress={() => {
               if (key === 'employer') {
-                navigation.navigate('EmployerBusiness');
+                navigation.navigate('EmployerCreateWorkplace');
                 return;
               }
               if (key === 'industries') {
                 navigation.navigate('EmployerIndustry');
-                return;
-              }
-              if (key === 'branch') {
-                navigation.navigate('EmployerBranchForm');
               }
             }}
           >
@@ -112,13 +117,19 @@ export function EmployerChecklistScreen({ navigation }: Props) {
         <Button
           label={t('employer:business.title')}
           variant="secondary"
-          onPress={() => navigation.navigate('EmployerBusiness')}
+          onPress={() =>
+            navigation.navigate(
+              workplaceId ? 'EmployerBusiness' : 'EmployerCreateWorkplace',
+            )
+          }
         />
-        <Button
-          label={t('employer:branches.createTitle')}
-          variant="secondary"
-          onPress={() => navigation.navigate('EmployerBranchForm')}
-        />
+        {workplaceId ? (
+          <Button
+            label={t('employer:branches.createTitle')}
+            variant="secondary"
+            onPress={() => navigation.navigate('EmployerBranchForm')}
+          />
+        ) : null}
       </View>
     </ModulePage>
   );

@@ -91,4 +91,34 @@ describe('Public identity codes ER/EE/TR/BR', () => {
     expect([200, 201]).toContain(branch.status);
     expect(branch.body.data.publicCode).toMatch(/^BR[A-Za-z0-9]{6}$/);
   });
+
+  it('rejects creating a branch before a workplace exists', async () => {
+    const user = await prisma.user.create({
+      data: { phoneE164: `+905558${Date.now().toString().slice(-7)}` },
+    });
+    const session = await prisma.refreshSession.create({
+      data: {
+        userId: user.id,
+        tokenHash: `no-wp-${user.id}`,
+        expiresAt: new Date(Date.now() + 86400000),
+        activeContext: { role: 'employer' },
+      },
+    });
+    const token = tokens.signAccess(user.id, session.id, {
+      role: 'employer',
+    }).accessToken;
+
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/branches')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Kadıköy',
+        addressLine1: 'Moda Cd. 1',
+        city: 'İstanbul',
+        latitude: 40.99,
+        longitude: 29.02,
+      });
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('ONBOARDING_REQUIRED');
+  });
 });

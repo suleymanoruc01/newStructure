@@ -69,6 +69,13 @@ describe('Verimor SMS admin + fallback OTP', () => {
     expect(res.body.data.fallbackOtp).toBe('290821');
     expect(res.body.data.password).toBeUndefined();
     expect(res.body.data.passwordSet).toBe(false);
+    expect(res.body.data.active).toBe(false);
+
+    const probe = await request(app.getHttpServer())
+      .post('/api/v1/admin/config/sms/probe')
+      .set('Authorization', `Bearer ${adminAccess}`);
+    expect([200, 201]).toContain(probe.status);
+    expect(probe.body.data.status).toBe('degraded');
   });
 
   it('rejects enabling Verimor without credentials', async () => {

@@ -53,9 +53,16 @@ export const adminNavSections: { title: string; items: AdminNavItem[] }[] = [
       { path: "/shifts", label: "Vardiyalar", screenId: "w.admin.shifts.list" },
       { path: "/disputes", label: "Uyuşmazlıklar", screenId: "w.admin.disputes.queue" },
       { path: "/tokens/ledger", label: "Jeton defteri", screenId: "w.admin.tokens.ledger" },
-      { path: "/tokens/packages", label: "Jeton paketleri", screenId: "w.admin.tokens.packages" },
-      { path: "/config/adapty", label: "Adapty ödemeler", screenId: "w.admin.config.adapty" },
       { path: "/ratings", label: "Puan moderasyonu", screenId: "w.admin.ratings.queue" },
+    ],
+  },
+  {
+    title: "Yapılandırma",
+    items: [
+      { path: "/config/sms", label: "Verimor ayarları", screenId: "w.admin.config.sms" },
+      { path: "/config/adapty", label: "Adapty ayarları", screenId: "w.admin.config.adapty" },
+      { path: "/config", label: "Uzak yapılandırma", screenId: "w.admin.config.remote" },
+      { path: "/tokens/packages", label: "Jeton paketleri", screenId: "w.admin.tokens.packages" },
     ],
   },
   {
@@ -65,8 +72,6 @@ export const adminNavSections: { title: string; items: AdminNavItem[] }[] = [
       { path: "/notifications/broadcast", label: "Yayın", screenId: "w.admin.notifications.broadcast" },
       { path: "/abuse", label: "Kötüye kullanım", screenId: "w.admin.abuse.list" },
       { path: "/risk", label: "Risk olayları", screenId: "w.admin.risk.queue" },
-      { path: "/config", label: "Uzak yapılandırma", screenId: "w.admin.config.remote" },
-      { path: "/config/sms", label: "Verimor SMS", screenId: "w.admin.config.sms" },
     ],
   },
   {

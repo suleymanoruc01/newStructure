@@ -132,7 +132,7 @@ export function TokenPackagesManagePage() {
     <PageShell title="Jeton paketleri" screenId="w.admin.tokens.packages">
       {error ? <p className="mb-3 text-sm text-destructive" role="alert">{error}</p> : null}
       {message ? <p className="mb-3 text-sm text-muted-foreground">{message}</p> : null}
-      <div className="mb-6 rounded-2xl border border-border bg-card p-4">
+      <div className="elev mb-6 rounded-lg border border-border bg-card p-4">
         <p className="mb-3 text-sm font-medium text-foreground">Yeni paket</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div>
@@ -204,7 +204,7 @@ export function TokenPackagesManagePage() {
         {items.map((row) => (
           <div
             key={row.id}
-            className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+            className="elev rounded-lg border border-border bg-card p-4"
           >
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>

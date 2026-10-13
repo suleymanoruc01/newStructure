@@ -87,6 +87,13 @@ describe('Adapty payments admin + webhook', () => {
     expect(res.body.data.enabled).toBe(false);
     expect(res.body.data.secretKey).toBeUndefined();
     expect(res.body.data.webhookPath).toBe('/api/v1/webhooks/adapty');
+    expect(res.body.data.active).toBe(false);
+
+    const probe = await request(app.getHttpServer())
+      .post('/api/v1/admin/config/adapty/probe')
+      .set('Authorization', `Bearer ${adminAccess}`);
+    expect([200, 201]).toContain(probe.status);
+    expect(probe.body.data.status).toBe('degraded');
 
     const denied = await request(app.getHttpServer())
       .patch('/api/v1/admin/config/adapty')
@@ -164,15 +171,15 @@ describe('Adapty payments admin + webhook', () => {
         customer_user_id: user.id,
         event_type: 'non_subscription_purchase',
         event_properties: {
-          transaction_id: 'store-txn-1',
+          transaction_id: `store-txn-${Date.now()}`,
           vendor_product_id: pack.iosProductId,
         },
       });
     expect([200, 201]).toContain(credited.status);
-    const account = await prisma.tokenAccount.findUnique({
-      where: { employerId: employer.id },
+    const purse = await prisma.tokenAccount.findUnique({
+      where: { ownerUserId: user.id },
     });
-    expect(account?.balance).toBeGreaterThanOrEqual(10);
+    expect(purse?.balance).toBeGreaterThanOrEqual(10);
 
     await request(app.getHttpServer())
       .patch('/api/v1/admin/config/adapty')

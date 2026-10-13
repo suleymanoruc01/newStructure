@@ -250,6 +250,11 @@ function EmployerBranchesNavigator() {
         name="EmployerBranchForm"
         options={{ title: 'Şube' }}
       />
+      <BranchStack.Screen
+        component={EmployerCreateWorkplaceScreen}
+        name="EmployerCreateWorkplace"
+        options={{ title: 'İşyeri' }}
+      />
     </BranchStack.Navigator>
   );
 }
