@@ -23,7 +23,7 @@ import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { formatTr, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
-type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerHome'>;
+type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerHomeRoot'>;
 
 type Summary = {
   available: number | null;
@@ -164,7 +164,7 @@ export function EmployerHomeScreen({ navigation, route }: Props) {
           <NavRow
             label={`${t('employer:home.branchTile')} · ${summary.branches == null ? '—' : summary.branches}`}
             onPress={() =>
-              openInTab(navigation, 'EmployerBranches', [
+              openInTab(navigation, 'EmployerBranchesRoot', [
                 'EmployerBranches',
                 'ManagerHome',
               ])

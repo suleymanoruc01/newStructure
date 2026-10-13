@@ -18,7 +18,7 @@ import { TextField } from '../../../components/ui/TextField';
 import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
-type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerBranches'>;
+type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerBranchesRoot'>;
 
 export function EmployerBranchesScreen({ route, navigation }: Props) {
   const { t } = useTranslation(['employer', 'common', 'errors']);

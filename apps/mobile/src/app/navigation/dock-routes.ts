@@ -49,7 +49,7 @@ export function workerShiftCtaKey(
 }
 
 export const WORKER_SCREEN_TAB: Record<string, string> = {
-  WorkerHome: 'WorkerHome',
+  WorkerHomeRoot: 'WorkerHome',
   WorkerShiftAvailability: 'WorkerHome',
   WorkerShiftPrep: 'WorkerHome',
   WorkerShiftCheckIn: 'WorkerHome',
@@ -64,7 +64,7 @@ export const WORKER_SCREEN_TAB: Record<string, string> = {
   WorkerJobsList: 'WorkerJobs',
   WorkerJobDetail: 'WorkerJobs',
   WorkerJobApply: 'WorkerJobs',
-  WorkerCalendar: 'WorkerCalendar',
+  WorkerCalendarRoot: 'WorkerCalendar',
   WorkerAvailabilityEdit: 'WorkerCalendar',
   WorkerProfileRoot: 'WorkerProfile',
   WorkerProfileEdit: 'WorkerProfile',
@@ -81,7 +81,7 @@ export const WORKER_SCREEN_TAB: Record<string, string> = {
 };
 
 export const EMPLOYER_SCREEN_TAB: Record<string, string> = {
-  EmployerHome: 'EmployerHome',
+  EmployerHomeRoot: 'EmployerHome',
   EmployerTokensRoot: 'EmployerHome',
   EmployerTokenTopUp: 'EmployerHome',
   EmployerOpenDisputes: 'EmployerHome',
@@ -97,7 +97,7 @@ export const EMPLOYER_SCREEN_TAB: Record<string, string> = {
   EmployerVerificationStatus: 'EmployerJobs',
   EmployerDashboard: 'EmployerHome',
   EmployerCalendar: 'EmployerHome',
-  EmployerBranches: 'EmployerBranches',
+  EmployerBranchesRoot: 'EmployerBranches',
   EmployerBranchDetail: 'EmployerBranches',
   EmployerBranchForm: 'EmployerBranches',
   EmployerProfileRoot: 'EmployerProfile',
@@ -116,8 +116,8 @@ export const EMPLOYER_SCREEN_TAB: Record<string, string> = {
 };
 
 export const MANAGER_SCREEN_TAB: Record<string, string> = {
-  EmployerHome: 'ManagerHome',
-  EmployerBranches: 'ManagerHome',
+  EmployerHomeRoot: 'ManagerHome',
+  EmployerBranchesRoot: 'ManagerHome',
   EmployerJobsList: 'ManagerJobs',
   EmployerCreateJob: 'ManagerJobs',
   EmployerJobDetail: 'ManagerJobs',

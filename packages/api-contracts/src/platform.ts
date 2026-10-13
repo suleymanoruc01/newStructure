@@ -21,11 +21,12 @@ export const platformRemoteConfigDataSchema = z.object({
   checkinEarlyMinutes: z.number().int().nonnegative(),
   checkinLateMinutes: z.number().int().nonnegative(),
   timeZone: ianaTimeZoneSchema,
-  adaptyEnabled: z.boolean(),
-  adaptyPublicSdkKey: z.string(),
-  adaptyPlacementId: z.string(),
-  appleStoreConnected: z.boolean(),
-  googleStoreConnected: z.boolean(),
+  // Adapty is the store billing path. Remote config omits these while it is not activated.
+  adaptyEnabled: z.boolean().default(false),
+  adaptyPublicSdkKey: z.string().default(''),
+  adaptyPlacementId: z.string().default(''),
+  appleStoreConnected: z.boolean().default(false),
+  googleStoreConnected: z.boolean().default(false),
 });
 
 export const platformRemoteConfigResponseSchema = successEnvelopeSchema(

@@ -172,12 +172,12 @@ function EmployerHomeNavigator({ screenId }: { screenId?: string }) {
       <HomeStack.Screen
         component={EmployerHomeScreen}
         initialParams={screenId ? { screenId } : undefined}
-        name="EmployerHome"
+        name="EmployerHomeRoot"
         options={{ headerShown: false }}
       />
       <HomeStack.Screen
         component={EmployerBranchesScreen}
-        name="EmployerBranches"
+        name="EmployerBranchesRoot"
         options={{ title: 'Şubeler' }}
       />
       {accountScreens(HomeStack)}
@@ -238,7 +238,7 @@ function EmployerBranchesNavigator() {
     <BranchStack.Navigator screenOptions={{ headerShown: false }}>
       <BranchStack.Screen
         component={EmployerBranchesScreen}
-        name="EmployerBranches"
+        name="EmployerBranchesRoot"
       />
       <BranchStack.Screen
         component={EmployerBranchDetailScreen}

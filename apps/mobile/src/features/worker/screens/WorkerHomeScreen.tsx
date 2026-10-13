@@ -32,7 +32,7 @@ import {
 } from '../../../shared/datetime/istanbul';
 import { partitionHomeShifts } from '../../../shared/shifts/partition-home';
 
-type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerHome'>;
+type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerHomeRoot'>;
 
 export function WorkerHomeScreen({ navigation }: Props) {
   const { t } = useTranslation(['worker', 'common', 'errors', 'system']);

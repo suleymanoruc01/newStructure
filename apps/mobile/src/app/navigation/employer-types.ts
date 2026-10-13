@@ -1,6 +1,6 @@
 export type EmployerStackParamList = {
-  EmployerHome: { screenId?: string } | undefined;
-  EmployerBranches: { screenId?: string } | undefined;
+  EmployerHomeRoot: { screenId?: string } | undefined;
+  EmployerBranchesRoot: { screenId?: string } | undefined;
   EmployerBranchDetail: { branchId: string };
   EmployerBranchForm: { branchId?: string } | undefined;
   EmployerProfileRoot: { screenId?: string } | undefined;

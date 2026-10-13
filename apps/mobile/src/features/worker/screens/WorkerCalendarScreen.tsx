@@ -36,7 +36,7 @@ import {
   weekdaySun0,
 } from '../../../shared/datetime/istanbul';
 
-type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerCalendar'>;
+type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerCalendarRoot'>;
 
 export function WorkerCalendarScreen({ navigation }: Props) {
   const { t } = useTranslation(['worker', 'common', 'errors']);

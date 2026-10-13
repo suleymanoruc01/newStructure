@@ -329,7 +329,7 @@ export function WorkerProfileRootScreen({ navigation }: Props) {
         <NavRow
           label={t('worker:calendar.title')}
           onPress={() =>
-            openInTab(navigation, 'WorkerCalendar', ['WorkerCalendar'])
+            openInTab(navigation, 'WorkerCalendarRoot', ['WorkerCalendar'])
           }
         />
         <NavRow

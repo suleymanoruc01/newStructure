@@ -1,6 +1,6 @@
 export type WorkerStackParamList = {
-  WorkerHome: undefined;
-  WorkerCalendar: undefined;
+  WorkerHomeRoot: undefined;
+  WorkerCalendarRoot: undefined;
   WorkerJobsList: { query?: string } | undefined;
   WorkerApplicationsList: undefined;
   WorkerFavoritesList: undefined;

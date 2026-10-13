@@ -90,8 +90,17 @@ export async function apiRequest<T>(
 
   const parsedSuccess = responseSchema.safeParse(json);
   if (!parsedSuccess.success) {
+    const issue = parsedSuccess.error.issues[0];
+    const where = issue
+      ? `${path} (${issue.path.join('.')}: ${issue.message})`
+      : path;
+    if (__DEV__) {
+      console.warn(`VALIDATION_FAILED ${where}`);
+    }
     throw new ApiClientError(
-      'Sunucu yanıtı doğrulanamadı.',
+      __DEV__
+        ? `Sunucu yanıtı doğrulanamadı. ${where}`
+        : 'Sunucu yanıtı doğrulanamadı.',
       response.status,
       'VALIDATION_FAILED',
     );

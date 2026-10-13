@@ -126,7 +126,7 @@ function WorkerHomeNavigator() {
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen
         component={WorkerHomeScreen}
-        name="WorkerHome"
+        name="WorkerHomeRoot"
         options={{ headerShown: false }}
       />
       {workerShiftScreens(HomeStack)}
@@ -162,7 +162,7 @@ function WorkerCalendarNavigator() {
     <CalendarStack.Navigator screenOptions={{ headerShown: false }}>
       <CalendarStack.Screen
         component={WorkerCalendarScreen}
-        name="WorkerCalendar"
+        name="WorkerCalendarRoot"
         options={{ headerShown: false }}
       />
       <CalendarStack.Screen
