@@ -19,6 +19,7 @@ import { TextField } from '../../../components/ui/TextField';
 import { NavRow } from '../../../components/ui/NavRow';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { formatTr, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
 
@@ -122,12 +123,14 @@ export function EmployerHomeScreen({ navigation, route }: Props) {
       testID={testID}
       title={t('employer:home.title')}
     >
-        <Button
-          label={t('employer:jobs.create')}
-          onPress={() =>
-            openInTab(navigation, 'EmployerCreateJob', ['EmployerJobs', 'ManagerJobs'])
-          }
-        />
+        {hasManagerPermission('jobs.create') ? (
+          <Button
+            label={t('employer:jobs.create')}
+            onPress={() =>
+              openInTab(navigation, 'EmployerCreateJob', ['EmployerJobs', 'ManagerJobs'])
+            }
+          />
+        ) : null}
         {error ? (
           <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
         ) : null}
@@ -222,12 +225,19 @@ export function EmployerHomeScreen({ navigation, route }: Props) {
           <View className="mt-6">
             <EmptyState
               title={t('employer:jobs.empty')}
-              actionLabel={t('employer:jobs.create')}
-              onAction={() =>
-                openInTab(navigation, 'EmployerCreateJob', [
-                  'EmployerJobs',
-                  'ManagerJobs',
-                ])
+              actionLabel={
+                hasManagerPermission('jobs.create')
+                  ? t('employer:jobs.create')
+                  : undefined
+              }
+              onAction={
+                hasManagerPermission('jobs.create')
+                  ? () =>
+                      openInTab(navigation, 'EmployerCreateJob', [
+                        'EmployerJobs',
+                        'ManagerJobs',
+                      ])
+                  : undefined
               }
             />
           </View>

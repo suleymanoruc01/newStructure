@@ -1,5 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ErrorCode, type TokenTopUpBody } from '@parton/api-contracts';
+import {
+  ErrorCode,
+  type AuthContext,
+  type TokenTopUpBody,
+} from '@parton/api-contracts';
 
 import { ApiException } from '../common/api.exception.js';
 import { AppConfigService } from '../config/app-config.service.js';
@@ -59,34 +63,269 @@ export class TokensService {
     });
   }
 
+  private async resolveSpendPool(
+    tx: Tx,
+    employerId: string,
+    branchId: string | null | undefined,
+    amount: number,
+    ownerUserId?: string,
+  ): Promise<{ balance: number; branchId: string | null }> {
+    let useBranchId: string | null = null;
+    if (branchId) {
+      const branchAcc = await tx.tokenAccount.findUnique({
+        where: { branchId },
+      });
+      if (branchAcc) {
+        useBranchId = branchId;
+      }
+    }
+    if (!useBranchId) {
+      await tx.tokenAccount.upsert({
+        where: { employerId },
+        create: { employerId, balance: 0 },
+        update: {},
+      });
+    }
+    const account = useBranchId
+      ? await tx.tokenAccount.findUnique({ where: { branchId: useBranchId } })
+      : await tx.tokenAccount.findUnique({ where: { employerId } });
+    if (!account) {
+      throw new ApiException(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        ErrorCode.TOKEN_INSUFFICIENT,
+        'Jeton hesabı bulunamadı.',
+      );
+    }
+    const heldAgg = await tx.tokenHold.aggregate({
+      where: useBranchId
+        ? { branchId: useBranchId, status: 'held' }
+        : { employerId, branchId: null, status: 'held' },
+      _sum: { amount: true },
+    });
+    let available = account.balance - (heldAgg._sum.amount ?? 0);
+    let purseUserId = ownerUserId;
+    if (!purseUserId) {
+      const owner = await tx.employerMembership.findFirst({
+        where: { employerId, role: 'owner', status: 'active' },
+      });
+      purseUserId = owner?.userId;
+    }
+    if (available < amount && purseUserId) {
+      const need = amount - available;
+      await this.transferFromPurse(
+        tx,
+        purseUserId,
+        employerId,
+        useBranchId,
+        need,
+      );
+      const refreshed = useBranchId
+        ? await tx.tokenAccount.findUnique({
+            where: { branchId: useBranchId },
+          })
+        : await tx.tokenAccount.findUnique({ where: { employerId } });
+      const heldAgain = await tx.tokenHold.aggregate({
+        where: useBranchId
+          ? { branchId: useBranchId, status: 'held' }
+          : { employerId, branchId: null, status: 'held' },
+        _sum: { amount: true },
+      });
+      available = (refreshed?.balance ?? 0) - (heldAgain._sum.amount ?? 0);
+    }
+    if (available < amount) {
+      throw new ApiException(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        ErrorCode.TOKEN_INSUFFICIENT,
+        'Yetersiz jeton bakiyesi.',
+      );
+    }
+    const latest = useBranchId
+      ? await tx.tokenAccount.findUnique({ where: { branchId: useBranchId } })
+      : await tx.tokenAccount.findUnique({ where: { employerId } });
+    return { balance: latest?.balance ?? account.balance, branchId: useBranchId };
+  }
+
+  private async transferFromPurse(
+    tx: Tx,
+    ownerUserId: string,
+    employerId: string,
+    branchId: string | null,
+    amount: number,
+    required = false,
+  ) {
+    await tx.tokenAccount.upsert({
+      where: { ownerUserId },
+      create: { ownerUserId, balance: 0 },
+      update: {},
+    });
+    const purse = await tx.tokenAccount.findUnique({
+      where: { ownerUserId },
+    });
+    if (required && (purse?.balance ?? 0) < amount) {
+      throw new ApiException(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        ErrorCode.TOKEN_INSUFFICIENT,
+        'Yetersiz jeton bakiyesi.',
+      );
+    }
+    const move = Math.min(amount, purse?.balance ?? 0);
+    if (move <= 0) {
+      return;
+    }
+    await tx.tokenAccount.update({
+      where: { ownerUserId },
+      data: { balance: { decrement: move } },
+    });
+    if (branchId) {
+      await tx.tokenAccount.upsert({
+        where: { branchId },
+        create: { branchId, balance: move },
+        update: { balance: { increment: move } },
+      });
+    } else {
+      await tx.tokenAccount.upsert({
+        where: { employerId },
+        create: { employerId, balance: move },
+        update: { balance: { increment: move } },
+      });
+    }
+    const dest = branchId
+      ? await tx.tokenAccount.findUnique({ where: { branchId } })
+      : await tx.tokenAccount.findUnique({ where: { employerId } });
+    const purseAfter = await tx.tokenAccount.findUnique({
+      where: { ownerUserId },
+    });
+    await tx.tokenLedgerEntry.create({
+      data: {
+        ownerUserId,
+        employerId,
+        branchId,
+        type: 'transfer',
+        amount: -move,
+        balanceAfter: purseAfter?.balance ?? 0,
+        refType: 'allocate',
+      },
+    });
+    await tx.tokenLedgerEntry.create({
+      data: {
+        employerId,
+        branchId,
+        type: 'transfer',
+        amount: move,
+        balanceAfter: dest?.balance ?? 0,
+        refType: 'allocate',
+      },
+    });
+  }
+
   listTopUpPackages() {
     return this.packages.listActivePublic();
   }
 
-  async getBalance(employerId: string) {
+  async ensurePurse(userId: string) {
+    await this.prisma.tokenAccount.upsert({
+      where: { ownerUserId: userId },
+      create: { ownerUserId: userId, balance: 0 },
+      update: {},
+    });
+  }
+
+  private async heldOnWorkplace(employerId: string, branchId?: string | null) {
+    const held = await this.prisma.tokenHold.aggregate({
+      where: branchId
+        ? { branchId, status: 'held' }
+        : { employerId, branchId: null, status: 'held' },
+      _sum: { amount: true },
+    });
+    return held._sum.amount ?? 0;
+  }
+
+  async getBalance(employerId: string, ctx?: AuthContext & { userId?: string }) {
     await this.ensureAccount(
       employerId,
       this.config.env.TOKEN_STARTING_BALANCE,
     );
-    const account = await this.prisma.tokenAccount.findUnique({
+    const workplace = await this.prisma.tokenAccount.findUnique({
       where: { employerId },
     });
-    const balance = account?.balance ?? 0;
-    const held = await this.prisma.tokenHold.aggregate({
-      where: { employerId, status: 'held' },
-      _sum: { amount: true },
+    const workplaceHeld = await this.heldOnWorkplace(employerId);
+    const workplaceBalance = workplace?.balance ?? 0;
+    const workplaceAvailable = Math.max(0, workplaceBalance - workplaceHeld);
+
+    const branches = await this.prisma.branch.findMany({
+      where: { employerId, status: 'active' },
+      include: { tokenAccount: true },
+      orderBy: { createdAt: 'asc' },
     });
-    const heldAmount = held._sum.amount ?? 0;
+    const branchPools = [];
+    for (const branch of branches) {
+      if (ctx?.role === 'manager' && ctx.branchIds?.length) {
+        if (!ctx.branchIds.includes(branch.id)) {
+          continue;
+        }
+      }
+      const held = await this.heldOnWorkplace(employerId, branch.id);
+      const balance = branch.tokenAccount?.balance ?? 0;
+      branchPools.push({
+        branchId: branch.id,
+        name: branch.name,
+        balance,
+        held,
+        available: Math.max(0, balance - held),
+      });
+    }
+
+    let unallocated = 0;
+    if (ctx?.role === 'employer' && ctx.userId) {
+      await this.ensurePurse(ctx.userId);
+      const purse = await this.prisma.tokenAccount.findUnique({
+        where: { ownerUserId: ctx.userId },
+      });
+      unallocated = purse?.balance ?? 0;
+    }
+
+    const managerLocked =
+      ctx?.role === 'manager' && (ctx.branchIds?.length ?? 0) > 0;
+    const spendable = managerLocked
+      ? branchPools.reduce((sum, row) => sum + row.available, 0)
+      : unallocated + workplaceAvailable;
+
+    const heldTotal = managerLocked
+      ? branchPools.reduce((sum, row) => sum + row.held, 0)
+      : workplaceHeld + branchPools.reduce((sum, row) => sum + row.held, 0);
+
     return {
-      balance,
-      held: heldAmount,
-      available: balance - heldAmount,
+      balance: managerLocked
+        ? branchPools.reduce((sum, row) => sum + row.balance, 0)
+        : unallocated + workplaceBalance,
+      held: heldTotal,
+      available: spendable,
+      unallocated,
+      workplace: workplaceBalance,
+      branches: branchPools,
     };
   }
 
-  async listLedger(employerId: string, limit = 50) {
+  async listLedger(
+    employerId: string,
+    ctx?: AuthContext & { userId?: string },
+    limit = 50,
+  ) {
+    const branchIds = (
+      await this.prisma.branch.findMany({
+        where: { employerId },
+        select: { id: true },
+      })
+    ).map((row) => row.id);
+    const or: Prisma.TokenLedgerEntryWhereInput[] = [{ employerId }];
+    if (ctx?.role === 'employer' && ctx.userId) {
+      or.push({ ownerUserId: ctx.userId });
+    }
+    if (branchIds.length > 0) {
+      or.push({ branchId: { in: branchIds } });
+    }
     const items = await this.prisma.tokenLedgerEntry.findMany({
-      where: { employerId },
+      where: { OR: or },
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
@@ -108,6 +347,11 @@ export class TokensService {
     jobId: string,
     amount: number,
     idempotencyKey?: string,
+    opts?: {
+      branchId?: string | null;
+      actorRole?: string;
+      actorUserId?: string;
+    },
   ) {
     if (amount <= 0) {
       throw new ApiException(
@@ -157,33 +401,18 @@ export class TokensService {
         return existing;
       }
 
-      const account = await tx.tokenAccount.findUnique({
-        where: { employerId },
-      });
-      if (!account) {
-        throw new ApiException(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          ErrorCode.TOKEN_INSUFFICIENT,
-          'Jeton hesabı bulunamadı.',
-        );
-      }
-      const heldAgg = await tx.tokenHold.aggregate({
-        where: { employerId, status: 'held' },
-        _sum: { amount: true },
-      });
-      const held = heldAgg._sum.amount ?? 0;
-      const available = account.balance - held;
-      if (available < amount) {
-        throw new ApiException(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          ErrorCode.TOKEN_INSUFFICIENT,
-          'Yetersiz jeton bakiyesi.',
-        );
-      }
+      const pool = await this.resolveSpendPool(
+        tx,
+        employerId,
+        opts?.branchId,
+        amount,
+        opts?.actorRole !== 'manager' ? opts?.actorUserId : undefined,
+      );
 
       const hold = await tx.tokenHold.create({
         data: {
           employerId,
+          branchId: pool.branchId,
           jobId,
           amount,
           status: 'held',
@@ -193,9 +422,10 @@ export class TokensService {
       await tx.tokenLedgerEntry.create({
         data: {
           employerId,
+          branchId: pool.branchId,
           type: 'hold',
           amount: -amount,
-          balanceAfter: account.balance,
+          balanceAfter: pool.balance,
           refType: 'job',
           refId: jobId,
           idempotencyKey,
@@ -209,15 +439,12 @@ export class TokensService {
   async adjustHoldForJob(
     employerId: string,
     jobId: string,
-    previousHeadcount: number,
+    _previousHeadcount: number,
     newHeadcount: number,
     idempotencyKey?: string,
+    opts?: { refund?: boolean },
   ) {
-    const delta = newHeadcount - previousHeadcount;
-    if (delta === 0) {
-      return;
-    }
-
+    const refund = opts?.refund !== false;
     return this.prisma.$transaction(async (tx) => {
       const hold = await tx.tokenHold.findUnique({ where: { jobId } });
       if (!hold || hold.status !== 'held') {
@@ -228,7 +455,8 @@ export class TokensService {
         );
       }
 
-      if (delta > 0) {
+      if (newHeadcount > hold.amount) {
+        const delta = newHeadcount - hold.amount;
         const account = await tx.tokenAccount.findUnique({
           where: { employerId },
         });
@@ -270,7 +498,10 @@ export class TokensService {
         return;
       }
 
-      const release = Math.min(hold.amount, -delta);
+      if (!refund || newHeadcount >= hold.amount) {
+        return;
+      }
+      const release = hold.amount - newHeadcount;
       if (release <= 0) {
         return;
       }
@@ -391,6 +622,7 @@ export class TokensService {
       userId?: string;
       adaptyTransactionId?: string;
       source?: 'client' | 'webhook';
+      creditTo?: 'workplace' | 'purse';
     },
   ) {
     await this.topUpProvider.assertPaymentAllowed({
@@ -417,7 +649,11 @@ export class TokensService {
         where: { idempotencyKey },
       });
       if (prior) {
-        if (prior.employerId !== employerId) {
+        if (
+          prior.employerId &&
+          prior.employerId !== employerId &&
+          !(meta?.userId && prior.ownerUserId === meta.userId)
+        ) {
           throw new ApiException(
             HttpStatus.CONFLICT,
             ErrorCode.CONFLICT,
@@ -431,9 +667,14 @@ export class TokensService {
             'Idempotency-Key ile istek gövdesi uyuşmuyor.',
           );
         }
-        const account = await this.prisma.tokenAccount.findUnique({
-          where: { employerId },
-        });
+        const account =
+          meta?.creditTo === 'purse' && meta.userId
+            ? await this.prisma.tokenAccount.findUnique({
+                where: { ownerUserId: meta.userId },
+              })
+            : await this.prisma.tokenAccount.findUnique({
+                where: { employerId },
+              });
         return {
           balance: account?.balance ?? 0,
           credited: prior.amount,
@@ -443,19 +684,33 @@ export class TokensService {
       }
     }
 
+    const creditPurse = meta?.creditTo === 'purse' && Boolean(meta.userId);
     return this.prisma.$transaction(async (tx) => {
-      await tx.tokenAccount.upsert({
-        where: { employerId },
-        create: { employerId, balance: amount },
-        update: { balance: { increment: amount } },
-      });
-      const account = await tx.tokenAccount.findUnique({
-        where: { employerId },
-      });
+      if (creditPurse && meta?.userId) {
+        await tx.tokenAccount.upsert({
+          where: { ownerUserId: meta.userId },
+          create: { ownerUserId: meta.userId, balance: amount },
+          update: { balance: { increment: amount } },
+        });
+      } else {
+        await tx.tokenAccount.upsert({
+          where: { employerId },
+          create: { employerId, balance: amount },
+          update: { balance: { increment: amount } },
+        });
+      }
+      const account = creditPurse && meta?.userId
+        ? await tx.tokenAccount.findUnique({
+            where: { ownerUserId: meta.userId },
+          })
+        : await tx.tokenAccount.findUnique({
+            where: { employerId },
+          });
       const balance = account?.balance ?? 0;
       await tx.tokenLedgerEntry.create({
         data: {
           employerId,
+          ownerUserId: creditPurse ? meta?.userId : undefined,
           type: 'top_up',
           amount,
           balanceAfter: balance,
@@ -516,16 +771,28 @@ export class TokensService {
         return;
       }
       await this.prisma.$transaction(async (tx) => {
-        await tx.tokenAccount.update({
-          where: { employerId: membership.employerId },
-          data: { balance: { decrement: prior.amount } },
-        });
-        const account = await tx.tokenAccount.findUnique({
-          where: { employerId: membership.employerId },
-        });
+        if (prior.ownerUserId) {
+          await tx.tokenAccount.update({
+            where: { ownerUserId: prior.ownerUserId },
+            data: { balance: { decrement: prior.amount } },
+          });
+        } else {
+          await tx.tokenAccount.update({
+            where: { employerId: membership.employerId },
+            data: { balance: { decrement: prior.amount } },
+          });
+        }
+        const account = prior.ownerUserId
+          ? await tx.tokenAccount.findUnique({
+              where: { ownerUserId: prior.ownerUserId },
+            })
+          : await tx.tokenAccount.findUnique({
+              where: { employerId: membership.employerId },
+            });
         await tx.tokenLedgerEntry.create({
           data: {
             employerId: membership.employerId,
+            ownerUserId: prior.ownerUserId,
             type: 'refund',
             amount: prior.amount,
             balanceAfter: account?.balance ?? 0,
@@ -569,8 +836,245 @@ export class TokensService {
         userId: customerUserId,
         adaptyTransactionId: transactionId,
         source: 'webhook',
+        creditTo: 'purse',
       },
     );
+  }
+
+  async allocate(
+    userId: string,
+    employerId: string,
+    body: { amount: number; target: 'workplace' | 'branch'; branchId?: string },
+  ) {
+    if (body.target === 'branch' && !body.branchId) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Şube jetonu için branchId gerekli.',
+      );
+    }
+    if (body.target === 'branch' && body.branchId) {
+      const branch = await this.prisma.branch.findFirst({
+        where: { id: body.branchId, employerId, status: 'active' },
+      });
+      if (!branch) {
+        throw new ApiException(
+          HttpStatus.NOT_FOUND,
+          ErrorCode.NOT_FOUND,
+          'Şube bulunamadı.',
+        );
+      }
+    }
+    await this.ensurePurse(userId);
+    await this.ensureAccount(employerId, 0);
+    return this.prisma.$transaction(async (tx) => {
+      await this.transferFromPurse(
+        tx,
+        userId,
+        employerId,
+        body.target === 'branch' ? (body.branchId ?? null) : null,
+        body.amount,
+        true,
+      );
+      const purse = await tx.tokenAccount.findUnique({
+        where: { ownerUserId: userId },
+      });
+      const workplace = await tx.tokenAccount.findUnique({
+        where: { employerId },
+      });
+      const branchAcc =
+        body.target === 'branch' && body.branchId
+          ? await tx.tokenAccount.findUnique({
+              where: { branchId: body.branchId },
+            })
+          : null;
+      return {
+        unallocated: purse?.balance ?? 0,
+        workplace: workplace?.balance ?? 0,
+        branchId: body.branchId ?? null,
+        branchBalance: branchAcc?.balance ?? 0,
+      };
+    });
+  }
+
+  async createTokenRequest(
+    userId: string,
+    ctx: AuthContext,
+    body: { amount?: number; branchId?: string; note?: string },
+  ) {
+    if (ctx.role !== 'manager' || !ctx.employerId) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.FORBIDDEN,
+        'Jeton talebi yalnızca yönetici içindir.',
+      );
+    }
+    let branchId = body.branchId ?? null;
+    if (ctx.branchIds?.length) {
+      if (branchId && !ctx.branchIds.includes(branchId)) {
+        throw new ApiException(
+          HttpStatus.FORBIDDEN,
+          ErrorCode.FORBIDDEN,
+          'Bu şube için yetkiniz yok.',
+        );
+      }
+      branchId = branchId ?? ctx.branchIds[0] ?? null;
+    } else if (branchId) {
+      const branch = await this.prisma.branch.findFirst({
+        where: { id: branchId, employerId: ctx.employerId },
+      });
+      if (!branch) {
+        throw new ApiException(
+          HttpStatus.NOT_FOUND,
+          ErrorCode.NOT_FOUND,
+          'Şube bulunamadı.',
+        );
+      }
+    }
+    const pending = await this.prisma.tokenRequest.findFirst({
+      where: {
+        requesterUserId: userId,
+        employerId: ctx.employerId,
+        branchId,
+        status: 'pending',
+      },
+    });
+    if (pending) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        ErrorCode.CONFLICT,
+        'Bekleyen bir jeton talebiniz var.',
+      );
+    }
+    const row = await this.prisma.tokenRequest.create({
+      data: {
+        requesterUserId: userId,
+        employerId: ctx.employerId,
+        branchId,
+        amount: body.amount,
+        note: body.note,
+        status: 'pending',
+      },
+    });
+    return this.mapTokenRequest(row);
+  }
+
+  async listTokenRequests(userId: string, ctx: AuthContext) {
+    if (!ctx.employerId) {
+      return { items: [] };
+    }
+    const where: Prisma.TokenRequestWhereInput = { employerId: ctx.employerId };
+    if (ctx.role === 'manager') {
+      where.requesterUserId = userId;
+    }
+    const items = await this.prisma.tokenRequest.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    return { items: items.map((row) => this.mapTokenRequest(row)) };
+  }
+
+  async resolveTokenRequest(
+    userId: string,
+    ctx: AuthContext,
+    requestId: string,
+    action: 'approve' | 'reject',
+    amount?: number,
+  ) {
+    if (ctx.role !== 'employer' || !ctx.employerId) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.FORBIDDEN,
+        'Talebi yalnızca işveren sonuçlandırabilir.',
+      );
+    }
+    const row = await this.prisma.tokenRequest.findFirst({
+      where: { id: requestId, employerId: ctx.employerId },
+    });
+    if (!row) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Talep bulunamadı.',
+      );
+    }
+    if (row.status !== 'pending') {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        ErrorCode.CONFLICT,
+        'Talep zaten sonuçlandı.',
+      );
+    }
+    if (action === 'reject') {
+      const updated = await this.prisma.tokenRequest.update({
+        where: { id: row.id },
+        data: {
+          status: 'rejected',
+          resolvedByUserId: userId,
+          resolvedAt: new Date(),
+        },
+      });
+      return this.mapTokenRequest(updated);
+    }
+    const credit = amount ?? row.amount;
+    if (credit == null || credit <= 0) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'Onay için jeton miktarı gerekli.',
+      );
+    }
+    await this.ensurePurse(userId);
+    await this.prisma.$transaction(async (tx) => {
+      await this.transferFromPurse(
+        tx,
+        userId,
+        row.employerId,
+        row.branchId,
+        credit,
+        true,
+      );
+      await tx.tokenRequest.update({
+        where: { id: row.id },
+        data: {
+          status: 'approved',
+          resolvedAmount: credit,
+          resolvedByUserId: userId,
+          resolvedAt: new Date(),
+        },
+      });
+    });
+    const updated = await this.prisma.tokenRequest.findUnique({
+      where: { id: row.id },
+    });
+    return this.mapTokenRequest(updated!);
+  }
+
+  private mapTokenRequest(row: {
+    id: string;
+    requesterUserId: string;
+    employerId: string;
+    branchId: string | null;
+    amount: number | null;
+    status: string;
+    note: string | null;
+    resolvedAmount: number | null;
+    createdAt: Date;
+    resolvedAt: Date | null;
+  }) {
+    return {
+      id: row.id,
+      requesterUserId: row.requesterUserId,
+      employerId: row.employerId,
+      branchId: row.branchId,
+      amount: row.amount,
+      status: row.status as 'pending' | 'approved' | 'rejected',
+      note: row.note,
+      resolvedAmount: row.resolvedAmount,
+      createdAt: row.createdAt.toISOString(),
+      resolvedAt: row.resolvedAt?.toISOString() ?? null,
+    };
   }
 
   async captureForShift(
@@ -606,9 +1110,13 @@ export class TokensService {
     }
 
     const captureAmount = 1;
-    const account = await tx.tokenAccount.findUnique({
-      where: { employerId: shift.employerId },
-    });
+    const account = hold.branchId
+      ? await tx.tokenAccount.findUnique({
+          where: { branchId: hold.branchId },
+        })
+      : await tx.tokenAccount.findUnique({
+          where: { employerId: shift.employerId },
+        });
     if (!account) {
       return;
     }

@@ -15,6 +15,7 @@
   "yes": "Evet",
   "no": "Hayır",
   "signOut": "Çıkış",
+  "publicCode": "Kod {{code}}",
   "signOutBody": "Oturum kapanır. İstediğiniz zaman yeniden giriş yapabilirsiniz.",
   "map": {
     "useMyLocation": "Konumumu kullan",

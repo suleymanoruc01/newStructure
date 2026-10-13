@@ -7,7 +7,7 @@ export const jobStatusSchema = z.enum(['draft', 'published', 'closed']);
 export const jobSchema = z.object({
   id: z.string().uuid(),
   employerId: z.string().uuid(),
-  branchId: z.string().uuid(),
+  branchId: z.string().uuid().nullable(),
   status: jobStatusSchema,
   sectorCode: z.string(),
   occupationCode: z.string().nullable().optional(),
@@ -35,7 +35,7 @@ export const jobSchema = z.object({
 export type Job = z.infer<typeof jobSchema>;
 
 export const jobCreateBodySchema = z.object({
-  branchId: z.string().uuid(),
+  branchId: z.string().uuid().optional(),
   sectorCode: z.string().min(1).max(64),
   occupationCode: z.string().min(1).max(64).optional(),
   title: z.string().min(2).max(200).optional(),

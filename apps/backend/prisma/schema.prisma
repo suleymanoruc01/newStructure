@@ -14,6 +14,7 @@ model User {
   locale       String  @default("tr-TR")
   email        String?
   status       String  @default("active")
+  employerPublicCode String? @unique @map("employer_public_code") @db.VarChar(8)
   deletionRequestedAt DateTime? @map("deletion_requested_at") @db.Timestamptz(6)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -21,6 +22,10 @@ model User {
   workerProfile         WorkerProfile?
   employerMemberships   EmployerMembership[]
   branchManagers        BranchManager[]
+  workplaceManagers     WorkplaceManager[]
+  tokenPurse            TokenAccount?          @relation("UserTokenPurse")
+  tokenRequestsMade     TokenRequest[]         @relation("TokenRequestRequester")
+  tokenRequestsResolved TokenRequest[]         @relation("TokenRequestResolver")
   platformAdmin         PlatformAdmin?
   refreshSessions       RefreshSession[]
   policyAcceptances     PolicyAcceptance[]
@@ -74,6 +79,7 @@ model PlatformAdmin {
 model WorkerProfile {
   id                   String    @id @default(uuid()) @db.Uuid
   userId               String    @unique @map("user_id") @db.Uuid
+  publicCode           String    @unique @default(dbgenerated("parton_public_code('EE')")) @map("public_code") @db.VarChar(8)
   firstName            String?   @map("first_name")
   lastName             String?   @map("last_name")
   birthDate            DateTime? @map("birth_date") @db.Date
@@ -138,7 +144,12 @@ model Employer {
   legalName            String    @map("legal_name")
   tradingName          String?   @map("trading_name")
   taxId                String    @unique @map("tax_id")
+  publicCode           String    @unique @default(dbgenerated("parton_public_code('TR')")) @map("public_code") @db.VarChar(8)
   industryCodes        Json      @default("[]") @map("industry_codes")
+  addressLine1         String?   @map("address_line1")
+  city                 String?
+  latitude             Decimal?  @db.Decimal(9, 6)
+  longitude            Decimal?  @db.Decimal(9, 6)
   verificationStatus   String    @default("pending") @map("verification_status")
   subscriptionPlanCode String    @default("free") @map("subscription_plan_code")
   subscriptionStatus   String    @default("active") @map("subscription_status")
@@ -148,7 +159,10 @@ model Employer {
 
   memberships EmployerMembership[]
   branches    Branch[]
-  tokenAccount TokenAccount?
+  workplaceManagers WorkplaceManager[]
+  workplaceManagerInvite WorkplaceManagerInvite?
+  tokenAccount TokenAccount? @relation("WorkplaceTokenAccount")
+  tokenRequests TokenRequest[]
   jobs         Job[]
   tokenHolds   TokenHold[]
   tokenLedger  TokenLedgerEntry[]
@@ -175,6 +189,7 @@ model EmployerMembership {
 model Branch {
   id           String   @id @default(uuid()) @db.Uuid
   employerId   String   @map("employer_id") @db.Uuid
+  publicCode   String   @unique @default(dbgenerated("parton_public_code('BR')")) @map("public_code") @db.VarChar(8)
   name         String
   addressLine1 String?  @map("address_line1")
   city         String?
@@ -187,6 +202,10 @@ model Branch {
   employer Employer        @relation(fields: [employerId], references: [id], onDelete: Cascade)
   managers BranchManager[]
   managerInvite BranchManagerInvite?
+  tokenAccount  TokenAccount? @relation("BranchTokenAccount")
+  tokenHolds    TokenHold[]
+  tokenLedger   TokenLedgerEntry[]
+  tokenRequests TokenRequest[]
   jobs          Job[]
   shifts        Shift[]
 
@@ -200,6 +219,7 @@ model BranchManager {
   branchId        String   @map("branch_id") @db.Uuid
   invitedByUserId String?  @map("invited_by_user_id") @db.Uuid
   status          String   @default("active")
+  permissions     Json     @default("[\"jobs.create\",\"jobs.read\",\"jobs.update\"]")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -207,6 +227,41 @@ model BranchManager {
 
   @@unique([userId, branchId])
   @@map("branch_managers")
+}
+
+model WorkplaceManager {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  employerId      String   @map("employer_id") @db.Uuid
+  invitedByUserId String?  @map("invited_by_user_id") @db.Uuid
+  status          String   @default("active")
+  permissions     Json     @default("[\"jobs.create\",\"jobs.read\",\"jobs.update\",\"branches.create\",\"branches.update\",\"branches.delete\",\"tokens.purchase\"]")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employer Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, employerId])
+  @@map("workplace_managers")
+}
+
+model WorkplaceManagerInvite {
+  id              String   @id @default(uuid()) @db.Uuid
+  employerId      String   @unique @map("employer_id") @db.Uuid
+  joinCode        String   @map("join_code")
+  codeHash        String   @map("code_hash")
+  expiresAt       DateTime @map("expires_at") @db.Timestamptz(6)
+  maxUses         Int      @default(50) @map("max_uses")
+  useCount        Int      @default(0) @map("use_count")
+  status          String   @default("active")
+  invitedByUserId String   @map("invited_by_user_id") @db.Uuid
+  permissions     Json     @default("[\"jobs.create\",\"jobs.read\",\"jobs.update\",\"branches.create\",\"branches.update\",\"branches.delete\",\"tokens.purchase\"]")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  employer Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@unique([codeHash])
+  @@map("workplace_manager_invites")
 }
 
 model BranchManagerInvite {
@@ -219,11 +274,12 @@ model BranchManagerInvite {
   useCount        Int      @default(0) @map("use_count")
   status          String   @default("active")
   invitedByUserId String   @map("invited_by_user_id") @db.Uuid
+  permissions     Json     @default("[\"jobs.create\",\"jobs.read\",\"jobs.update\"]")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-  @@index([codeHash])
+  @@unique([codeHash])
   @@map("branch_manager_invites")
 }
 
@@ -372,7 +428,7 @@ model JobCatalogOccupation {
 model Job {
   id                   String   @id @default(uuid()) @db.Uuid
   employerId           String   @map("employer_id") @db.Uuid
-  branchId             String   @map("branch_id") @db.Uuid
+  branchId             String?  @map("branch_id") @db.Uuid
   status               String   @default("draft")
   sectorCode           String   @map("sector_code")
   occupationCode       String?  @map("occupation_code")
@@ -396,7 +452,7 @@ model Job {
   updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   employer Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
-  branch   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branch   Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
   tokenHold TokenHold?
   applications Application[]
   shifts       Shift[]
@@ -408,12 +464,16 @@ model Job {
 }
 
 model TokenAccount {
-  id         String   @id @default(uuid()) @db.Uuid
-  employerId String   @unique @map("employer_id") @db.Uuid
-  balance    Int      @default(0)
-  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id          String   @id @default(uuid()) @db.Uuid
+  employerId  String?  @unique @map("employer_id") @db.Uuid
+  branchId    String?  @unique @map("branch_id") @db.Uuid
+  ownerUserId String?  @unique @map("owner_user_id") @db.Uuid
+  balance     Int      @default(0)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  employer Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  employer Employer? @relation("WorkplaceTokenAccount", fields: [employerId], references: [id], onDelete: Cascade)
+  branch   Branch?   @relation("BranchTokenAccount", fields: [branchId], references: [id], onDelete: Cascade)
+  owner    User?     @relation("UserTokenPurse", fields: [ownerUserId], references: [id], onDelete: Cascade)
 
   @@map("token_accounts")
 }
@@ -421,6 +481,7 @@ model TokenAccount {
 model TokenHold {
   id         String   @id @default(uuid()) @db.Uuid
   employerId String   @map("employer_id") @db.Uuid
+  branchId   String?  @map("branch_id") @db.Uuid
   jobId      String   @unique @map("job_id") @db.Uuid
   amount     Int
   status     String   @default("held")
@@ -428,9 +489,11 @@ model TokenHold {
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   employer Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  branch   Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   job      Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([employerId, status])
+  @@index([branchId, status])
   @@map("token_holds")
 }
 
@@ -455,7 +518,9 @@ model TokenPackage {
 
 model TokenLedgerEntry {
   id             String   @id @default(uuid()) @db.Uuid
-  employerId     String   @map("employer_id") @db.Uuid
+  employerId     String?  @map("employer_id") @db.Uuid
+  ownerUserId    String?  @map("owner_user_id") @db.Uuid
+  branchId       String?  @map("branch_id") @db.Uuid
   type           String
   amount         Int
   balanceAfter   Int      @map("balance_after")
@@ -464,10 +529,36 @@ model TokenLedgerEntry {
   idempotencyKey String?  @unique @map("idempotency_key")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  employer Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  employer Employer? @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  branch   Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@index([employerId, createdAt])
+  @@index([ownerUserId, createdAt])
+  @@index([branchId, createdAt])
   @@map("token_ledger_entries")
+}
+
+model TokenRequest {
+  id               String    @id @default(uuid()) @db.Uuid
+  requesterUserId  String    @map("requester_user_id") @db.Uuid
+  employerId       String    @map("employer_id") @db.Uuid
+  branchId         String?   @map("branch_id") @db.Uuid
+  amount           Int?
+  status           String    @default("pending")
+  note             String?
+  resolvedAmount   Int?      @map("resolved_amount")
+  resolvedByUserId String?   @map("resolved_by_user_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  resolvedAt       DateTime? @map("resolved_at") @db.Timestamptz(6)
+
+  requester  User     @relation("TokenRequestRequester", fields: [requesterUserId], references: [id], onDelete: Cascade)
+  resolver   User?    @relation("TokenRequestResolver", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+  employer   Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  branch     Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([employerId, status, createdAt])
+  @@index([requesterUserId, status])
+  @@map("token_requests")
 }
 
 model Application {
@@ -580,7 +671,7 @@ model Shift {
   jobId                   String    @map("job_id") @db.Uuid
   workerUserId            String    @map("worker_user_id") @db.Uuid
   employerId              String    @map("employer_id") @db.Uuid
-  branchId                String    @map("branch_id") @db.Uuid
+  branchId                String?   @map("branch_id") @db.Uuid
   status                  String    @default("scheduled")
   startsAt                DateTime  @map("starts_at") @db.Timestamptz(6)
   endsAt                  DateTime  @map("ends_at") @db.Timestamptz(6)
@@ -602,7 +693,7 @@ model Shift {
   application Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   job         Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
   employer    Employer           @relation(fields: [employerId], references: [id], onDelete: Cascade)
-  branch      Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branch      Branch?            @relation(fields: [branchId], references: [id], onDelete: Cascade)
   workerUser  User               @relation("ShiftWorkerUser", fields: [workerUserId], references: [id], onDelete: Cascade)
   confirms    AvailabilityConfirm[]
   checkIns    CheckIn[]

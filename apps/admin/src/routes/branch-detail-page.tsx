@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageShell } from "@/components/page-shell";
+import { asRows } from "@/components/field-grid";
 import { adminPatch, fetchAdminResource } from "@/lib/admin-api";
 import { isApiClientError } from "@/lib/api-client";
+import { ManagerPermissionsControl } from "@/routes/admin-controls";
 
 type BranchDraft = {
   id: string;
@@ -58,6 +60,7 @@ const selectClass =
 export function BranchDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [branch, setBranch] = useState<BranchDraft | null>(null);
+  const [managers, setManagers] = useState<unknown[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -70,6 +73,9 @@ export function BranchDetailPage() {
     const parsed = asBranch(data);
     if (parsed) {
       setBranch(parsed);
+    }
+    if (data && typeof data === "object" && "managers" in data) {
+      setManagers(asRows((data as { managers: unknown }).managers));
     }
   }
 
@@ -178,6 +184,14 @@ export function BranchDetailPage() {
           <Button type="button" disabled={pending} onClick={() => void save()}>
             Kaydet
           </Button>
+          <div className="mt-4">
+            <p className="mb-2 text-sm font-medium">Şube yöneticileri</p>
+            <ManagerPermissionsControl
+              employerId={branch.employerId}
+              rows={managers}
+              onDone={() => void load()}
+            />
+          </div>
         </div>
       )}
     </PageShell>

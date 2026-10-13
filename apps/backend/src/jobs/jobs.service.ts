@@ -20,9 +20,15 @@ import { evaluateJobEligibility } from '../matching/matching.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PlatformService } from '../platform/platform.service.js';
+import { MembershipService } from '../auth/membership.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
 import { WorkerDocumentsService } from '../workers/worker-documents.service.js';
 import { JobCatalogService } from '../job-catalog/job-catalog.service.js';
+import {
+  jobSiteFrom,
+  requireJobSite,
+  requireWorkplaceCoords,
+} from '../common/job-location.js';
 
 @Injectable()
 export class JobsService {
@@ -35,6 +41,7 @@ export class JobsService {
     private readonly notifications: NotificationsService,
     private readonly platform: PlatformService,
     private readonly catalog: JobCatalogService,
+    private readonly membership: MembershipService,
   ) {}
 
   private favoriteAudienceJobInput(
@@ -260,6 +267,13 @@ export class JobsService {
     const eligibilityJob = this.jobEligibilityInput({
       ...job,
       branch,
+      employer: {
+        legalName: employer.legalName,
+        tradingName: null,
+        city: branch.city,
+        latitude: branch.latitude,
+        longitude: branch.longitude,
+      },
     });
     const matchedWorkerIds: string[] = [];
     const scannedUserIds: string[] = [];
@@ -384,8 +398,21 @@ export class JobsService {
     minAge: number | null;
     maxAge: number | null;
     requiredDocumentTypes: unknown;
-    branch: { latitude: Prisma.Decimal; longitude: Prisma.Decimal };
+    branch: {
+      name?: string;
+      city?: string | null;
+      latitude: Prisma.Decimal;
+      longitude: Prisma.Decimal;
+    } | null;
+    employer: {
+      legalName: string;
+      tradingName: string | null;
+      city: string | null;
+      latitude: Prisma.Decimal | null;
+      longitude: Prisma.Decimal | null;
+    };
   }) {
+    const site = requireJobSite(job);
     return {
       id: job.id,
       employerId: job.employerId,
@@ -402,15 +429,15 @@ export class JobsService {
       requiredDocumentTypes: parseRequiredDocumentTypes(
         job.requiredDocumentTypes,
       ),
-      branchLatitude: Number(job.branch.latitude),
-      branchLongitude: Number(job.branch.longitude),
+      branchLatitude: site.latitude,
+      branchLongitude: site.longitude,
     };
   }
 
   private mapJob(job: {
     id: string;
     employerId: string;
-    branchId: string;
+    branchId: string | null;
     status: string;
     sectorCode: string;
     occupationCode: string | null;
@@ -430,7 +457,19 @@ export class JobsService {
     instantAutoApprove?: boolean;
     notes: string | null;
     publishedAt: Date | null;
-    branch?: { name: string; latitude: unknown; longitude: unknown } | null;
+    branch?: {
+      name: string;
+      city?: string | null;
+      latitude: unknown;
+      longitude: unknown;
+    } | null;
+    employer?: {
+      legalName: string;
+      tradingName: string | null;
+      city: string | null;
+      latitude: unknown;
+      longitude: unknown;
+    };
   }) {
     const docs = Array.isArray(job.requiredDocumentTypes)
       ? (job.requiredDocumentTypes as string[])
@@ -461,9 +500,21 @@ export class JobsService {
       instantAutoApprove: job.instantAutoApprove ?? false,
       notes: job.notes,
       publishedAt: job.publishedAt?.toISOString() ?? null,
-      branchName: job.branch?.name,
-      branchLatitude: job.branch ? Number(job.branch.latitude) : undefined,
-      branchLongitude: job.branch ? Number(job.branch.longitude) : undefined,
+      branchName:
+        job.branch?.name ??
+        (job.employer
+          ? (job.employer.tradingName ?? job.employer.legalName)
+          : undefined),
+      branchLatitude: job.branch
+        ? Number(job.branch.latitude)
+        : job.employer?.latitude != null
+          ? Number(job.employer.latitude)
+          : undefined,
+      branchLongitude: job.branch
+        ? Number(job.branch.longitude)
+        : job.employer?.longitude != null
+          ? Number(job.employer.longitude)
+          : undefined,
     };
   }
 
@@ -520,6 +571,7 @@ export class JobsService {
   }
 
   private async assertBranchAccess(
+    userId: string,
     employerId: string,
     branchId: string,
     ctx: AuthContext,
@@ -534,15 +586,7 @@ export class JobsService {
         'Şube bulunamadı.',
       );
     }
-    if (ctx.role === 'manager' && ctx.branchIds?.length) {
-      if (!ctx.branchIds.includes(branchId)) {
-        throw new ApiException(
-          HttpStatus.FORBIDDEN,
-          ErrorCode.FORBIDDEN,
-          'Bu şube için yetkiniz yok.',
-        );
-      }
-    }
+    await this.membership.assertManagerLive(userId, ctx, branchId);
     return branch;
   }
 
@@ -560,6 +604,12 @@ export class JobsService {
         'İşveren bağlamı gerekli.',
       );
     }
+    await this.membership.assertPermission(
+      userId,
+      ctx,
+      'jobs.create',
+      body.branchId,
+    );
     const employer = await this.prisma.employer.findUnique({
       where: { id: employerId },
     });
@@ -570,7 +620,32 @@ export class JobsService {
         'İşveren bulunamadı.',
       );
     }
-    const branch = await this.assertBranchAccess(employerId, body.branchId, ctx);
+    if (ctx.role === 'manager' && ctx.branchIds?.length && !body.branchId) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.FORBIDDEN,
+        'Şube yöneticisi işyeri ilanı oluşturamaz.',
+      );
+    }
+    const branch = body.branchId
+      ? await this.assertBranchAccess(userId, employerId, body.branchId, ctx)
+      : null;
+    if (!branch) {
+      requireWorkplaceCoords(employer);
+    }
+    const site = branch
+      ? {
+          latitude: branch.latitude,
+          longitude: branch.longitude,
+          city: branch.city,
+          name: branch.name,
+        }
+      : {
+          latitude: employer.latitude!,
+          longitude: employer.longitude!,
+          city: employer.city,
+          name: employer.tradingName ?? employer.legalName,
+        };
     const startsAt = new Date(body.startsAt);
     const endsAt = new Date(body.endsAt);
     this.validateSchedule(startsAt, endsAt);
@@ -588,7 +663,7 @@ export class JobsService {
     if (favoritesOnly) {
       eligibleFavoriteAudience = await this.countEligibleFavoriteAudience(
         employerId,
-        branch,
+        site,
         {
           sectorCode: body.sectorCode,
           occupationCode: body.occupationCode,
@@ -609,7 +684,7 @@ export class JobsService {
     const job = await this.prisma.job.create({
       data: {
         employerId,
-        branchId: body.branchId,
+        branchId: body.branchId ?? null,
         status: publish ? 'published' : 'draft',
         sectorCode: body.sectorCode,
         occupationCode: body.occupationCode,
@@ -638,11 +713,16 @@ export class JobsService {
         job.id,
         body.headcount,
         idempotencyKey,
+        {
+          branchId: job.branchId,
+          actorRole: ctx.role,
+          actorUserId: userId,
+        },
       );
       await this.notifyWorkersAfterJobPublish(
         job,
         { legalName: employer.legalName },
-        branch,
+        site,
       );
     } else if (favoritesOnly && eligibleFavoriteAudience === 0) {
       await this.prisma.$transaction(async (tx) => {
@@ -656,10 +736,21 @@ export class JobsService {
       });
     }
 
-    return this.mapJob(job);
+    return this.mapJob({
+      ...job,
+      branch: branch
+        ? {
+            name: branch.name,
+            city: branch.city,
+            latitude: branch.latitude,
+            longitude: branch.longitude,
+          }
+        : null,
+      employer,
+    });
   }
 
-  async listEmployerJobs(ctx: AuthContext) {
+  async listEmployerJobs(userId: string, ctx: AuthContext) {
     const employerId = ctx.employerId;
     if (!employerId) {
       throw new ApiException(
@@ -668,6 +759,8 @@ export class JobsService {
         'İşveren bağlamı gerekli.',
       );
     }
+    await this.membership.assertManagerLive(userId, ctx);
+    await this.membership.assertPermission(userId, ctx, 'jobs.read');
     const where: Prisma.JobWhereInput = { employerId };
     if (ctx.role === 'manager' && ctx.branchIds?.length) {
       where.branchId = { in: ctx.branchIds };
@@ -675,7 +768,7 @@ export class JobsService {
     const jobs = await this.prisma.job.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { branch: true },
+      include: { branch: true, employer: true },
     });
     return { items: jobs.map((j) => this.mapJob(j)) };
   }
@@ -683,7 +776,7 @@ export class JobsService {
   async getJobForUser(userId: string, ctx: AuthContext | undefined, jobId: string) {
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      include: { branch: true },
+      include: { branch: true, employer: true },
     });
     if (!job) {
       throw new ApiException(
@@ -694,12 +787,13 @@ export class JobsService {
     }
 
     const base = this.mapJob(job);
+    const site = jobSiteFrom(job);
     const detail = {
       ...base,
-      branchName: job.branch.name,
-      branchCity: job.branch.city,
-      branchLatitude: Number(job.branch.latitude),
-      branchLongitude: Number(job.branch.longitude),
+      branchName: site?.name ?? base.branchName,
+      branchCity: site?.city ?? job.branch?.city ?? job.employer.city,
+      branchLatitude: site?.latitude,
+      branchLongitude: site?.longitude,
     };
 
     if (ctx?.role === 'employer' || ctx?.role === 'manager') {
@@ -710,6 +804,22 @@ export class JobsService {
           'Bu ilana erişiminiz yok.',
         );
       }
+      if (ctx.role === 'manager' && ctx.branchIds?.length) {
+        if (!job.branchId || !ctx.branchIds.includes(job.branchId)) {
+          throw new ApiException(
+            HttpStatus.FORBIDDEN,
+            ErrorCode.FORBIDDEN,
+            'Bu şube için yetkiniz yok.',
+          );
+        }
+      }
+      await this.membership.assertManagerLive(userId, ctx, job.branchId);
+      await this.membership.assertPermission(
+        userId,
+        ctx,
+        'jobs.read',
+        job.branchId,
+      );
       return detail;
     }
 
@@ -766,6 +876,7 @@ export class JobsService {
   }
 
   async patchJob(
+    userId: string,
     ctx: AuthContext,
     jobId: string,
     body: JobPatchBody,
@@ -784,6 +895,31 @@ export class JobsService {
         HttpStatus.FORBIDDEN,
         ErrorCode.FORBIDDEN,
         'Bu ilana erişiminiz yok.',
+      );
+    }
+    if (ctx.role === 'manager' && ctx.branchIds?.length) {
+      if (!job.branchId || !ctx.branchIds.includes(job.branchId)) {
+        throw new ApiException(
+          HttpStatus.FORBIDDEN,
+          ErrorCode.FORBIDDEN,
+          'Bu şube için yetkiniz yok.',
+        );
+      }
+    }
+    await this.membership.assertManagerLive(userId, ctx, job.branchId);
+    if (body.status === 'closed') {
+      await this.membership.assertPermission(
+        userId,
+        ctx,
+        'jobs.delete',
+        job.branchId,
+      );
+    } else {
+      await this.membership.assertPermission(
+        userId,
+        ctx,
+        'jobs.update',
+        job.branchId,
       );
     }
 
@@ -814,23 +950,37 @@ export class JobsService {
         );
       }
       this.assertPublishAllowed(employer.verificationStatus);
+      if (!job.branchId) {
+        requireWorkplaceCoords(employer);
+      }
       const favoritesOnly = body.favoritesOnly ?? job.favoritesOnly;
       if (favoritesOnly) {
-        const branch = await this.prisma.branch.findFirst({
-          where: { id: job.branchId, employerId: job.employerId },
-        });
-        if (!branch) {
+        const branch = job.branchId
+          ? await this.prisma.branch.findFirst({
+              where: { id: job.branchId, employerId: job.employerId },
+            })
+          : null;
+        if (job.branchId && !branch) {
           throw new ApiException(
             HttpStatus.NOT_FOUND,
             ErrorCode.NOT_FOUND,
             'Şube bulunamadı.',
           );
         }
+        if (!branch) {
+          requireWorkplaceCoords(employer);
+        }
+        const site = branch ?? {
+          latitude: employer.latitude!,
+          longitude: employer.longitude!,
+          city: employer.city,
+          name: employer.tradingName ?? employer.legalName,
+        };
         const docs = body.requiredDocumentTypes ??
           parseRequiredDocumentTypes(job.requiredDocumentTypes);
         const eligible = await this.countEligibleFavoriteAudience(
           job.employerId,
-          branch,
+          site,
           {
             sectorCode: body.sectorCode ?? job.sectorCode,
             occupationCode: body.occupationCode ?? job.occupationCode,
@@ -851,6 +1001,11 @@ export class JobsService {
         job.id,
         body.headcount ?? job.headcount,
         idempotencyKey,
+        {
+          branchId: job.branchId,
+          actorRole: ctx.role,
+          actorUserId: userId,
+        },
       );
     }
     if (body.status === 'closed' && job.status === 'published') {
@@ -873,12 +1028,19 @@ export class JobsService {
           'Personel sayısı onaylanan başvuruların altına düşürülemez.',
         );
       }
+      const canRefund =
+        ctx.role === 'employer' ||
+        ctx.role === 'admin' ||
+        (await this.membership.permissionsFor(userId, ctx)).includes(
+          'tokens.refund',
+        );
       await this.tokens.adjustHoldForJob(
         job.employerId,
         job.id,
         job.headcount,
         headcount,
         idempotencyKey ? `${idempotencyKey}:hold-adjust` : undefined,
+        { refund: canRefund },
       );
       remainingHeadcount = job.remainingHeadcount + (headcount - job.headcount);
     } else if (status === 'published' && job.status === 'draft') {
@@ -913,15 +1075,25 @@ export class JobsService {
       const employer = await this.prisma.employer.findUnique({
         where: { id: job.employerId },
       });
-      const branch = await this.prisma.branch.findFirst({
-        where: { id: job.branchId, employerId: job.employerId },
-      });
-      if (employer && branch) {
-        await this.notifyWorkersAfterJobPublish(
-          updated,
-          { legalName: employer.legalName },
-          branch,
-        );
+      const branch = job.branchId
+        ? await this.prisma.branch.findFirst({
+            where: { id: job.branchId, employerId: job.employerId },
+          })
+        : null;
+      if (employer) {
+        const site = branch ?? {
+          latitude: employer.latitude!,
+          longitude: employer.longitude!,
+          city: employer.city,
+          name: employer.tradingName ?? employer.legalName,
+        };
+        if (site.latitude != null && site.longitude != null) {
+          await this.notifyWorkersAfterJobPublish(
+            updated,
+            { legalName: employer.legalName },
+            site,
+          );
+        }
       }
     }
     return this.mapJob(updated);
@@ -1021,7 +1193,7 @@ export class JobsService {
       : null;
 
     type JobWithBranch = Prisma.JobGetPayload<{
-      include: { branch: true };
+      include: { branch: true; employer: true };
     }>;
 
     const scored: Array<{
@@ -1058,7 +1230,7 @@ export class JobsService {
             : {}),
           AND: [favoritesVisibility, keysetFilter],
         },
-        include: { branch: true },
+        include: { branch: true, employer: true },
         orderBy: [{ startsAt: 'asc' }, { id: 'asc' }],
         take: BATCH,
       });
@@ -1082,6 +1254,9 @@ export class JobsService {
       };
 
       for (const job of jobs) {
+        if (!jobSiteFrom(job)) {
+          continue;
+        }
         const eligibility = evaluateJobEligibility(
           this.jobEligibilityInput(job),
           {
@@ -1126,10 +1301,10 @@ export class JobsService {
     return {
       items: page.map(({ job, eligibility }) => ({
         ...this.mapJob(job),
-        branchName: job.branch.name,
-        branchCity: job.branch.city,
-        branchLatitude: Number(job.branch.latitude),
-        branchLongitude: Number(job.branch.longitude),
+        branchName: jobSiteFrom(job)?.name ?? job.branch?.name,
+        branchCity: jobSiteFrom(job)?.city ?? job.branch?.city,
+        branchLatitude: jobSiteFrom(job)?.latitude,
+        branchLongitude: jobSiteFrom(job)?.longitude,
         distanceKm: eligibility.distanceKm,
         matchReasons: eligibility.matchReasons,
         eligibility: {

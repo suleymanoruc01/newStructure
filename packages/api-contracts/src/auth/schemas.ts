@@ -70,10 +70,52 @@ export type OtpVerifyBody = z.infer<typeof otpVerifyBodySchema>;
 
 export type UserRole = z.infer<typeof userRoleSchema>;
 
+export const managerPermissionSchema = z.enum([
+  'jobs.create',
+  'jobs.read',
+  'jobs.update',
+  'jobs.delete',
+  'branches.create',
+  'branches.update',
+  'branches.delete',
+  'tokens.purchase',
+  'tokens.refund',
+]);
+
+export type ManagerPermission = z.infer<typeof managerPermissionSchema>;
+
+export const MANAGER_PERMISSIONS = managerPermissionSchema.options;
+
+export const legacyManagerPermissions: ManagerPermission[] = [
+  'jobs.create',
+  'jobs.read',
+  'jobs.update',
+  'jobs.delete',
+  'tokens.refund',
+];
+
+export const workplaceManagerInviteDefaultPermissions: ManagerPermission[] = [
+  'jobs.create',
+  'jobs.read',
+  'jobs.update',
+  'branches.create',
+  'branches.update',
+  'branches.delete',
+  'tokens.purchase',
+];
+
+export const branchManagerInviteDefaultPermissions: ManagerPermission[] = [
+  'jobs.create',
+  'jobs.read',
+  'jobs.update',
+];
+
 export const authContextSchema = z.object({
   role: userRoleSchema,
   employerId: z.string().uuid().optional(),
   branchIds: z.array(z.string().uuid()).optional(),
+  label: z.string().optional(),
+  permissions: z.array(managerPermissionSchema).optional(),
 });
 
 export type AuthContext = z.infer<typeof authContextSchema>;
@@ -86,6 +128,8 @@ export const meUserSchema = z.object({
   status: z.enum(['active', 'restricted', 'banned']).optional(),
   deletionRequestedAt: z.string().datetime().nullable().optional(),
   roles: z.array(userRoleSchema),
+  employerPublicCode: z.string().length(8).nullable().optional(),
+  workerPublicCode: z.string().length(8).nullable().optional(),
 });
 
 export type MeUser = z.infer<typeof meUserSchema>;

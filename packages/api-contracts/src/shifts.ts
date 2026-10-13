@@ -31,7 +31,7 @@ export const shiftSchema = z.object({
   jobId: z.string().uuid(),
   workerUserId: z.string().uuid(),
   employerId: z.string().uuid(),
-  branchId: z.string().uuid(),
+  branchId: z.string().uuid().nullable(),
   status: shiftStatusSchema,
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime(),

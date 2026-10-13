@@ -6,6 +6,7 @@ import type {
 } from '@parton/api-contracts';
 import { ErrorCode } from '@parton/api-contracts';
 
+import { MembershipService } from '../auth/membership.service.js';
 import { ApiException } from '../common/api.exception.js';
 import { formatIstanbulDateTime } from '../common/istanbul-civil.js';
 import { AppConfigService } from '../config/app-config.service.js';
@@ -23,6 +24,7 @@ import {
   workerDisplayName,
 } from './application-snapshot.util.js';
 import { intervalsOverlap } from './overlap.util.js';
+import { jobSiteFrom, requireJobSite } from '../common/job-location.js';
 
 const ACTIVE_OVERLAP_STATUSES: ApplicationStatus[] = ['pending', 'accepted'];
 
@@ -43,6 +45,7 @@ export class ApplicationsService {
     private readonly workerDocuments: WorkerDocumentsService,
     private readonly config: AppConfigService,
     private readonly platform: PlatformService,
+    private readonly membership: MembershipService,
   ) {}
 
   private mapApplication(row: {
@@ -136,7 +139,7 @@ export class ApplicationsService {
 
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      include: { branch: true },
+      include: { branch: true, employer: true },
     });
     if (!job) {
       throw new ApiException(
@@ -194,8 +197,8 @@ export class ApplicationsService {
         requiredDocumentTypes: parseRequiredDocumentTypes(
           job.requiredDocumentTypes,
         ),
-        branchLatitude: Number(job.branch.latitude),
-        branchLongitude: Number(job.branch.longitude),
+        branchLatitude: requireJobSite(job).latitude,
+        branchLongitude: requireJobSite(job).longitude,
       },
       {
         profile: worker,
@@ -336,7 +339,7 @@ export class ApplicationsService {
     const rows = await this.prisma.application.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { job: { include: { branch: true } } },
+      include: { job: { include: { branch: true, employer: true } } },
     });
     return {
       items: rows.map((row) => ({
@@ -344,7 +347,7 @@ export class ApplicationsService {
         jobTitle: row.job.title,
         jobStartsAt: row.job.startsAt.toISOString(),
         jobEndsAt: row.job.endsAt.toISOString(),
-        branchName: row.job.branch.name,
+        branchName: jobSiteFrom(row.job)?.name ?? 'İşyeri',
         payAmountMinor: row.job.payAmountMinor,
         payCurrency: row.job.payCurrency,
         amenities: jsonStrings(row.job.amenities),
@@ -352,8 +355,19 @@ export class ApplicationsService {
     };
   }
 
-  async listForJob(ctx: AuthContext, jobId: string, status?: ApplicationStatus) {
+  async listForJob(
+    userId: string,
+    ctx: AuthContext,
+    jobId: string,
+    status?: ApplicationStatus,
+  ) {
     const job = await this.assertJobAccess(ctx, jobId);
+    await this.membership.assertPermission(
+      userId,
+      ctx,
+      'jobs.read',
+      job.branchId,
+    );
     const rows = await this.prisma.application.findMany({
       where: {
         jobId: job.id,
@@ -374,7 +388,7 @@ export class ApplicationsService {
   async getOne(userId: string, ctx: AuthContext | undefined, id: string) {
     const row = await this.prisma.application.findUnique({
       where: { id },
-      include: { job: { include: { branch: true } } },
+      include: { job: { include: { branch: true, employer: true } } },
     });
     if (!row) {
       throw new ApiException(
@@ -393,6 +407,12 @@ export class ApplicationsService {
       }
     } else if (ctx?.role === 'employer' || ctx?.role === 'manager') {
       await this.assertJobAccess(ctx, row.jobId);
+      await this.membership.assertPermission(
+        userId,
+        ctx,
+        'jobs.read',
+        row.job.branchId,
+      );
     } else {
       throw new ApiException(
         HttpStatus.FORBIDDEN,
@@ -405,7 +425,7 @@ export class ApplicationsService {
       jobTitle: row.job.title,
       jobStartsAt: row.job.startsAt.toISOString(),
       jobEndsAt: row.job.endsAt.toISOString(),
-      branchName: row.job.branch.name,
+      branchName: jobSiteFrom(row.job)?.name ?? 'İşyeri',
       payAmountMinor: row.job.payAmountMinor,
       payCurrency: row.job.payCurrency,
       amenities: jsonStrings(row.job.amenities),
@@ -449,7 +469,7 @@ export class ApplicationsService {
   ) {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
-      include: { job: { include: { branch: true } } },
+      include: { job: { include: { branch: true, employer: true } } },
     });
     if (!application) {
       throw new ApiException(
@@ -459,6 +479,12 @@ export class ApplicationsService {
       );
     }
     await this.assertJobAccess(ctx, application.jobId);
+    await this.membership.assertPermission(
+      actorUserId,
+      ctx,
+      'jobs.update',
+      application.job.branchId,
+    );
     this.assertTransition(application.status as ApplicationStatus, [
       'pending',
       'substitute',
@@ -534,7 +560,7 @@ export class ApplicationsService {
         dedupeKey: `application.accepted:${applicationId}`,
         templateInput: {
           jobTitle: application.job.title ?? application.job.sectorCode,
-          branchName: application.job.branch.name,
+          branchName: jobSiteFrom(application.job)?.name ?? 'İşyeri',
           startLocal,
         },
         data: {
@@ -571,7 +597,7 @@ export class ApplicationsService {
   async reject(actorUserId: string, ctx: AuthContext, applicationId: string) {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
-      include: { job: { include: { branch: true } } },
+      include: { job: { include: { branch: true, employer: true } } },
     });
     if (!application) {
       throw new ApiException(
@@ -581,6 +607,12 @@ export class ApplicationsService {
       );
     }
     await this.assertJobAccess(ctx, application.jobId);
+    await this.membership.assertPermission(
+      actorUserId,
+      ctx,
+      'jobs.update',
+      application.job.branchId,
+    );
     this.assertTransition(application.status as ApplicationStatus, [
       'pending',
       'substitute',
@@ -627,7 +659,13 @@ export class ApplicationsService {
         'Başvuru bulunamadı.',
       );
     }
-    await this.assertJobAccess(ctx, application.jobId);
+    const job = await this.assertJobAccess(ctx, application.jobId);
+    await this.membership.assertPermission(
+      actorUserId,
+      ctx,
+      'jobs.update',
+      job.branchId,
+    );
     this.assertTransition(application.status as ApplicationStatus, ['pending']);
     const updated = await this.prisma.$transaction(async (tx) => {
       const app = await tx.application.update({
@@ -661,7 +699,13 @@ export class ApplicationsService {
         'Başvuru bulunamadı.',
       );
     }
-    await this.assertJobAccess(ctx, application.jobId);
+    const job = await this.assertJobAccess(ctx, application.jobId);
+    await this.membership.assertPermission(
+      actorUserId,
+      ctx,
+      'jobs.update',
+      job.branchId,
+    );
     this.assertTransition(application.status as ApplicationStatus, [
       'substitute',
     ]);
@@ -690,7 +734,7 @@ export class ApplicationsService {
   ) {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
-      include: { job: { include: { branch: true } } },
+      include: { job: { include: { branch: true, employer: true } } },
     });
     if (!application) {
       throw new ApiException(
@@ -700,6 +744,12 @@ export class ApplicationsService {
       );
     }
     await this.assertJobAccess(ctx, application.jobId);
+    await this.membership.assertPermission(
+      actorUserId,
+      ctx,
+      'jobs.update',
+      application.job.branchId,
+    );
     this.assertTransition(application.status as ApplicationStatus, ['accepted']);
 
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -755,6 +805,7 @@ export class ApplicationsService {
         application.jobId,
         jobAfter.headcount,
         idempotencyKey,
+        { branchId: application.job.branchId },
       );
     }
 
@@ -846,7 +897,7 @@ export class ApplicationsService {
       );
     }
     if (ctx.role === 'manager' && ctx.branchIds?.length) {
-      if (!ctx.branchIds.includes(job.branchId)) {
+      if (!job.branchId || !ctx.branchIds.includes(job.branchId)) {
         throw new ApiException(
           HttpStatus.FORBIDDEN,
           ErrorCode.FORBIDDEN,
@@ -857,13 +908,22 @@ export class ApplicationsService {
     return job;
   }
 
-  private async resolveEmployerAudience(employerId: string, branchId: string) {
+  private async resolveEmployerAudience(
+    employerId: string,
+    branchId: string | null,
+  ) {
     const memberships = await this.prisma.employerMembership.findMany({
       where: { employerId, status: 'active' },
       select: { userId: true },
     });
-    const managers = await this.prisma.branchManager.findMany({
-      where: { branchId, status: 'active' },
+    const managers = branchId
+      ? await this.prisma.branchManager.findMany({
+          where: { branchId, status: 'active' },
+          select: { userId: true },
+        })
+      : [];
+    const workplaceManagers = await this.prisma.workplaceManager.findMany({
+      where: { employerId, status: 'active' },
       select: { userId: true },
     });
     const ids = new Set<string>();
@@ -871,6 +931,9 @@ export class ApplicationsService {
       ids.add(m.userId);
     }
     for (const m of managers) {
+      ids.add(m.userId);
+    }
+    for (const m of workplaceManagers) {
       ids.add(m.userId);
     }
     return [...ids];

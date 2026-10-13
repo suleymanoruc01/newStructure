@@ -8,6 +8,7 @@ export const branchStatusSchema = z.enum(['active', 'inactive', 'archived']);
 export const branchSchema = z.object({
   id: z.string().uuid(),
   employerId: z.string().uuid(),
+  publicCode: z.string().length(8),
   name: z.string(),
   addressLine1: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
@@ -74,13 +75,23 @@ export const managerJoinBranchPreviewSchema = z.object({
   employerName: z.string(),
 });
 
-export const managerJoinDataSchema = z.object({
-  branch: managerJoinBranchPreviewSchema,
-  accessToken: z.string(),
-  accessExpiresAt: z.string(),
-  refreshToken: z.string(),
-  user: meUserSchema,
+export const managerJoinWorkplacePreviewSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
 });
+
+export const managerJoinDataSchema = z
+  .object({
+    branch: managerJoinBranchPreviewSchema.optional(),
+    workplace: managerJoinWorkplacePreviewSchema.optional(),
+    accessToken: z.string(),
+    accessExpiresAt: z.string(),
+    refreshToken: z.string(),
+    user: meUserSchema,
+  })
+  .refine((row) => row.branch != null || row.workplace != null, {
+    message: 'branch veya workplace gerekli',
+  });
 
 export const managerJoinResponseSchema =
   successEnvelopeSchema(managerJoinDataSchema);

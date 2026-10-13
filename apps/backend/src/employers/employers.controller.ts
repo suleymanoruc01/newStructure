@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Query,
@@ -13,6 +14,8 @@ import {
 import {
   employerCreateBodySchema,
   employerPatchBodySchema,
+  managerAssignmentPatchBodySchema,
+  managerInvitePatchBodySchema,
 } from '@parton/api-contracts';
 import type { Request, Response } from 'express';
 
@@ -67,6 +70,13 @@ export class EmployersController {
       refreshToken: result.refreshToken,
       user: result.user,
     });
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async listMine(@Req() req: Request) {
+    const data = await this.employers.listWorkplaces(req.userId!);
+    return successResponse(req.requestId ?? '', data);
   }
 
   @Get('me')
@@ -128,6 +138,95 @@ export class EmployersController {
     const data = await this.employers.getSetupStatus(
       req.userId!,
       req.authContext?.employerId,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get('me/managers')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer')
+  async listManagers(@Req() req: Request) {
+    const employerId = req.authContext?.employerId;
+    if (!employerId) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'İşveren bağlamı gerekli.',
+      );
+    }
+    const data = await this.employers.listWorkplaceManagers(
+      req.userId!,
+      employerId,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch('me/managers/:userId')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer')
+  async patchManager(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+    @Body(new ZodValidationPipe(managerAssignmentPatchBodySchema))
+    body: unknown,
+  ) {
+    const employerId = req.authContext?.employerId;
+    if (!employerId) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'İşveren bağlamı gerekli.',
+      );
+    }
+    const parsed = managerAssignmentPatchBodySchema.parse(body);
+    const data = await this.employers.patchWorkplaceManager(
+      req.userId!,
+      employerId,
+      userId,
+      parsed,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch('me/manager-invite')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer')
+  async patchManagerInvite(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(managerInvitePatchBodySchema)) body: unknown,
+  ) {
+    const employerId = req.authContext?.employerId;
+    if (!employerId) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'İşveren bağlamı gerekli.',
+      );
+    }
+    const parsed = managerInvitePatchBodySchema.parse(body);
+    const data = await this.employers.patchWorkplaceManagerInvite(
+      req.userId!,
+      employerId,
+      parsed,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get('me/manager-invite')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer')
+  async managerInvite(@Req() req: Request) {
+    const employerId = req.authContext?.employerId;
+    if (!employerId) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_FAILED,
+        'İşveren bağlamı gerekli.',
+      );
+    }
+    const data = await this.employers.getOrCreateWorkplaceInvite(
+      req.userId!,
+      employerId,
     );
     return successResponse(req.requestId ?? '', data);
   }

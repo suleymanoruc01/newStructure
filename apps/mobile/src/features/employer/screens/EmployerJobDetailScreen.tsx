@@ -19,6 +19,7 @@ import { Pressable } from '../../../components/ui/Pressable';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { formatPayTry } from '../../../shared/format/pay';
 import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
@@ -317,12 +318,19 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
             onPress={() => void saveHeadcount()}
             disabled={submitting}
           />
-          <Button
-            label={t('employer:jobs.detail.closeJob')}
-            variant="destructive"
-            onPress={() => void closeJob()}
-            disabled={submitting}
-          />
+          {!hasManagerPermission('tokens.refund') ? (
+            <Text className="font-sans text-sm text-text-medium">
+              {t('employer:managers.noRefundHint')}
+            </Text>
+          ) : null}
+          {hasManagerPermission('jobs.delete') ? (
+            <Button
+              label={t('employer:jobs.detail.closeJob')}
+              variant="destructive"
+              onPress={() => void closeJob()}
+              disabled={submitting}
+            />
+          ) : null}
         </View>
       ) : (
         error ? (

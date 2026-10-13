@@ -2,10 +2,21 @@ import { z } from 'zod';
 
 import { successEnvelopeSchema } from './envelope.js';
 
+export const tokenPoolSchema = z.object({
+  branchId: z.string().uuid(),
+  name: z.string(),
+  balance: z.number().int().nonnegative(),
+  held: z.number().int().nonnegative(),
+  available: z.number().int().nonnegative(),
+});
+
 export const tokenBalanceSchema = z.object({
   balance: z.number().int().nonnegative(),
   held: z.number().int().nonnegative(),
   available: z.number().int().nonnegative(),
+  unallocated: z.number().int().nonnegative().optional(),
+  workplace: z.number().int().nonnegative().optional(),
+  branches: z.array(tokenPoolSchema).optional(),
 });
 
 export const tokenBalanceResponseSchema =
@@ -57,3 +68,70 @@ export const tokenTopUpDataSchema = z.object({
 
 export const tokenTopUpResponseSchema =
   successEnvelopeSchema(tokenTopUpDataSchema);
+
+export const tokenAllocateBodySchema = z.object({
+  amount: z.number().int().min(1).max(100_000),
+  target: z.enum(['workplace', 'branch']),
+  branchId: z.string().uuid().optional(),
+});
+
+export type TokenAllocateBody = z.infer<typeof tokenAllocateBodySchema>;
+
+export const tokenAllocateDataSchema = z.object({
+  unallocated: z.number().int().nonnegative(),
+  workplace: z.number().int().nonnegative(),
+  branchId: z.string().uuid().nullable().optional(),
+  branchBalance: z.number().int().nonnegative().optional(),
+});
+
+export const tokenAllocateResponseSchema = successEnvelopeSchema(
+  tokenAllocateDataSchema,
+);
+
+export const tokenRequestStatusSchema = z.enum([
+  'pending',
+  'approved',
+  'rejected',
+]);
+
+export const tokenRequestCreateBodySchema = z.object({
+  amount: z.number().int().min(1).max(100_000).optional(),
+  branchId: z.string().uuid().optional(),
+  note: z.string().trim().max(500).optional(),
+});
+
+export type TokenRequestCreateBody = z.infer<
+  typeof tokenRequestCreateBodySchema
+>;
+
+export const tokenRequestApproveBodySchema = z.object({
+  amount: z.number().int().min(1).max(100_000).optional(),
+});
+
+export type TokenRequestApproveBody = z.infer<
+  typeof tokenRequestApproveBodySchema
+>;
+
+export const tokenRequestSchema = z.object({
+  id: z.string().uuid(),
+  requesterUserId: z.string().uuid(),
+  employerId: z.string().uuid(),
+  branchId: z.string().uuid().nullable().optional(),
+  amount: z.number().int().nullable().optional(),
+  status: tokenRequestStatusSchema,
+  note: z.string().nullable().optional(),
+  resolvedAmount: z.number().int().nullable().optional(),
+  createdAt: z.string().datetime(),
+  resolvedAt: z.string().datetime().nullable().optional(),
+});
+
+export const tokenRequestListDataSchema = z.object({
+  items: z.array(tokenRequestSchema),
+});
+
+export const tokenRequestListResponseSchema = successEnvelopeSchema(
+  tokenRequestListDataSchema,
+);
+
+export const tokenRequestResponseSchema =
+  successEnvelopeSchema(tokenRequestSchema);

@@ -21,6 +21,7 @@ export type EmployerStackParamList = {
   EmployerDashboard: undefined;
   EmployerCalendar: undefined;
   EmployerBusiness: undefined;
+  EmployerCreateWorkplace: undefined;
   EmployerIndustry: undefined;
   EmployerChecklist: undefined;
   EmployerOpsSettings: undefined;

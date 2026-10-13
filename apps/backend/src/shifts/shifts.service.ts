@@ -21,6 +21,7 @@ import { PlatformService } from '../platform/platform.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RatingsService } from '../ratings/ratings.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
+import { requireJobSite } from '../common/job-location.js';
 import { resolveEmployerAudience } from './shift-notify.util.js';
 import {
   computeConfirmWindow,
@@ -98,7 +99,7 @@ export class ShiftsService {
       jobId: string;
       workerUserId: string;
       employerId: string;
-      branchId: string;
+      branchId: string | null;
       startsAt: Date;
       endsAt: Date;
     },
@@ -135,7 +136,7 @@ export class ShiftsService {
       jobId: string;
       workerUserId: string;
       employerId: string;
-      branchId: string;
+      branchId: string | null;
       status: string;
       startsAt: Date;
       endsAt: Date;
@@ -153,6 +154,12 @@ export class ShiftsService {
       payCurrency?: string | null;
       amenities?: unknown;
       requiredDocumentTypes?: unknown;
+      employer?: {
+        legalName: string;
+        tradingName: string | null;
+        latitude: unknown;
+        longitude: unknown;
+      };
     } | null,
     branch?: { name: string; latitude: unknown; longitude: unknown } | null,
     extra?: { workerDisplayName?: string | null },
@@ -169,9 +176,21 @@ export class ShiftsService {
       startsAt: row.startsAt.toISOString(),
       endsAt: row.endsAt.toISOString(),
       jobTitle: job?.title ?? job?.sectorCode ?? null,
-      branchName: branch?.name ?? null,
-      branchLatitude: branch ? Number(branch.latitude) : undefined,
-      branchLongitude: branch ? Number(branch.longitude) : undefined,
+      branchName:
+        branch?.name ??
+        job?.employer?.tradingName ??
+        job?.employer?.legalName ??
+        null,
+      branchLatitude: branch
+        ? Number(branch.latitude)
+        : job?.employer?.latitude != null
+          ? Number(job.employer.latitude)
+          : undefined,
+      branchLongitude: branch
+        ? Number(branch.longitude)
+        : job?.employer?.longitude != null
+          ? Number(job.employer.longitude)
+          : undefined,
       payAmountMinor: job?.payAmountMinor ?? null,
       payCurrency: job?.payCurrency ?? 'TRY',
       amenities: jsonStrings(job?.amenities),
@@ -203,7 +222,7 @@ export class ShiftsService {
     const rows = await this.prisma.shift.findMany({
       where: { workerUserId, ...(startsAt ? { startsAt } : {}) },
       orderBy: { startsAt: 'asc' },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     return {
       items: rows.map((r) => this.mapShift(r, r.job, r.branch)),
@@ -289,7 +308,7 @@ export class ShiftsService {
   ) {
     const row = await this.prisma.shift.findUnique({
       where: { id: shiftId },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     if (!row) {
       throw new ApiException(
@@ -325,7 +344,7 @@ export class ShiftsService {
   ) {
     const shift = await this.prisma.shift.findUnique({
       where: { id: shiftId },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     if (!shift || shift.workerUserId !== workerUserId) {
       throw new ApiException(
@@ -429,7 +448,7 @@ export class ShiftsService {
 
     const updated = await this.prisma.shift.findUnique({
       where: { id: shiftId },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     return this.mapShift(updated!, updated!.job, updated!.branch);
   }
@@ -443,7 +462,11 @@ export class ShiftsService {
     if (idempotencyKey) {
       const prior = await this.prisma.checkIn.findUnique({
         where: { idempotencyKey },
-        include: { shift: { include: { job: true, branch: true } } },
+        include: {
+          shift: {
+            include: { job: { include: { employer: true } }, branch: true },
+          },
+        },
       });
       if (prior) {
         if (prior.success) {
@@ -480,7 +503,7 @@ export class ShiftsService {
 
     const shift = await this.prisma.shift.findUnique({
       where: { id: shiftId },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     if (!shift || shift.workerUserId !== workerUserId) {
       throw new ApiException(
@@ -527,10 +550,14 @@ export class ShiftsService {
 
     let geo: ReturnType<GeofenceService['evaluate']> | undefined;
     try {
+      const site = requireJobSite({
+        branch: shift.branch,
+        employer: shift.job.employer,
+      });
       geo = this.geofence.evaluate(
         {
-          branchLatitude: Number(shift.branch.latitude),
-          branchLongitude: Number(shift.branch.longitude),
+          branchLatitude: site.latitude,
+          branchLongitude: site.longitude,
           latitude: body.latitude,
           longitude: body.longitude,
           accuracyM: body.accuracyM,
@@ -633,7 +660,7 @@ export class ShiftsService {
     const updated = await this.prisma.shift.update({
       where: { id: shiftId },
       data: { status: 'completed', completedAt: new Date() },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     return this.mapShift(updated, updated.job, updated.branch);
   }
@@ -763,7 +790,7 @@ export class ShiftsService {
   private async loadShiftForConfirm(shiftId: string) {
     const shift = await this.prisma.shift.findUnique({
       where: { id: shiftId },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     if (!shift) {
       throw new ApiException(
@@ -782,15 +809,19 @@ export class ShiftsService {
       jobId: string;
       workerUserId: string;
       checkedInAt: Date | null;
-      job: { title: string | null; sectorCode: string };
-      branch: { name: string };
+      job: {
+        title: string | null;
+        sectorCode: string;
+        employer?: { tradingName: string | null; legalName: string };
+      };
+      branch: { name: string } | null;
     },
     idempotencyKey?: string,
   ) {
     if (shift.checkedInAt) {
       const current = await this.prisma.shift.findUnique({
         where: { id: shift.id },
-        include: { job: true, branch: true },
+        include: { job: { include: { employer: true } }, branch: true },
       });
       return this.mapShift(current!, current!.job, current!.branch);
     }
@@ -817,7 +848,10 @@ export class ShiftsService {
         dedupeKey: `shift.manual_confirmed:${shift.id}`,
         templateInput: {
           jobTitle: shift.job.title ?? shift.job.sectorCode,
-          branchName: shift.branch.name,
+          branchName:
+            shift.branch?.name ??
+            shift.job.employer?.tradingName ??
+            shift.job.employer?.legalName,
         },
         data: { shiftId: shift.id, jobId: shift.jobId },
       });
@@ -825,7 +859,7 @@ export class ShiftsService {
 
     const updated = await this.prisma.shift.findUnique({
       where: { id: shift.id },
-      include: { job: true, branch: true },
+      include: { job: { include: { employer: true } }, branch: true },
     });
     return this.mapShift(updated!, updated!.job, updated!.branch);
   }
@@ -922,7 +956,7 @@ export class ShiftsService {
 
   private async assertEmployerAccess(
     ctx: AuthContext,
-    shift: { employerId: string; branchId: string },
+    shift: { employerId: string; branchId: string | null },
   ) {
     if (!ctx.employerId || ctx.employerId !== shift.employerId) {
       throw new ApiException(
@@ -932,7 +966,7 @@ export class ShiftsService {
       );
     }
     if (ctx.role === 'manager' && ctx.branchIds?.length) {
-      if (!ctx.branchIds.includes(shift.branchId)) {
+      if (!shift.branchId || !ctx.branchIds.includes(shift.branchId)) {
         throw new ApiException(
           HttpStatus.FORBIDDEN,
           ErrorCode.FORBIDDEN,

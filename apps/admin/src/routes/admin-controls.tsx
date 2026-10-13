@@ -9,6 +9,12 @@ function messageOf(err: unknown, fallback: string): string {
   return isApiClientError(err) ? err.message : fallback;
 }
 
+function asRecord(row: unknown): Record<string, unknown> | null {
+  return row && typeof row === "object" && !Array.isArray(row)
+    ? (row as Record<string, unknown>)
+    : null;
+}
+
 const selectClass =
   "flex h-11 w-full rounded-[0.5rem] border border-input bg-card px-3 text-sm text-foreground";
 
@@ -68,15 +74,27 @@ export function EmployerProfileControl({
   employerId,
   legalName,
   tradingName,
+  addressLine1,
+  city,
+  latitude,
+  longitude,
   onDone,
 }: {
   employerId: string;
   legalName: string;
   tradingName: string | null;
+  addressLine1?: string | null;
+  city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   onDone: () => void;
 }) {
   const [name, setName] = useState(legalName);
   const [trade, setTrade] = useState(tradingName ?? "");
+  const [address, setAddress] = useState(addressLine1 ?? "");
+  const [cityValue, setCityValue] = useState(city ?? "");
+  const [lat, setLat] = useState(latitude != null ? String(latitude) : "");
+  const [lng, setLng] = useState(longitude != null ? String(longitude) : "");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -88,9 +106,15 @@ export function EmployerProfileControl({
     setPending(true);
     setError(null);
     try {
+      const parsedLat = lat.trim() ? Number(lat) : null;
+      const parsedLng = lng.trim() ? Number(lng) : null;
       await adminPatch(`/admin/employers/${employerId}`, {
         legalName: name.trim(),
         tradingName: trade.trim().length > 0 ? trade.trim() : null,
+        addressLine1: address.trim().length > 0 ? address.trim() : null,
+        city: cityValue.trim().length > 0 ? cityValue.trim() : null,
+        latitude: parsedLat,
+        longitude: parsedLng,
       });
       onDone();
     } catch (err) {
@@ -113,6 +137,30 @@ export function EmployerProfileControl({
         id="employer-trading-name"
         value={trade}
         onChange={(event) => setTrade(event.target.value)}
+      />
+      <Label htmlFor="employer-address">Adres</Label>
+      <Input
+        id="employer-address"
+        value={address}
+        onChange={(event) => setAddress(event.target.value)}
+      />
+      <Label htmlFor="employer-city">İl</Label>
+      <Input
+        id="employer-city"
+        value={cityValue}
+        onChange={(event) => setCityValue(event.target.value)}
+      />
+      <Label htmlFor="employer-lat">Enlem</Label>
+      <Input
+        id="employer-lat"
+        value={lat}
+        onChange={(event) => setLat(event.target.value)}
+      />
+      <Label htmlFor="employer-lng">Boylam</Label>
+      <Input
+        id="employer-lng"
+        value={lng}
+        onChange={(event) => setLng(event.target.value)}
       />
       <Button type="button" onClick={() => void saveProfile()} disabled={pending}>
         Ünvanı kaydet
@@ -289,6 +337,164 @@ export function EmployerControls({
           Jeton yaz
         </Button>
       </div>
+      {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
+    </div>
+  );
+}
+
+export function WorkplaceTokenAllocateControl({
+  employerId,
+  onDone,
+}: {
+  employerId: string;
+  onDone: () => void;
+}) {
+  const [amount, setAmount] = useState("1");
+  const [target, setTarget] = useState<"workplace" | "branch">("workplace");
+  const [branchId, setBranchId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function allocate() {
+    const parsed = Number(amount);
+    if (!Number.isInteger(parsed) || parsed < 1) {
+      setError("Geçerli bir miktar girin.");
+      return;
+    }
+    if (target === "branch" && branchId.trim().length < 8) {
+      setError("Şube kimliği gerekli.");
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      await adminPost(`/admin/employers/${employerId}/tokens/allocate`, {
+        amount: parsed,
+        target,
+        branchId: target === "branch" ? branchId.trim() : undefined,
+      });
+      onDone();
+    } catch (err) {
+      setError(messageOf(err, "Paylaşım yapılamadı."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="mb-6 grid max-w-sm gap-2">
+      <Label htmlFor="alloc-amount">Dağıtılmamış jetondan paylaş</Label>
+      <Input
+        id="alloc-amount"
+        inputMode="numeric"
+        value={amount}
+        onChange={(event) => setAmount(event.target.value)}
+      />
+      <select
+        className={selectClass}
+        value={target}
+        onChange={(event) =>
+          setTarget(event.target.value === "branch" ? "branch" : "workplace")
+        }
+      >
+        <option value="workplace">İşyeri</option>
+        <option value="branch">Şube</option>
+      </select>
+      {target === "branch" ? (
+        <Input
+          placeholder="Şube kimliği"
+          value={branchId}
+          onChange={(event) => setBranchId(event.target.value)}
+        />
+      ) : null}
+      <Button type="button" variant="secondary" onClick={() => void allocate()} disabled={pending}>
+        Paylaştır
+      </Button>
+      {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
+    </div>
+  );
+}
+
+export function TokenRequestQueue({
+  employerId,
+  rows,
+  onDone,
+}: {
+  employerId: string;
+  rows: unknown[];
+  onDone: () => void;
+}) {
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function resolve(requestId: string, action: "approve" | "reject") {
+    setPending(true);
+    setError(null);
+    try {
+      const parsed = Number(amount);
+      await adminPost(
+        `/admin/employers/${employerId}/tokens/requests/${requestId}`,
+        {
+          action,
+          amount:
+            action === "approve" && Number.isInteger(parsed) && parsed > 0
+              ? parsed
+              : undefined,
+        },
+      );
+      onDone();
+    } catch (err) {
+      setError(messageOf(err, "Talep güncellenemedi."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-3">
+      <Input
+        placeholder="Onay miktarı (taleptesizse)"
+        value={amount}
+        onChange={(event) => setAmount(event.target.value)}
+      />
+      {rows.length === 0 ? <p className="text-sm text-muted-foreground">Talep yok.</p> : null}
+      {rows.map((raw, index) => {
+        const row = asRecord(raw);
+        if (!row) {
+          return null;
+        }
+        const id = typeof row.id === "string" ? row.id : `row-${index}`;
+        const status = String(row.status ?? "");
+        return (
+          <div key={id} className="flex flex-wrap items-center gap-2 text-sm">
+            <span>
+              {String(row.amount ?? "—")} · {status}
+            </span>
+            {status === "pending" && id ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => void resolve(id, "approve")}
+                >
+                  Onayla
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={pending}
+                  onClick={() => void resolve(id, "reject")}
+                >
+                  Reddet
+                </Button>
+              </>
+            ) : null}
+          </div>
+        );
+      })}
       {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
     </div>
   );
@@ -756,6 +962,106 @@ export function AbuseResolveControl({
       <Button type="button" onClick={() => void resolve()} disabled={pending}>
         Raporu çöz
       </Button>
+      {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
+    </div>
+  );
+}
+
+const PERM_LABELS: Record<string, string> = {
+  "jobs.create": "İlan oluştur",
+  "jobs.read": "İlan görüntüle",
+  "jobs.update": "İlan düzenle",
+  "jobs.delete": "İlan kapat",
+  "branches.create": "Şube ekle",
+  "branches.update": "Şube düzenle",
+  "branches.delete": "Şube kapat",
+  "tokens.purchase": "Jeton satın al",
+  "tokens.refund": "Jeton iadesi",
+};
+
+export function ManagerPermissionsControl({
+  employerId,
+  rows,
+  onDone,
+}: {
+  employerId: string;
+  rows: unknown[];
+  onDone: () => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
+
+  async function toggle(
+    userId: string,
+    current: string[],
+    perm: string,
+    scope: "workplace" | "branch",
+    branchId?: string,
+  ) {
+    const next = current.includes(perm)
+      ? current.filter((item) => item !== perm)
+      : [...current, perm];
+    setPending(userId);
+    setError(null);
+    try {
+      await adminPatch(`/admin/employers/${employerId}/managers/${userId}`, {
+        permissions: next,
+        scope,
+        branchId,
+      });
+      onDone();
+    } catch (err) {
+      setError(messageOf(err, "Yetki güncellenemedi."));
+    } finally {
+      setPending(null);
+    }
+  }
+
+  if (rows.length === 0) {
+    return <p className="text-sm text-muted-foreground">Yönetici yok.</p>;
+  }
+
+  return (
+    <div className="grid gap-4">
+      {rows.map((raw) => {
+        const row = asRecord(raw);
+        if (!row) {
+          return null;
+        }
+        const userId = typeof row.userId === "string" ? row.userId : "";
+        const perms = Array.isArray(row.permissions)
+          ? row.permissions.filter((item): item is string => typeof item === "string")
+          : [];
+        const scope = row.scope === "branch" ? "branch" : "workplace";
+        const branchId =
+          typeof row.branchId === "string" ? row.branchId : undefined;
+        return (
+          <div key={userId} className="grid gap-2 rounded-md border border-border p-3">
+            <p className="text-sm font-medium">
+              {typeof row.phoneE164 === "string" ? row.phoneE164 : userId}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {Object.keys(PERM_LABELS).map((perm) => {
+                const on = perms.includes(perm);
+                return (
+                  <Button
+                    key={perm}
+                    type="button"
+                    size="sm"
+                    variant={on ? "default" : "secondary"}
+                    disabled={pending === userId || !userId}
+                    onClick={() =>
+                      void toggle(userId, perms, perm, scope, branchId)
+                    }
+                  >
+                    {PERM_LABELS[perm]}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
       {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
     </div>
   );

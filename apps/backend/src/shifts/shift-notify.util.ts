@@ -6,14 +6,20 @@ type Tx = Prisma.TransactionClient;
 export async function resolveEmployerAudience(
   prisma: PrismaService | Tx,
   employerId: string,
-  branchId: string,
+  branchId?: string | null,
 ): Promise<string[]> {
   const memberships = await prisma.employerMembership.findMany({
     where: { employerId, status: 'active' },
     select: { userId: true },
   });
-  const managers = await prisma.branchManager.findMany({
-    where: { branchId, status: 'active' },
+  const managers = branchId
+    ? await prisma.branchManager.findMany({
+        where: { branchId, status: 'active' },
+        select: { userId: true },
+      })
+    : [];
+  const workplaceManagers = await prisma.workplaceManager.findMany({
+    where: { employerId, status: 'active' },
     select: { userId: true },
   });
   const ids = new Set<string>();
@@ -21,6 +27,9 @@ export async function resolveEmployerAudience(
     ids.add(m.userId);
   }
   for (const m of managers) {
+    ids.add(m.userId);
+  }
+  for (const m of workplaceManagers) {
     ids.add(m.userId);
   }
   return [...ids];

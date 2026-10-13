@@ -39,10 +39,10 @@ export class JwtAuthGuard implements CanActivate {
         'Geçersiz erişim jetonu.',
       );
     }
-    await this.sessions.assertSessionActive(payload.sid);
+    const session = await this.sessions.assertSessionActive(payload.sid);
     req.userId = payload.sub;
     req.sessionId = payload.sid;
-    req.authContext = payload.ctx;
+    req.authContext = session.activeContext ?? payload.ctx;
     return true;
   }
 }

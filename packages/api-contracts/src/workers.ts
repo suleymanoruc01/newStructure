@@ -22,6 +22,7 @@ export type AvailabilityWindowInput = z.infer<typeof availabilityWindowSchema>;
 export const workerProfileSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
+  publicCode: z.string().length(8),
   firstName: z.string().nullable().optional(),
   lastName: z.string().nullable().optional(),
   birthDate: z.string().date().nullable().optional(),

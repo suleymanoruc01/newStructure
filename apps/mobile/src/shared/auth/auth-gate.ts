@@ -5,6 +5,7 @@ import { listPolicies } from '../../api/auth-api';
 import { fetchWorkerSetupStatus } from '../../api/workers-api';
 import type { AuthPhase, OnboardingKind } from './auth-types';
 import { resolveShellRole } from './active-context';
+import { managerOnboardingComplete } from './manager-onboarding';
 
 export function primaryRole(
   user: MeUser,
@@ -109,10 +110,7 @@ export async function resolveAuthPhase(
       };
     }
   } else if (role === 'manager') {
-    const hasBranch = contexts.some(
-      (c) => c.role === 'manager' && (c.branchIds?.length ?? 0) > 0,
-    );
-    if (!hasBranch) {
+    if (!managerOnboardingComplete(contexts)) {
       return {
         phase: 'needs_onboarding',
         onboardingKind: 'manager',

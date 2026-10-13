@@ -25,7 +25,8 @@ type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerProfileRoot
 
 export function EmployerProfileRootScreen({ navigation, route }: Props) {
   const { t } = useTranslation(['employer', 'common', 'system']);
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const [workplaceCode, setWorkplaceCode] = useState<string | null>(null);
   const testID = route.params?.screenId ?? 'm.employer.profile.root';
   const [legalName, setLegalName] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(
@@ -63,6 +64,7 @@ export function EmployerProfileRootScreen({ navigation, route }: Props) {
       setLegalName(employer.value.legalName);
       setVerificationStatus(employer.value.verificationStatus);
       setTaxId(employer.value.taxId);
+      setWorkplaceCode(employer.value.publicCode);
       setIndustryCodes(employer.value.industryCodes ?? []);
     }
     if (tokens.status === 'fulfilled') {
@@ -110,6 +112,24 @@ export function EmployerProfileRootScreen({ navigation, route }: Props) {
             label={`${t('employer:business.taxId')} · ${taxId}`}
             tone="strong"
           />
+        ) : null}
+        {user?.employerPublicCode ? (
+          <View className="mt-2">
+            <StatusBadge
+              label={t('employer:profile.employerCode', {
+                code: user.employerPublicCode,
+              })}
+              tone="neutral"
+            />
+          </View>
+        ) : null}
+        {workplaceCode ? (
+          <View className="mt-2">
+            <StatusBadge
+              label={t('employer:profile.workplaceCode', { code: workplaceCode })}
+              tone="neutral"
+            />
+          </View>
         ) : null}
         <View className="mt-3">
           <StatStrip
@@ -194,6 +214,10 @@ export function EmployerProfileRootScreen({ navigation, route }: Props) {
         <NavRow
           label={t('employer:tokens.title')}
           onPress={() => navigation.navigate('EmployerTokensRoot')}
+        />
+        <NavRow
+          label={t('employer:business.addWorkplace')}
+          onPress={() => navigation.navigate('EmployerCreateWorkplace')}
         />
         <NavRow
           label={t('employer:jobs.navFavorites')}

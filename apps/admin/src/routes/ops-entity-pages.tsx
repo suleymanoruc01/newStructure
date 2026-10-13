@@ -12,6 +12,9 @@ import {
   EmployerControls,
   EmployerProfileControl,
   EmployerSubscriptionControl,
+  ManagerPermissionsControl,
+  TokenRequestQueue,
+  WorkplaceTokenAllocateControl,
   JobFavoritesOnlyControl,
   JobForceCloseControl,
   RatingModerationControl,
@@ -134,6 +137,18 @@ export function EmployerDetailPage() {
               employerId={data.id}
               legalName={str(data, "legalName")}
               tradingName={str(data, "tradingName") || null}
+              addressLine1={str(data, "addressLine1") || null}
+              city={str(data, "city") || null}
+              latitude={
+                typeof data.latitude === "number" ? data.latitude : null
+              }
+              longitude={
+                typeof data.longitude === "number" ? data.longitude : null
+              }
+              onDone={reload}
+            />
+            <WorkplaceTokenAllocateControl
+              employerId={data.id}
               onDone={reload}
             />
             <EmployerControls
@@ -159,17 +174,36 @@ export function EmployerDetailPage() {
         { label: "Abonelik planı", value: data.subscriptionPlanCode },
         { label: "Abonelik durumu", value: data.subscriptionStatus },
         { label: "Abonelik bitiş", value: data.subscriptionEndsAt },
+        { label: "Adres", value: data.addressLine1 },
+        { label: "İl", value: data.city },
+        { label: "Enlem", value: data.latitude },
+        { label: "Boylam", value: data.longitude },
+        { label: "Dağıtılmamış jeton", value: data.unallocated },
         { label: "Jeton bakiyesi", value: data.tokenBalance },
         { label: "Bloke jeton", value: data.heldTokens },
         { label: "Oluşturma", value: data.createdAt },
       ]}
-      extras={(data) => (
+      extras={(data, reload) => (
         <>
           <Section title="Şubeler">
             <JsonDataTable rows={asRows(data.branches)} linkBase="/branches" />
           </Section>
           <Section title="Üyeler">
             <JsonDataTable rows={asRows(data.members)} idKey="userId" linkBase="/users" />
+          </Section>
+          <Section title="İşyeri yöneticileri">
+            <ManagerPermissionsControl
+              employerId={typeof data.id === "string" ? data.id : ""}
+              rows={asRows(data.workplaceManagers)}
+              onDone={reload}
+            />
+          </Section>
+          <Section title="Jeton talepleri">
+            <TokenRequestQueue
+              employerId={typeof data.id === "string" ? data.id : ""}
+              rows={asRows(data.tokenRequests)}
+              onDone={reload}
+            />
           </Section>
           <Section title="Jeton blokesi">
             <JsonDataTable rows={asRows(data.holds)} />

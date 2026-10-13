@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { managerPermissionSchema } from './auth/schemas.js';
 import { successEnvelopeSchema } from './envelope.js';
 import { ianaTimeZoneSchema } from './platform.js';
 
@@ -26,6 +27,10 @@ export const adminUserPatchSchema = z.object({
 export const adminEmployerPatchSchema = z.object({
   legalName: z.string().trim().min(2).max(200).optional(),
   tradingName: z.string().trim().min(2).max(200).nullable().optional(),
+  addressLine1: z.string().trim().min(2).max(240).nullable().optional(),
+  city: z.string().trim().min(2).max(80).nullable().optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 
 export type AdminEmployerPatchBody = z.infer<typeof adminEmployerPatchSchema>;
@@ -109,6 +114,33 @@ export const adminTokenCreditSchema = z.object({
   amount: z.number().int().positive(),
   note: z.string().min(1).max(500),
 });
+
+export const adminTokenAllocateSchema = z.object({
+  amount: z.number().int().min(1).max(100_000),
+  target: z.enum(['workplace', 'branch']),
+  branchId: z.string().uuid().optional(),
+  ownerUserId: z.string().uuid().optional(),
+});
+
+export type AdminTokenAllocateBody = z.infer<typeof adminTokenAllocateSchema>;
+
+export const adminTokenRequestPatchSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  amount: z.number().int().min(1).max(100_000).optional(),
+});
+
+export type AdminTokenRequestPatchBody = z.infer<
+  typeof adminTokenRequestPatchSchema
+>;
+
+export const adminManagerPatchSchema = z.object({
+  permissions: z.array(managerPermissionSchema).optional(),
+  status: z.enum(['active', 'revoked']).optional(),
+  scope: z.enum(['workplace', 'branch']).optional(),
+  branchId: z.string().uuid().optional(),
+});
+
+export type AdminManagerPatchBody = z.infer<typeof adminManagerPatchSchema>;
 
 export const adminBroadcastSchema = z.object({
   title: z.string().min(1).max(120),

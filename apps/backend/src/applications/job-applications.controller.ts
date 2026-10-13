@@ -55,6 +55,7 @@ export class JobApplicationsController {
       ? applicationStatusSchema.parse(statusRaw)
       : undefined;
     const data = await this.applications.listForJob(
+      req.userId!,
       req.authContext!,
       jobId,
       status,

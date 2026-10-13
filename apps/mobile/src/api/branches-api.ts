@@ -4,10 +4,17 @@ import {
   branchListResponseSchema,
   branchPatchBodySchema,
   branchResponseSchema,
+  managerAssignmentListResponseSchema,
+  managerAssignmentPatchBodySchema,
+  managerAssignmentResponseSchema,
+  managerInvitePatchBodySchema,
   managerJoinBodySchema,
   managerJoinResponseSchema,
+  workplaceManagerInviteResponseSchema,
   type BranchCreateBody,
   type BranchPatchBody,
+  type ManagerAssignmentPatchBody,
+  type ManagerInvitePatchBody,
   type ManagerJoinBody,
 } from '@parton/api-contracts';
 
@@ -49,6 +56,44 @@ export async function createBranch(
     body,
     accessToken,
   });
+}
+
+export async function listBranchManagers(
+  branchId: string,
+  accessToken: string,
+) {
+  return apiRequest(
+    `/branches/${branchId}/managers`,
+    managerAssignmentListResponseSchema,
+    { accessToken },
+  );
+}
+
+export async function patchBranchManager(
+  branchId: string,
+  userId: string,
+  body: ManagerAssignmentPatchBody,
+  accessToken: string,
+) {
+  managerAssignmentPatchBodySchema.parse(body);
+  return apiRequest(
+    `/branches/${branchId}/managers/${userId}`,
+    managerAssignmentResponseSchema,
+    { method: 'PATCH', body, accessToken },
+  );
+}
+
+export async function patchBranchManagerInvite(
+  branchId: string,
+  body: ManagerInvitePatchBody,
+  accessToken: string,
+) {
+  managerInvitePatchBodySchema.parse(body);
+  return apiRequest(
+    `/branches/${branchId}/manager-invite`,
+    workplaceManagerInviteResponseSchema,
+    { method: 'PATCH', body, accessToken },
+  );
 }
 
 export async function managerJoin(

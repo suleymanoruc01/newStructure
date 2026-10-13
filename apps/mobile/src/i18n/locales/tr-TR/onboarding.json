@@ -27,8 +27,8 @@
     "invalidCoords": "Geçerli enlem ve boylam girin."
   },
   "employer": {
-    "businessTitle": "İşletme bilgileri",
-    "businessSubtitle": "Firma kaydını oluşturun.",
+    "businessTitle": "İşyeri veya marka",
+    "businessSubtitle": "Önce işyerini veya markayı kaydedin. Şubeleri sonra eklersiniz.",
     "legalName": "Ticari unvan",
     "tradingName": "Marka adı (isteğe bağlı)",
     "taxId": "Vergi numarası",
@@ -42,8 +42,10 @@
     "latitude": "Enlem",
     "longitude": "Boylam",
     "wizard": {
-      "identity": "Firma",
-      "identityHint": "Ticari unvan ve vergi numarası doğrulama için gerekli.",
+      "identity": "İşyeri",
+      "identityHint": "İşyeri veya marka unvanı ve vergi numarası doğrulama için gerekli.",
+      "location": "Adres",
+      "locationHint": "Şubesiz ilan ve check-in için işyeri konumu şube ile aynı alanları kullanır.",
       "industries": "Sektörler",
       "industriesHint": "İlanlarınızın görüneceği sektörleri seçin.",
       "branch": "Şube",
@@ -53,13 +55,14 @@
     },
     "finish": "Kurulumu bitir",
     "identityIncomplete": "Ticari unvan ve vergi numarasını doldurun.",
+    "locationIncomplete": "Adres, il ve harita pinini doldurun.",
     "branchIncomplete": "Şube adı, adres ve ili doldurun.",
     "invalidCoords": "Geçerli enlem ve boylam girin."
   },
   "manager": {
-    "title": "Şube yöneticisi kodu",
-    "subtitle": "İşvereninizden aldığınız kodu girin.",
+    "title": "Yönetici kodu",
+    "subtitle": "İşvereninizden aldığınız işyeri veya şube kodunu girin.",
     "codeLabel": "Yönetici kodu",
-    "submit": "Şubeye bağlan"
+    "submit": "Bağlan"
   }
 }

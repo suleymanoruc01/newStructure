@@ -88,39 +88,34 @@ describe('Token live balance (e2e) CASE-TOKEN T-163', () => {
       .set('Authorization', `Bearer ${accessToken}`);
     expect(balanceRes.status).toBe(200);
 
-    const account = await prisma.tokenAccount.findUnique({
+    const workplace = await prisma.tokenAccount.findUnique({
       where: { employerId },
     });
-    expect(balanceRes.body.data.balance).toBe(account?.balance ?? 0);
-
-    const latestLedger = await prisma.tokenLedgerEntry.findFirst({
-      where: { employerId },
-      orderBy: { createdAt: 'desc' },
+    const purse = await prisma.tokenAccount.findUnique({
+      where: { ownerUserId: employerUserId },
     });
-    if (latestLedger) {
-      expect(balanceRes.body.data.balance).toBe(latestLedger.balanceAfter);
-    }
-
-    const heldAgg = await prisma.tokenHold.aggregate({
+    const workplaceHeld = await prisma.tokenHold.aggregate({
+      where: { employerId, branchId: null, status: 'held' },
+      _sum: { amount: true },
+    });
+    const heldAll = await prisma.tokenHold.aggregate({
       where: { employerId, status: 'held' },
       _sum: { amount: true },
     });
-    const heldSum = heldAgg._sum.amount ?? 0;
-    expect(balanceRes.body.data.held).toBe(heldSum);
+    expect(balanceRes.body.data.balance).toBe(
+      (workplace?.balance ?? 0) + (purse?.balance ?? 0),
+    );
+    expect(balanceRes.body.data.held).toBe(heldAll._sum.amount ?? 0);
     expect(balanceRes.body.data.available).toBe(
-      balanceRes.body.data.balance - heldSum,
+      (purse?.balance ?? 0) +
+        Math.max(0, (workplace?.balance ?? 0) - (workplaceHeld._sum.amount ?? 0)),
     );
 
     const ledgerRes = await request(app.getHttpServer())
       .get('/api/v1/employers/me/tokens/ledger')
       .set('Authorization', `Bearer ${accessToken}`);
     expect(ledgerRes.status).toBe(200);
-    const newest = ledgerRes.body.data.items[0] as
-      | { balanceAfter: number }
-      | undefined;
-    if (newest) {
-      expect(balanceRes.body.data.balance).toBe(newest.balanceAfter);
-    }
+    expect(Array.isArray(ledgerRes.body.data.items)).toBe(true);
   }
 
   function jobBody(headcount: number, publish: boolean) {

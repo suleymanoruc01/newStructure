@@ -19,6 +19,7 @@ import { TextField } from '../../../components/ui/TextField';
 import { ApiClientError } from '../../../api/client';
 import { listEmployerJobs } from '../../../api/jobs-api';
 import { uniqueJobBranches } from '../../../shared/jobs/unique-branches';
+import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerJobsList'>;
@@ -187,12 +188,14 @@ export function EmployerJobsListScreen({ navigation }: Props) {
           <SkeletonList />
         </View>
       ) : null}
-      <View className="mt-4">
-        <Button
-          label={t('employer:jobs.create')}
-          onPress={() => navigation.navigate('EmployerCreateJob')}
-        />
-      </View>
+      {hasManagerPermission('jobs.create') ? (
+        <View className="mt-4">
+          <Button
+            label={t('employer:jobs.create')}
+            onPress={() => navigation.navigate('EmployerCreateJob')}
+          />
+        </View>
+      ) : null}
       {view === 'map' ? (
         <View className="mt-6 gap-3">
           {pins.length === 0 ? (
@@ -235,8 +238,16 @@ export function EmployerJobsListScreen({ navigation }: Props) {
           {!loading && items.length === 0 ? (
             <EmptyState
               title={t('employer:jobs.empty')}
-              actionLabel={t('employer:jobs.create')}
-              onAction={() => navigation.navigate('EmployerCreateJob')}
+              actionLabel={
+                hasManagerPermission('jobs.create')
+                  ? t('employer:jobs.create')
+                  : undefined
+              }
+              onAction={
+                hasManagerPermission('jobs.create')
+                  ? () => navigation.navigate('EmployerCreateJob')
+                  : undefined
+              }
             />
           ) : null}
           {!loading && items.length > 0 && shown.length === 0 ? (

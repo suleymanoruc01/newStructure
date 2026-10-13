@@ -1,4 +1,4 @@
-import { hashPassword, passwordIsStrong, verifyPassword } from './password';
+import { hashPassword, passwordIsStrong, verifyPassword } from './password.js';
 
 describe('password', () => {
   it('accepts the password that was hashed and rejects a different one', async () => {

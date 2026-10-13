@@ -15,6 +15,7 @@ import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
+import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerBranches'>;
@@ -119,12 +120,14 @@ export function EmployerBranchesScreen({ route, navigation }: Props) {
           />
         </View>
       ) : null}
-      <View className="mt-4">
-        <Button
-          label={t('employer:branches.createTitle')}
-          onPress={() => navigation.navigate('EmployerBranchForm')}
-        />
-      </View>
+      {hasManagerPermission('branches.create') ? (
+        <View className="mt-4">
+          <Button
+            label={t('employer:branches.createTitle')}
+            onPress={() => navigation.navigate('EmployerBranchForm')}
+          />
+        </View>
+      ) : null}
       <View className="mt-4 gap-3">
         {shown.map((branch) => (
           <JobCard
@@ -136,15 +139,25 @@ export function EmployerBranchesScreen({ route, navigation }: Props) {
             }
           >
             <Text className="font-sans text-sm text-text-medium">
-              {[branch.city, branch.addressLine1].filter(Boolean).join(' · ')}
+              {[branch.publicCode, branch.city, branch.addressLine1]
+                .filter(Boolean)
+                .join(' · ')}
             </Text>
           </JobCard>
         ))}
         {!loading && items.length === 0 ? (
           <EmptyState
             title={t('employer:branches.empty')}
-            actionLabel={t('employer:branches.createTitle')}
-            onAction={() => navigation.navigate('EmployerBranchForm')}
+            actionLabel={
+              hasManagerPermission('branches.create')
+                ? t('employer:branches.createTitle')
+                : undefined
+            }
+            onAction={
+              hasManagerPermission('branches.create')
+                ? () => navigation.navigate('EmployerBranchForm')
+                : undefined
+            }
           />
         ) : null}
         {!loading && items.length > 0 && shown.length === 0 ? (

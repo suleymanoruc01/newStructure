@@ -194,6 +194,40 @@ export class SubscriptionsService {
     }
   }
 
+  async assertCanAddManager(
+    employerId: string,
+    joiningUserId: string,
+  ): Promise<void> {
+    const plan = await this.planForEmployer(employerId);
+    const [workplace, branch] = await Promise.all([
+      this.prisma.workplaceManager.findMany({
+        where: { employerId, status: 'active' },
+        select: { userId: true },
+      }),
+      this.prisma.branchManager.findMany({
+        where: { status: 'active', branch: { employerId } },
+        select: { userId: true },
+      }),
+    ]);
+    const users = new Set<string>();
+    for (const row of workplace) {
+      users.add(row.userId);
+    }
+    for (const row of branch) {
+      users.add(row.userId);
+    }
+    if (users.has(joiningUserId)) {
+      return;
+    }
+    if (users.size >= plan.maxMemberships) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.SUBSCRIPTION_LIMIT_REACHED,
+        'Abonelik planı yönetici limitine ulaşıldı.',
+      );
+    }
+  }
+
   async userHasPrioritySupport(userId: string): Promise<boolean> {
     const memberships = await this.prisma.employerMembership.findMany({
       where: { userId, status: 'active' },

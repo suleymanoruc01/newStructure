@@ -18,7 +18,10 @@ import {
   adminRemoteConfigSchema,
   adminSmsSettingsPatchSchema,
   adminAdaptySettingsPatchSchema,
+  adminManagerPatchSchema,
+  adminTokenAllocateSchema,
   adminTokenCreditSchema,
+  adminTokenRequestPatchSchema,
   adminUserPatchSchema,
   adminPolicyPatchSchema,
   adminVerificationPatchSchema,
@@ -484,6 +487,58 @@ export class AdminOpsController {
     const data = await this.ops.creditEmployerTokens(
       req.userId!,
       id,
+      parsed,
+      req.requestId ?? '',
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch('employers/:id/managers/:userId')
+  async patchManager(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body(new ZodValidationPipe(adminManagerPatchSchema)) body: unknown,
+  ) {
+    const parsed = adminManagerPatchSchema.parse(body);
+    const data = await this.ops.patchEmployerManager(
+      req.userId!,
+      id,
+      userId,
+      parsed,
+      req.requestId ?? '',
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post('employers/:id/tokens/allocate')
+  async allocateTokens(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(adminTokenAllocateSchema)) body: unknown,
+  ) {
+    const parsed = adminTokenAllocateSchema.parse(body);
+    const data = await this.ops.allocateEmployerTokens(
+      req.userId!,
+      id,
+      parsed,
+      req.requestId ?? '',
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post('employers/:id/tokens/requests/:requestId')
+  async resolveTokenRequest(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Param('requestId') requestId: string,
+    @Body(new ZodValidationPipe(adminTokenRequestPatchSchema)) body: unknown,
+  ) {
+    const parsed = adminTokenRequestPatchSchema.parse(body);
+    const data = await this.ops.resolveEmployerTokenRequest(
+      req.userId!,
+      id,
+      requestId,
       parsed,
       req.requestId ?? '',
     );

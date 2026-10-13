@@ -11,6 +11,8 @@ import {
 import {
   branchCreateBodySchema,
   branchPatchBodySchema,
+  managerAssignmentPatchBodySchema,
+  managerInvitePatchBodySchema,
 } from '@parton/api-contracts';
 import type { Request } from 'express';
 
@@ -35,7 +37,7 @@ export class BranchesController {
   }
 
   @Post()
-  @RequireRoles('employer')
+  @RequireRoles('employer', 'manager')
   async create(
     @Req() req: Request,
     @Body(new ZodValidationPipe(branchCreateBodySchema)) body: unknown,
@@ -44,6 +46,54 @@ export class BranchesController {
     const data = await this.branches.createBranch(
       req.userId!,
       req.authContext!,
+      parsed,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Get(':id/managers')
+  @RequireRoles('employer', 'manager')
+  async listManagers(@Req() req: Request, @Param('id') id: string) {
+    const data = await this.branches.listBranchManagers(
+      req.userId!,
+      req.authContext!,
+      id,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch(':id/manager-invite')
+  @RequireRoles('employer')
+  async patchInvite(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(managerInvitePatchBodySchema)) body: unknown,
+  ) {
+    const parsed = managerInvitePatchBodySchema.parse(body);
+    const data = await this.branches.patchBranchManagerInvite(
+      req.userId!,
+      req.authContext!,
+      id,
+      parsed,
+    );
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Patch(':id/managers/:userId')
+  @RequireRoles('employer')
+  async patchManager(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body(new ZodValidationPipe(managerAssignmentPatchBodySchema))
+    body: unknown,
+  ) {
+    const parsed = managerAssignmentPatchBodySchema.parse(body);
+    const data = await this.branches.patchBranchManager(
+      req.userId!,
+      req.authContext!,
+      id,
+      userId,
       parsed,
     );
     return successResponse(req.requestId ?? '', data);
@@ -60,7 +110,7 @@ export class BranchesController {
   }
 
   @Patch(':id')
-  @RequireRoles('employer')
+  @RequireRoles('employer', 'manager')
   async patch(
     @Req() req: Request,
     @Param('id') id: string,

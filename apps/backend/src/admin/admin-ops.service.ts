@@ -11,7 +11,10 @@ import type {
   AdminAdaptySettingsBody,
   AdminRemoteConfigBody,
   AdminSmsSettingsBody,
+  AdminTokenAllocateBody,
   AdminTokenCreditBody,
+  AdminManagerPatchBody,
+  AdminTokenRequestPatchBody,
   AdminUserPatchBody,
   AdminVerificationPatchBody,
   AdminWorkerPatchBody,
@@ -27,6 +30,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
 import { WorkerDocumentsService } from '../workers/worker-documents.service.js';
 import { LegalAuditLogger } from '../audit/legal-audit.logger.js';
+import { parseManagerPermissions } from '../auth/manager-permissions.js';
+import { MembershipService } from '../auth/membership.service.js';
 import { SessionService } from '../auth/session.service.js';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service.js';
 import { SupportService } from '../support/support.service.js';
@@ -72,6 +77,7 @@ export class AdminOpsService {
     private readonly branches: BranchesService,
     private readonly applications: ApplicationsService,
     private readonly shifts: ShiftsService,
+    private readonly membership: MembershipService,
   ) {}
 
   async dashboard() {
@@ -131,6 +137,8 @@ export class AdminOpsService {
       status: user.status,
       locale: user.locale,
       createdAt: user.createdAt.toISOString(),
+      employerPublicCode: user.employerPublicCode,
+      workerPublicCode: user.workerProfile?.publicCode ?? null,
       workerProfileId: user.workerProfile?.id ?? null,
       employerIds: user.employerMemberships.map((m) => m.employerId),
       isPlatformAdmin: Boolean(user.platformAdmin),
@@ -169,6 +177,8 @@ export class AdminOpsService {
           phoneE164: maskPhone(user.phoneE164),
           status: user.status,
           roles,
+          employerPublicCode: user.employerPublicCode,
+          workerPublicCode: user.workerProfile?.publicCode ?? null,
           createdAt: user.createdAt.toISOString(),
         };
       }),
@@ -259,6 +269,7 @@ export class AdminOpsService {
       items: rows.map((w) => ({
         id: w.id,
         userId: w.userId,
+        publicCode: w.publicCode,
         firstName: w.firstName,
         lastName: w.lastName,
         nightShiftAvailable: w.nightShiftAvailable,
@@ -294,6 +305,7 @@ export class AdminOpsService {
     return {
       id: worker.id,
       userId: worker.userId,
+      publicCode: worker.publicCode,
       firstName: worker.firstName,
       lastName: worker.lastName,
       phoneE164: maskPhone(worker.user.phoneE164),
@@ -377,6 +389,7 @@ export class AdminOpsService {
         legalName: true,
         tradingName: true,
         taxId: true,
+        publicCode: true,
         verificationStatus: true,
         subscriptionPlanCode: true,
         createdAt: true,
@@ -388,6 +401,7 @@ export class AdminOpsService {
         legalName: row.legalName,
         tradingName: row.tradingName,
         taxId: row.taxId,
+        publicCode: row.publicCode,
         verificationStatus: row.verificationStatus,
         subscriptionPlanCode: row.subscriptionPlanCode,
         createdAt: row.createdAt.toISOString(),
@@ -411,7 +425,14 @@ export class AdminOpsService {
         'İşveren bulunamadı.',
       );
     }
-    if (body.legalName === undefined && body.tradingName === undefined) {
+    if (
+      body.legalName === undefined &&
+      body.tradingName === undefined &&
+      body.addressLine1 === undefined &&
+      body.city === undefined &&
+      body.latitude === undefined &&
+      body.longitude === undefined
+    ) {
       throw new ApiException(
         HttpStatus.BAD_REQUEST,
         ErrorCode.VALIDATION_FAILED,
@@ -424,6 +445,16 @@ export class AdminOpsService {
         ...(body.legalName !== undefined && { legalName: body.legalName }),
         ...(body.tradingName !== undefined && {
           tradingName: body.tradingName,
+        }),
+        ...(body.addressLine1 !== undefined && {
+          addressLine1: body.addressLine1,
+        }),
+        ...(body.city !== undefined && { city: body.city }),
+        ...(body.latitude !== undefined && {
+          latitude: body.latitude,
+        }),
+        ...(body.longitude !== undefined && {
+          longitude: body.longitude,
         }),
       },
     });
@@ -470,7 +501,13 @@ export class AdminOpsService {
       where: { id: employerId },
       include: {
         branches: {
-          select: { id: true, name: true, city: true, status: true },
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            status: true,
+            publicCode: true,
+          },
         },
         memberships: {
           include: {
@@ -478,6 +515,15 @@ export class AdminOpsService {
           },
         },
         tokenAccount: true,
+        workplaceManagers: {
+          include: {
+            user: { select: { id: true, phoneE164: true, status: true } },
+          },
+        },
+        tokenRequests: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        },
       },
     });
     if (!employer) {
@@ -488,7 +534,8 @@ export class AdminOpsService {
       );
     }
     const memberUserIds = employer.memberships.map((row) => row.userId);
-    const [favorites, holds] = await Promise.all([
+    const owner = employer.memberships.find((row) => row.role === 'owner');
+    const [favorites, holds, ownerPurse] = await Promise.all([
       this.prisma.favorite.findMany({
         where: { ownerUserId: { in: memberUserIds } },
         take: 50,
@@ -503,20 +550,52 @@ export class AdminOpsService {
         where: { employerId, status: 'held' },
         select: { id: true, jobId: true, amount: true, status: true },
       }),
+      owner
+        ? this.prisma.tokenAccount.findUnique({
+            where: { ownerUserId: owner.userId },
+          })
+        : Promise.resolve(null),
     ]);
     return {
       id: employer.id,
       legalName: employer.legalName,
       tradingName: employer.tradingName,
       taxId: employer.taxId,
+      publicCode: employer.publicCode,
       verificationStatus: employer.verificationStatus,
       subscriptionPlanCode: employer.subscriptionPlanCode,
       subscriptionStatus: employer.subscriptionStatus,
       subscriptionEndsAt: iso(employer.subscriptionEndsAt),
+      addressLine1: employer.addressLine1,
+      city: employer.city,
+      latitude:
+        employer.latitude != null ? Number(employer.latitude) : null,
+      longitude:
+        employer.longitude != null ? Number(employer.longitude) : null,
+      unallocated: ownerPurse?.balance ?? 0,
       tokenBalance: employer.tokenAccount?.balance ?? 0,
       heldTokens: holds.reduce((sum, hold) => sum + hold.amount, 0),
       holds,
       branches: employer.branches,
+      workplaceManagers: employer.workplaceManagers.map((row) => ({
+        userId: row.userId,
+        status: row.status,
+        permissions: parseManagerPermissions(row.permissions),
+        phoneE164: maskPhone(row.user.phoneE164),
+        userStatus: row.user.status,
+        scope: 'workplace',
+      })),
+      tokenRequests: employer.tokenRequests.map((row) => ({
+        id: row.id,
+        requesterUserId: row.requesterUserId,
+        branchId: row.branchId,
+        amount: row.amount,
+        status: row.status,
+        note: row.note,
+        resolvedAmount: row.resolvedAmount,
+        createdAt: row.createdAt.toISOString(),
+        resolvedAt: iso(row.resolvedAt),
+      })),
       members: employer.memberships.map((row) => ({
         userId: row.userId,
         role: row.role,
@@ -666,7 +745,12 @@ export class AdminOpsService {
       take: Math.min(limit, 100),
       include: {
         employer: {
-          select: { id: true, legalName: true, tradingName: true },
+          select: {
+            id: true,
+            legalName: true,
+            tradingName: true,
+            publicCode: true,
+          },
         },
       },
     });
@@ -674,9 +758,11 @@ export class AdminOpsService {
       items: rows.map((row) => ({
         id: row.id,
         name: row.name,
+        publicCode: row.publicCode,
         city: row.city,
         status: row.status,
         employerName: row.employer.legalName,
+        workplacePublicCode: row.employer.publicCode,
         employerId: row.employerId,
         latitude: Number(row.latitude),
         longitude: Number(row.longitude),
@@ -745,7 +831,7 @@ export class AdminOpsService {
       employerId: job.employerId,
       employerName: job.employer.legalName,
       branchId: job.branchId,
-      branchName: job.branch.name,
+      branchName: job.branch?.name ?? job.employer.legalName,
       requiredDocumentTypes: stringList(job.requiredDocumentTypes),
       amenities: stringList(job.amenities),
       instantAutoApprove: job.instantAutoApprove,
@@ -990,7 +1076,7 @@ export class AdminOpsService {
         remainingHeadcount: job.remainingHeadcount,
         startsAt: job.startsAt.toISOString(),
         employer: job.employer.legalName,
-        branch: job.branch.name,
+        branch: job.branch?.name ?? job.employer.legalName,
       })),
     };
   }
@@ -1435,10 +1521,213 @@ export class AdminOpsService {
     return result;
   }
 
+  async patchEmployerManager(
+    actorUserId: string,
+    employerId: string,
+    managerUserId: string,
+    body: AdminManagerPatchBody,
+    requestId: string,
+  ) {
+    const scope = body.scope ?? (body.branchId ? 'branch' : 'workplace');
+    switch (scope) {
+      case 'workplace': {
+        const row = await this.prisma.workplaceManager.findUnique({
+          where: {
+            userId_employerId: { userId: managerUserId, employerId },
+          },
+        });
+        if (!row) {
+          throw new ApiException(
+            HttpStatus.NOT_FOUND,
+            ErrorCode.NOT_FOUND,
+            'Yönetici bulunamadı.',
+          );
+        }
+        const permissions = body.permissions
+          ? parseManagerPermissions(body.permissions)
+          : parseManagerPermissions(row.permissions);
+        await this.prisma.workplaceManager.update({
+          where: { id: row.id },
+          data: {
+            ...(body.status ? { status: body.status } : {}),
+            ...(body.permissions ? { permissions } : {}),
+          },
+        });
+        if (body.status === 'revoked') {
+          await this.membership.revokeManagerContext(managerUserId, employerId);
+        } else {
+          await this.membership.syncManagerSessionPermissions(
+            managerUserId,
+            employerId,
+            permissions,
+          );
+        }
+        break;
+      }
+      case 'branch': {
+        if (!body.branchId) {
+          throw new ApiException(
+            HttpStatus.BAD_REQUEST,
+            ErrorCode.VALIDATION_FAILED,
+            'Şube yöneticisi için branchId gerekli.',
+          );
+        }
+        const row = await this.prisma.branchManager.findFirst({
+          where: {
+            userId: managerUserId,
+            branchId: body.branchId,
+            branch: { employerId },
+          },
+        });
+        if (!row) {
+          throw new ApiException(
+            HttpStatus.NOT_FOUND,
+            ErrorCode.NOT_FOUND,
+            'Yönetici bulunamadı.',
+          );
+        }
+        const permissions = body.permissions
+          ? parseManagerPermissions(body.permissions)
+          : parseManagerPermissions(row.permissions);
+        await this.prisma.branchManager.update({
+          where: { id: row.id },
+          data: {
+            ...(body.status ? { status: body.status } : {}),
+            ...(body.permissions ? { permissions } : {}),
+          },
+        });
+        if (body.status === 'revoked') {
+          await this.membership.revokeManagerContext(managerUserId, employerId);
+        } else {
+          await this.membership.syncManagerSessionPermissions(
+            managerUserId,
+            employerId,
+            permissions,
+          );
+        }
+        break;
+      }
+      default: {
+        const _exhaustive: never = scope;
+        throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          ErrorCode.VALIDATION_FAILED,
+          `Bilinmeyen kapsam: ${_exhaustive}`,
+        );
+      }
+    }
+    await this.audit.append({
+      category: 'admin_action',
+      action: 'employer.manager_permissions',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'employer',
+      resourceId: employerId,
+      requestId,
+      metadata: {
+        managerUserId,
+        permissions: body.permissions,
+        status: body.status,
+        scope,
+        branchId: body.branchId,
+      },
+    });
+    return { ok: true };
+  }
+
+  async allocateEmployerTokens(
+    actorUserId: string,
+    employerId: string,
+    body: AdminTokenAllocateBody,
+    requestId: string,
+  ) {
+    const owner =
+      body.ownerUserId ??
+      (
+        await this.prisma.employerMembership.findFirst({
+          where: { employerId, role: 'owner', status: 'active' },
+        })
+      )?.userId;
+    if (!owner) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İşyeri sahibi bulunamadı.',
+      );
+    }
+    const result = await this.tokens.allocate(owner, employerId, body);
+    await this.audit.append({
+      category: 'token_adjust',
+      action: 'employer.token_allocate',
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'employer',
+      resourceId: employerId,
+      requestId,
+      metadata: {
+        amount: body.amount,
+        target: body.target,
+        branchId: body.branchId,
+      },
+    });
+    return result;
+  }
+
+  async resolveEmployerTokenRequest(
+    actorUserId: string,
+    employerId: string,
+    requestId: string,
+    body: AdminTokenRequestPatchBody,
+    reqId: string,
+  ) {
+    const owner = await this.prisma.employerMembership.findFirst({
+      where: { employerId, role: 'owner', status: 'active' },
+    });
+    if (!owner) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İşyeri sahibi bulunamadı.',
+      );
+    }
+    switch (body.action) {
+      case 'approve':
+      case 'reject':
+        break;
+      default: {
+        const _exhaustive: never = body.action;
+        throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          ErrorCode.VALIDATION_FAILED,
+          `Bilinmeyen işlem: ${_exhaustive}`,
+        );
+      }
+    }
+    const ctx = { role: 'employer' as const, employerId };
+    const result = await this.tokens.resolveTokenRequest(
+      owner.userId,
+      ctx,
+      requestId,
+      body.action,
+      body.amount,
+    );
+    await this.audit.append({
+      category: 'token_adjust',
+      action: `employer.token_request_${body.action}`,
+      actorUserId,
+      actorRole: 'admin',
+      resourceType: 'token_request',
+      resourceId: requestId,
+      requestId: reqId,
+      metadata: { employerId, amount: body.amount },
+    });
+    return result;
+  }
+
   async matchingDiagnostics(jobId: string, workerUserId: string) {
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      include: { branch: true },
+      include: { branch: true, employer: true },
     });
     if (!job) {
       throw new ApiException(
@@ -1483,8 +1772,12 @@ export class AdminOpsService {
         minAge: job.minAge,
         maxAge: job.maxAge,
         requiredDocumentTypes: required,
-        branchLatitude: Number(job.branch.latitude),
-        branchLongitude: Number(job.branch.longitude),
+        branchLatitude: Number(
+          job.branch?.latitude ?? job.employer.latitude,
+        ),
+        branchLongitude: Number(
+          job.branch?.longitude ?? job.employer.longitude,
+        ),
       },
       {
         profile: worker,

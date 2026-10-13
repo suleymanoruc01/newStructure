@@ -7,6 +7,10 @@ import {
 import { Prisma } from '../generated/prisma/client.js';
 
 import { ApiException } from '../common/api.exception.js';
+import {
+  PUBLIC_CODE_PREFIX,
+  allocatePublicCode,
+} from '../common/public-code.js';
 import { assertValidCoordinates } from '../common/geo.util.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { assertAvailabilityWindowsValid } from './availability.util.js';
@@ -27,7 +31,13 @@ export class WorkersService {
     });
     if (!profile) {
       profile = await this.prisma.workerProfile.create({
-        data: { userId },
+        data: {
+          userId,
+          publicCode: await allocatePublicCode(
+            this.prisma,
+            PUBLIC_CODE_PREFIX.worker,
+          ),
+        },
         include: {
           availability: true,
           sectors: true,
@@ -48,6 +58,7 @@ export class WorkersService {
     return {
       id: profile.id,
       userId: profile.userId,
+      publicCode: profile.publicCode,
       firstName: profile.firstName,
       lastName: profile.lastName,
       birthDate: profile.birthDate

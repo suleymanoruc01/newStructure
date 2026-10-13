@@ -13,9 +13,10 @@ Canonical terms for PartOn docs and code. Prefer these names in ADRs, cases, Ope
 
 | Term | Meaning |
 | --- | --- |
-| **Worker** | Job seeker (işçi / part-time applicant) |
-| **Employer** | Organization posting jobs; owns tokens and branches |
-| **Manager** | Branch-scoped operator membership (`branch_managers`) — AuthZ ready; product label AO-11 |
+| **Worker** | Job seeker (işçi / part-time applicant). Public code `EE` + 6 mixed alphanumerics. |
+| **Employer** | The person who employs (işveren). Public code `ER` + 6. Owns one or more workplaces. |
+| **Workplace / brand** | İşyeri or marka (`employers` table). Legal name, tax ID, address/geo (same fields as a branch), jobs. Public code `TR` + 6. May have zero branches; branchless jobs use workplace coords for check-in. |
+| **Manager** | Workplace-scoped (`workplace_managers`) and/or branch-scoped (`branch_managers`) operator. Employer sets named permissions (`jobs.*`, `branches.*`, `tokens.purchase` / `tokens.refund`). Default brand invite: branch CRUD, token purchase, job CRU — not job close, not headcount refund. Join uses a separate invite code, not ER/EE/TR/BR. |
 | **Admin** | Platform ops user (Nest-hosted admin SPA) |
 | **Context / membership** | Active role+scope for a session; switch via AS-3 |
 
@@ -23,20 +24,22 @@ Canonical terms for PartOn docs and code. Prefer these names in ADRs, cases, Ope
 
 | Term | Meaning |
 | --- | --- |
-| **Job / posting** | Employer-created shift opportunity at a branch |
+| **Job / posting** | Employer-created shift opportunity at a workplace (no branch) or a branch |
 | **Job catalog** | Platform taxonomy of job types (admin-managed) |
 | **Application** | Worker apply → employer review state machine |
 | **Shift** | Accepted application that becomes attendance lifecycle (3h, check-in) |
 | **Feed** | Server-matched job list for a worker (`GET /jobs/feed`) |
 | **Favorites** | Directional worker↔employer preference; may gate **favorites-only** jobs |
-| **Branch** | Physical workplace with geo for check-in |
+| **Branch** | Physical location under a workplace, with geo for check-in. Public code `BR` + 6. |
+| **Public code** | 8-character unique id (prefix + mixed-case letters and digits): ER employer, EE worker, TR workplace, BR branch. UUIDs remain the SoR PK. |
 | **Document** | Worker certificate/file; may be required by job |
 
 ## Tokens & money-adjacent
 
 | Term | Meaning |
 | --- | --- |
-| **Token** | Employer prepaid unit for publishing / seating (not crypto) |
+| **Token** | Employer prepaid unit for publishing / seating (not crypto). Store top-up credits the employer-person purse; the owner allocates to workplaces and/or branches. Job publish holds from the job’s pool (branch if allocated, else workplace, with purse waterfall for the owner). |
+| **Token request** | Workplace/branch manager asks the employer for tokens, with or without an amount; owner approves (amount required if unspecified) or rejects. |
 | **Balance** | Available tokens |
 | **Hold** | Reserved tokens against a job (not spendable until capture/release) |
 | **Capture** | Consume held tokens (e.g. on publish/accept rules) |

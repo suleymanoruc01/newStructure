@@ -33,7 +33,7 @@ export const ratingPendingItemSchema = z.object({
   shiftId: z.string().uuid(),
   jobId: z.string().uuid(),
   jobTitle: z.string().nullable().optional(),
-  branchId: z.string().uuid(),
+  branchId: z.string().uuid().nullable(),
   branchName: z.string().nullable().optional(),
   counterpartLabel: z.string(),
   opensAt: z.string().datetime(),

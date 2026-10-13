@@ -18,7 +18,7 @@
 | Primary AuthN | **Phone OTP** → short-lived **access JWT** + **rotating refresh** (server-side sessions) |
 | AuthZ model | **RBAC + resource scope** (employer / branch / ownership) — not ABAC day-1 |
 | Roles | `worker`, `employer`, `manager`, `admin` (+ optional future fine-grained permissions) |
-| Manager | **First-class membership** on branches for AuthZ (AO-11 product naming still open) |
+| Manager | Workplace or branch membership; employer-named permissions (`jobs.*`, `branches.*`, `tokens.purchase` / `tokens.refund`) |
 | Edge | **REST `/api/v1` only** — no client gRPC; admin uses same domain AuthZ |
 | Secrets | OTP/refresh hashed; JWT signing keys only on backend; never in shared packages |
 
@@ -225,13 +225,14 @@ Start with **role + scope**; introduce named permissions when admin needs differ
 | --- | --- | --- | --- | --- |
 | `profile:read/write` own | ✓ | ✓ | ✓ | ✓ |
 | `jobs:feed` | ✓ | — | — | ✓ |
-| `jobs:create/update` | — | ✓ org | ✓ branch | ✓ |
-| `jobs:publish` | — | ✓ if verified | ✓ if permitted | ✓ |
+| `jobs:create/update` | — | ✓ org | if granted | ✓ |
+| `jobs:delete` (close) | — | ✓ | if granted | ✓ |
+| `jobs:publish` | — | ✓ if verified | if `jobs.create` | ✓ |
 | `applications:apply` | ✓ | — | — | — |
 | `applications:review` | — | ✓ org | ✓ branch | ✓ |
-| `tokens:*` | — | ✓ org | read limited | ✓ |
-| `branches:create` | — | ✓ | — | ✓ |
-| `branches:manage` | — | ✓ | limited | ✓ |
+| `tokens:*` | — | ✓ org | purchase / refund if granted | ✓ |
+| `branches:create` | — | ✓ | if granted | ✓ |
+| `branches:manage` | — | ✓ | if granted | ✓ |
 | `shifts:check-in` | ✓ assigned | — | — | — |
 | `shifts:manual-confirm` | — | ✓ | ✓ branch | ✓ |
 | `moderation:*` | report | report | report | ✓ |

@@ -9,6 +9,7 @@ import { EmployerBranchDetailScreen } from '../../features/employer/screens/Empl
 import { EmployerBranchFormScreen } from '../../features/employer/screens/EmployerBranchFormScreen';
 import { EmployerBranchesScreen } from '../../features/employer/screens/EmployerBranchesScreen';
 import { EmployerBusinessScreen } from '../../features/employer/screens/EmployerBusinessScreen';
+import { EmployerCreateWorkplaceScreen } from '../../features/employer/screens/EmployerCreateWorkplaceScreen';
 import { EmployerCalendarScreen } from '../../features/employer/screens/EmployerCalendarScreen';
 import { EmployerChecklistScreen } from '../../features/employer/screens/EmployerChecklistScreen';
 import { EmployerCreateJobScreen } from '../../features/employer/screens/EmployerCreateJobScreen';
@@ -73,6 +74,11 @@ function accountScreens(Stack: typeof HomeStack) {
         component={EmployerBusinessScreen}
         name="EmployerBusiness"
         options={{ title: 'İşletme' }}
+      />
+      <Stack.Screen
+        component={EmployerCreateWorkplaceScreen}
+        name="EmployerCreateWorkplace"
+        options={{ title: 'İşyeri' }}
       />
       <Stack.Screen
         component={EmployerIndustryScreen}

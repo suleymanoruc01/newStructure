@@ -201,11 +201,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const me = await fetchMe(tokens.accessToken);
         const ctx = await fetchContexts(tokens.accessToken);
         if (!cancelled) {
+          const items = ctx.items ?? [];
           setSessionUser(me);
-          setSessionContexts(ctx.items ?? []);
+          setSessionContexts(items);
+          setActiveContext(pickDefaultActiveContext(items));
           setUser(me);
-          setContexts(ctx.items ?? []);
-          await syncGate(tokens.accessToken, me, ctx.items ?? []);
+          setContexts(items);
+          await syncGate(tokens.accessToken, me, items);
         }
       } catch (err) {
         if (
@@ -454,25 +456,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data.accessToken,
         data.refreshToken,
       );
-      setEmployerOnboardingStep('branch');
+      try {
+        const listed = await fetchContexts(data.accessToken);
+        const items = listed.items ?? [];
+        if (items.length > 0) {
+          setSessionContexts(items);
+          setContexts(items);
+        }
+        const created = items.find(
+          (ctx) =>
+            ctx.role === 'employer' && ctx.employerId === data.employer.id,
+        );
+        setActiveContext(
+          created ?? { role: 'employer', employerId: data.employer.id },
+        );
+      } catch {
+        // New workplace session is already applied.
+      }
     },
     [applySession],
   );
 
   const applyManagerJoin = useCallback(
     async (data: ManagerJoinData) => {
+      const employerId = data.workplace?.id ?? data.branch?.employerId;
       await applySession(
         data.user,
         [
           {
             role: 'manager',
-            employerId: data.branch.employerId,
-            branchIds: [data.branch.id],
+            employerId,
+            branchIds: data.branch ? [data.branch.id] : [],
           },
         ],
         data.accessToken,
         data.refreshToken,
       );
+      try {
+        const listed = await fetchContexts(data.accessToken);
+        const items = listed.items ?? [];
+        if (items.length > 0) {
+          setSessionContexts(items);
+          setContexts(items);
+          const joined = items.find(
+            (ctx) => ctx.role === 'manager' && ctx.employerId === employerId,
+          );
+          setActiveContext(joined ?? pickDefaultActiveContext(items));
+        }
+      } catch {
+        // Join tokens already applied.
+      }
     },
     [applySession],
   );
@@ -483,16 +516,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
     }
     const me = await fetchMe(token);
-    const ctx =
-      contexts.length > 0
-        ? contexts
-        : ((await fetchContexts(token)).items ?? []);
+    const listed = await fetchContexts(token);
+    const ctx = listed.items ?? [];
     setUser(me);
     setContexts(ctx);
     setSessionUser(me);
     setSessionContexts(ctx);
+    setActiveContext(pickDefaultActiveContext(ctx));
     return syncGate(token, me, ctx);
-  }, [contexts, syncGate]);
+  }, [syncGate]);
 
   const switchActiveContextHandler = useCallback(
     async (context: AuthContext) => {

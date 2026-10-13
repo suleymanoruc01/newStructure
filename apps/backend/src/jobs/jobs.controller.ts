@@ -66,7 +66,10 @@ export class JobsController {
     if (employer !== 'me') {
       return successResponse(req.requestId ?? '', { items: [] });
     }
-    const data = await this.jobs.listEmployerJobs(req.authContext!);
+    const data = await this.jobs.listEmployerJobs(
+      req.userId!,
+      req.authContext!,
+    );
     return successResponse(req.requestId ?? '', data);
   }
 
@@ -110,6 +113,7 @@ export class JobsController {
     const parsed = jobPatchBodySchema.parse(body);
     const idem = req.headers['idempotency-key'];
     const data = await this.jobs.patchJob(
+      req.userId!,
       req.authContext!,
       id,
       parsed,

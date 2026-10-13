@@ -122,6 +122,7 @@
   "profile": {
     "title": "Profilim",
     "unnamed": "İş arayan",
+    "publicCode": "İşçi {{code}}",
     "complete": "Profiliniz tamam — ilanlarla eşleşmeye hazırsınız.",
     "incomplete": "Profilinizi tamamlayın",
     "statusComplete": "Hazır",

@@ -4,12 +4,13 @@
 **Source group description:** İşveren profili, firma bilgileri, şube ve işveren hesap yönetimi akışları.
 
 ## Required capabilities
-- Create branch; multi-branch per employer (T-031–T-032)
+- Create workplace/brand first (`TR` code); then optional branches under it (`BR`) (T-031–T-032). A workplace may have zero branches; jobs can attach to the workplace when address/geo is filled. One employer person may own multiple workplaces.
 - Persist accurate coordinates (T-033); reject invalid coords (T-036)
 - Updating branch updates related open jobs display/geo (T-034)
 - Deactivating branch closes or freezes its jobs (T-035) — confirm product rule
 - Soft-delete / archive: historical jobs visibility (T-038)
 - Employer only sees own branches (T-037)
+- Employer assigns managers to a workplace or a branch and sets their permissions (branch CRUD, token purchase, job CRU; job close and token refund are off unless granted)
 
 ## Nest modules
 `employers`, `branches`, `jobs`, `location`

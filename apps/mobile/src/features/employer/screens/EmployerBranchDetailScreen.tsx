@@ -5,8 +5,17 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import type { EmployerStackParamList } from '../../../app/navigation/employer-types';
-import { getBranch } from '../../../api/branches-api';
+import type { ManagerPermission } from '@parton/api-contracts';
+import {
+  getBranch,
+  listBranchManagers,
+  patchBranchManager,
+  patchBranchManagerInvite,
+} from '../../../api/branches-api';
+import { ManagerPermissionToggles } from '../ManagerPermissionToggles';
+import { hasManagerPermission } from '../../../shared/auth/manager-permissions';
 import { ApiClientError } from '../../../api/client';
+import { formErrorMessage } from '../../../api/form-error';
 import { JobCard } from '../../../components/job/JobCard';
 import { LocationMap } from '../../../components/map/LocationMap';
 import { Button } from '../../../components/ui/Button';
@@ -16,7 +25,7 @@ import { ModulePage } from '../../../components/ui/ScreenModules';
 import { openMapsAt } from '../../../shared/maps/open-maps';
 import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
 import { type GeofenceRadii } from '../../../shared/location/geofence';
-import { getAccessToken } from '../../../shared/auth/session-memory';
+import { getAccessToken, getActiveContext } from '../../../shared/auth/session-memory';
 
 type Props = NativeStackScreenProps<
   EmployerStackParamList,
@@ -34,7 +43,13 @@ export function EmployerBranchDetailScreen({ route, navigation }: Props) {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [invite, setInvite] = useState<string | null>(null);
+  const [publicCode, setPublicCode] = useState<string | null>(null);
   const [radii, setRadii] = useState<GeofenceRadii | null>(null);
+  const [managers, setManagers] = useState<
+    { userId: string; status: string; permissions: ManagerPermission[]; phoneE164?: string }[]
+  >([]);
+  const [managerError, setManagerError] = useState<string | null>(null);
+  const isEmployer = getActiveContext()?.role === 'employer';
 
   const load = useCallback(async () => {
     setError(null);
@@ -51,6 +66,11 @@ export function EmployerBranchDetailScreen({ route, navigation }: Props) {
       setLatitude(branch.latitude);
       setLongitude(branch.longitude);
       setInvite(branch.managerInviteCode ?? null);
+      setPublicCode(branch.publicCode ?? null);
+      if (getActiveContext()?.role === 'employer') {
+        const listed = await listBranchManagers(branchId, token);
+        setManagers(listed.items ?? []);
+      }
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -91,7 +111,7 @@ export function EmployerBranchDetailScreen({ route, navigation }: Props) {
       <View className="mt-4">
         <JobCard status={status || undefined} title={name || t('employer:branches.title')}>
           <Text className="font-sans text-sm text-text-medium">
-            {[city, address].filter(Boolean).join(' · ')}
+            {[publicCode, city, address].filter(Boolean).join(' · ')}
           </Text>
           {invite ? (
             <View className="mt-2">
@@ -121,10 +141,117 @@ export function EmployerBranchDetailScreen({ route, navigation }: Props) {
             onPress={() => void openMapsAt(latitude, longitude, name || undefined)}
           />
         ) : null}
-        <Button
-          label={t('employer:branches.edit')}
-          onPress={() => navigation.navigate('EmployerBranchForm', { branchId })}
-        />
+        {isEmployer && managers.length > 0 ? (
+          <View className="gap-3">
+            <Text className="font-sans text-sm font-semibold text-text-high">
+              {t('employer:managers.title')}
+            </Text>
+            {managerError ? (
+              <Text className="font-sans text-sm text-feedback-error">
+                {managerError}
+              </Text>
+            ) : null}
+            {managers.map((row) => (
+              <JobCard
+                key={row.userId}
+                title={row.phoneE164 ?? row.userId}
+                status={row.status}
+              >
+                <ManagerPermissionToggles
+                  value={row.permissions}
+                  onChange={(permissions) => {
+                    void (async () => {
+                      try {
+                        const token = getAccessToken();
+                        if (!token) {
+                          return;
+                        }
+                        const updated = await patchBranchManager(
+                          branchId,
+                          row.userId,
+                          { permissions },
+                          token,
+                        );
+                        setManagers((current) =>
+                          current.map((item) =>
+                            item.userId === row.userId
+                              ? { ...item, permissions: updated.permissions }
+                              : item,
+                          ),
+                        );
+                      } catch (err) {
+                        setManagerError(formErrorMessage(err, t));
+                      }
+                    })();
+                  }}
+                />
+                {row.status !== 'revoked' ? (
+                  <View className="mt-2">
+                    <Button
+                      label={t('employer:managers.revoke')}
+                      variant="ghost"
+                      onPress={() => {
+                        void (async () => {
+                          try {
+                            const token = getAccessToken();
+                            if (!token) {
+                              return;
+                            }
+                            const updated = await patchBranchManager(
+                              branchId,
+                              row.userId,
+                              { status: 'revoked' },
+                              token,
+                            );
+                            setManagers((current) =>
+                              current.map((item) =>
+                                item.userId === row.userId
+                                  ? { ...item, status: updated.status }
+                                  : item,
+                              ),
+                            );
+                          } catch (err) {
+                            setManagerError(formErrorMessage(err, t));
+                          }
+                        })();
+                      }}
+                    />
+                  </View>
+                ) : null}
+              </JobCard>
+            ))}
+          </View>
+        ) : null}
+        {isEmployer && invite ? (
+          <Button
+            label={t('employer:branches.inviteRotate')}
+            variant="secondary"
+            onPress={() => {
+              void (async () => {
+                try {
+                  const token = getAccessToken();
+                  if (!token) {
+                    return;
+                  }
+                  const rotated = await patchBranchManagerInvite(
+                    branchId,
+                    { rotate: true },
+                    token,
+                  );
+                  setInvite(rotated.joinCode);
+                } catch (err) {
+                  setError(formErrorMessage(err, t));
+                }
+              })();
+            }}
+          />
+        ) : null}
+        {hasManagerPermission('branches.update') ? (
+          <Button
+            label={t('employer:branches.edit')}
+            onPress={() => navigation.navigate('EmployerBranchForm', { branchId })}
+          />
+        ) : null}
       </View>
     </ModulePage>
   );

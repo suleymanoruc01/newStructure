@@ -40,6 +40,7 @@ stateDiagram-v2
 | Multi-headcount partial attendance → partial capture | T-157, T-225 |
 | Increase headcount → additional hold or block | T-158 |
 | Decrease headcount → release excess hold | T-159 |
+| Manager without `tokens.refund` cannot release hold when reducing headcount | — |
 | Idempotent ops (network retry safe) | T-160, T-232, T-233 |
 | Failed payment → job stays draft | T-161 |
 | Full movement history | T-162 |
@@ -47,7 +48,7 @@ stateDiagram-v2
 
 ## Suggested tables
 
-- `token_accounts` (employer_id, balance)
+- `token_accounts` (exactly one of `owner_user_id` / `employer_id` / `branch_id`, balance)
 - `token_holds` (job_id, seat_index?, amount, status)
 - `token_ledger_entries` (id, employer_id, type, amount, ref_type, ref_id, idempotency_key, created_at)
 

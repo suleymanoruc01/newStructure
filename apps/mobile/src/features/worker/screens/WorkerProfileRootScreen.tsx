@@ -144,6 +144,14 @@ export function WorkerProfileRootScreen({ navigation }: Props) {
           }
           tone={complete ? 'strong' : 'warn'}
         />
+        {profile.publicCode ? (
+          <View className="mt-2">
+            <StatusBadge
+              label={t('worker:profile.publicCode', { code: profile.publicCode })}
+              tone="neutral"
+            />
+          </View>
+        ) : null}
         {complete ? (
           <Text className="font-sans mt-2 text-sm text-text-medium">
             {t('worker:profile.complete')}

@@ -42,7 +42,8 @@ export class BranchesJoinController {
       newCsrfToken(),
     );
     return successResponse(req.requestId ?? '', {
-      branch: result.branch,
+      ...('branch' in result ? { branch: result.branch } : {}),
+      workplace: result.workplace,
       accessToken: result.accessToken,
       accessExpiresAt: result.accessExpiresAt,
       refreshToken: result.refreshToken,

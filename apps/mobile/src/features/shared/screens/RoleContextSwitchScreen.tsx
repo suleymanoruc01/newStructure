@@ -13,16 +13,15 @@ import { useAuth } from '../../../shared/auth/AuthProvider';
 import { getActiveContext } from '../../../shared/auth/session-memory';
 
 function contextLabel(ctx: AuthContext, t: (key: string) => string): string {
-  if (ctx.role === 'worker') {
-    return t('auth:contextSwitch.roleWorker');
-  }
-  if (ctx.role === 'employer') {
-    return t('auth:contextSwitch.roleEmployer');
-  }
-  if (ctx.role === 'manager') {
-    return t('auth:contextSwitch.roleManager');
-  }
-  return t('auth:contextSwitch.roleAdmin');
+  const role =
+    ctx.role === 'worker'
+      ? t('auth:contextSwitch.roleWorker')
+      : ctx.role === 'employer'
+        ? t('auth:contextSwitch.roleEmployer')
+        : ctx.role === 'manager'
+          ? t('auth:contextSwitch.roleManager')
+          : t('auth:contextSwitch.roleAdmin');
+  return ctx.label ? `${role} · ${ctx.label}` : role;
 }
 
 type Props = {

@@ -16,7 +16,7 @@ import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
 import { listBranches } from '../../../api/branches-api';
 import { fetchEmployerMe } from '../../../api/employers-api';
-import { createBranchJob, fetchJobCatalog } from '../../../api/jobs-api';
+import { createBranchJob, createJob, fetchJobCatalog } from '../../../api/jobs-api';
 import { fetchTokenBalance } from '../../../api/tokens-api';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { useAuth } from '../../../shared/auth/AuthProvider';
@@ -74,6 +74,11 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [sectors, setSectors] = useState<CatalogSector[]>([]);
   const [branchId, setBranchId] = useState('');
+  const [workplacePin, setWorkplacePin] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [workplaceLabel, setWorkplaceLabel] = useState('');
   const [sectorCode, setSectorCode] = useState('');
   const [occupationCode, setOccupationCode] = useState('');
   const [headcount, setHeadcount] = useState('1');
@@ -117,7 +122,19 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
         ]);
         const branchItems = branchList.items ?? [];
         setBranches(branchItems);
-        if (branchItems.length === 1) {
+        if (
+          employer.latitude != null &&
+          employer.longitude != null
+        ) {
+          setWorkplacePin({
+            latitude: employer.latitude,
+            longitude: employer.longitude,
+          });
+          setWorkplaceLabel(
+            employer.tradingName ?? employer.legalName,
+          );
+        }
+        if (branchItems.length === 1 && employer.latitude == null) {
           setBranchId(branchItems[0]!.id);
         }
         const catalogSectors = catalog.sectors ?? [];
@@ -176,8 +193,12 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const goNext = () => {
     setError(null);
     if (step === 1) {
-      if (!branchId) {
-        setError(t('employer:jobs.branchRequired'));
+      if (!branchId && !workplacePin) {
+        setError(
+          workplacePin
+            ? t('employer:jobs.branchRequired')
+            : t('employer:jobs.workplaceLocationMissing'),
+        );
         return;
       }
       if (!sectorCode) {
@@ -204,9 +225,9 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      if (!branchId) {
+      if (!branchId && !workplacePin) {
         throw new ApiClientError(
-          t('employer:jobs.branchRequired'),
+          t('employer:jobs.workplaceLocationMissing'),
           400,
           'VALIDATION_FAILED',
         );
@@ -253,27 +274,28 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
         durationH,
         timeZone,
       );
-      await createBranchJob(
-        branchId,
-        {
-          sectorCode,
-          occupationCode: occupationCode || undefined,
-          headcount: Number.parseInt(headcount, 10),
-          startsAt,
-          endsAt,
-          publish,
-          favoritesOnly,
-          instantAutoApprove,
-          amenities: amenities.length > 0 ? amenities : undefined,
-          genderFilter: genderFilter === 'none' ? undefined : genderFilter,
-          minAge: parsedMinAge,
-          maxAge: parsedMaxAge,
-          requiredDocumentTypes: docTypes.length > 0 ? docTypes : undefined,
-          payAmountMinor,
-          notes: notes.trim() || undefined,
-        },
-        token,
-      );
+      const jobBody = {
+        sectorCode,
+        occupationCode: occupationCode || undefined,
+        headcount: Number.parseInt(headcount, 10),
+        startsAt,
+        endsAt,
+        publish,
+        favoritesOnly,
+        instantAutoApprove,
+        amenities: amenities.length > 0 ? amenities : undefined,
+        genderFilter: genderFilter === 'none' ? undefined : genderFilter,
+        minAge: parsedMinAge,
+        maxAge: parsedMaxAge,
+        requiredDocumentTypes: docTypes.length > 0 ? docTypes : undefined,
+        payAmountMinor,
+        notes: notes.trim() || undefined,
+      };
+      if (branchId) {
+        await createBranchJob(branchId, jobBody, token);
+      } else {
+        await createJob(jobBody, token);
+      }
       navigation.navigate('EmployerJobsList');
     } catch (err) {
       setError(formErrorMessage(err, t));
@@ -283,7 +305,7 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   };
 
   const selectedBranch = branches.find((branch) => branch.id === branchId);
-  const branchName = selectedBranch?.name;
+  const branchName = selectedBranch?.name ?? (branchId ? undefined : workplaceLabel);
   const sectorName = sectorRows.find((sector) => sector.code === sectorCode)?.displayName;
   const occupationName = occupations.find((row) => row.code === occupationCode)?.title;
   const when = wallToIso(dayKey, startHour, durationH, timeZone);
@@ -365,6 +387,13 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
             />
           ) : null}
           <View className="flex-row flex-wrap gap-2">
+            {workplacePin ? (
+              <ClayChip
+                label={t('employer:jobs.workplaceSite')}
+                selected={branchId === ''}
+                onPress={() => setBranchId('')}
+              />
+            ) : null}
             {shownBranches.map((branch) => (
               <ClayChip
                 key={branch.id}
@@ -671,13 +700,17 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
               notes={notes.trim() || undefined}
             />
           </JobCard>
-          {selectedBranch ? (
+          {selectedBranch || (!branchId && workplacePin) ? (
             <LocationMap
-              pin={{
-                latitude: selectedBranch.latitude,
-                longitude: selectedBranch.longitude,
-              }}
-              pinLabel={selectedBranch.name}
+              pin={
+                selectedBranch
+                  ? {
+                      latitude: selectedBranch.latitude,
+                      longitude: selectedBranch.longitude,
+                    }
+                  : workplacePin!
+              }
+              pinLabel={selectedBranch?.name ?? workplaceLabel}
             />
           ) : null}
           <TokenCostPreview

@@ -147,7 +147,33 @@ export class SessionService {
     });
   }
 
-  async assertSessionActive(sessionId: string): Promise<void> {
+  async demoteManagerSessions(
+    userId: string,
+    employerId: string,
+    fallback: AuthContext,
+  ): Promise<void> {
+    const sessions = await this.prisma.refreshSession.findMany({
+      where: { userId, revokedAt: null },
+    });
+    const ids = sessions
+      .filter((session) => {
+        const ctx = session.activeContext as AuthContext | null;
+        return ctx?.role === 'manager' && ctx.employerId === employerId;
+      })
+      .map((session) => session.id);
+    if (ids.length === 0) {
+      return;
+    }
+    await this.prisma.refreshSession.updateMany({
+      where: { id: { in: ids } },
+      data: { activeContext: fallback },
+    });
+  }
+
+  async assertSessionActive(sessionId: string): Promise<{
+    userId: string;
+    activeContext: AuthContext;
+  }> {
     const session = await this.prisma.refreshSession.findUnique({
       where: { id: sessionId },
       include: { user: { select: { status: true, phoneE164: true } } },
@@ -187,6 +213,10 @@ export class SessionService {
         'Hesap erişime kapalı.',
       );
     }
+    return {
+      userId: session.userId,
+      activeContext: (session.activeContext ?? { role: 'worker' }) as AuthContext,
+    };
   }
 
   async updateSessionContext(

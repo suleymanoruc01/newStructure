@@ -1,4 +1,11 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
 
 export function hashOtp(code: string, pepper: string): string {
   return createHmac('sha256', pepper).update(code).digest('hex');
@@ -69,4 +76,43 @@ export function verifyManagerJoinCode(
     return false;
   }
   return timingSafeEqual(a, b);
+}
+
+function managerJoinSealKey(pepper: string): Buffer {
+  return createHash('sha256').update(`manager-join-seal:${pepper}`).digest();
+}
+
+export function sealManagerJoinCode(code: string, pepper: string): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', managerJoinSealKey(pepper), iv);
+  const encrypted = Buffer.concat([
+    cipher.update(code, 'utf8'),
+    cipher.final(),
+  ]);
+  return `v1:${iv.toString('base64url')}:${cipher.getAuthTag().toString('base64url')}:${encrypted.toString('base64url')}`;
+}
+
+export function revealManagerJoinCode(
+  stored: string | null | undefined,
+  pepper: string,
+): string | undefined {
+  if (!stored) {
+    return undefined;
+  }
+  const parts = stored.split(':');
+  if (parts[0] !== 'v1' || parts.length !== 4) {
+    return stored;
+  }
+  const iv = Buffer.from(parts[1], 'base64url');
+  const tag = Buffer.from(parts[2], 'base64url');
+  const encrypted = Buffer.from(parts[3], 'base64url');
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    managerJoinSealKey(pepper),
+    iv,
+  );
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString(
+    'utf8',
+  );
 }

@@ -6,7 +6,7 @@
     "step": "Adım {{current}} / {{total}}",
     "wizard": {
       "place": "Pozisyon",
-      "placeHint": "Şube, meslek ve ücret bu adımda kilitlenir.",
+      "placeHint": "İşyeri veya şube, meslek ve ücret bu adımda kilitlenir.",
       "when": "Zaman",
       "whenHint": "Vardiya günü, saati ve süresi.",
       "audience": "Koşullar",
@@ -16,7 +16,9 @@
     },
     "publish": "Yayınla",
     "branchId": "Şube kimliği",
-    "branchRequired": "Şube seçin veya şube kimliği girin.",
+    "branchRequired": "İşyeri konumu veya şube seçin.",
+    "workplaceSite": "Bu işyeri (şubesiz)",
+    "workplaceLocationMissing": "Şubesiz ilan için işyeri adresini kaydedin.",
     "sectorRequired": "Sektör seçin.",
     "sector": "Sektör kodu",
     "occupation": "Meslek kodu",
@@ -123,7 +125,7 @@
   },
   "branches": {
     "title": "Şubeler",
-    "empty": "Kayıtlı şube yok.",
+    "empty": "Bu işyerine henüz şube eklenmedi.",
     "search": "Şube veya şehir ara",
     "searchEmpty": "Bu aramaya uyan şube yok.",
     "createTitle": "Şube ekle",
@@ -146,6 +148,8 @@
     "pinPicked": "Pin: {{lat}}, {{lng}}",
     "coordsInvalid": "Geçerli enlem ve boylam girin.",
     "invite": "Yönetici kodu: {{code}}",
+    "inviteRotate": "Kodu yenile",
+    "publicCode": "Şube kodu {{code}}",
     "status": {
       "active": "Aktif",
       "inactive": "Pasif",
@@ -158,7 +162,9 @@
     "insightBranches": "{{count}} şube",
     "statJobs": "İlan",
     "statBranches": "Şube",
-    "noIndustry": "Sektör seçilmedi — eşleşme için sektör ekleyin."
+    "noIndustry": "Sektör seçilmedi — eşleşme için sektör ekleyin.",
+    "employerCode": "İşveren {{code}}",
+    "workplaceCode": "İşyeri {{code}}"
   },
   "verification": {
     "title": "Firma doğrulama",
@@ -224,7 +230,13 @@
     "title": "İşletme",
     "legalName": "Ticari unvan",
     "tradingName": "Marka adı",
-    "taxId": "Vergi numarası"
+    "taxId": "Vergi numarası",
+    "address": "Adres",
+    "invite": "İşyeri yönetici kodu: {{code}}",
+    "inviteCta": "Yönetici kodu oluştur",
+    "inviteRotate": "Kodu yenile",
+    "addWorkplace": "Başka işyeri ekle",
+    "coordsInvalid": "Geçerli enlem ve boylam girin."
   },
   "industry": {
     "title": "Sektörler",
@@ -295,7 +307,45 @@
       "top_up": "Jeton yükleme",
       "hold": "Provizyon",
       "release": "Provizyon iadesi",
-      "capture": "Kesinleşen jeton"
+      "capture": "Kesinleşen jeton",
+      "transfer": "Paylaşım",
+      "refund": "İade"
+    },
+    "unallocated": "Dağıtılmamış",
+    "workplacePool": "İşyeri",
+    "allocateCta": "Paylaştır",
+    "allocateAmount": "Miktar",
+    "allocateTargetWorkplace": "Bu işyerine",
+    "allocateTargetBranch": "Şubeye",
+    "requestsTitle": "Jeton talepleri",
+    "requestCta": "İşverenden jeton iste",
+    "requestAmount": "Miktar (isteğe bağlı)",
+    "requestNote": "Not",
+    "requestEmpty": "Bekleyen talep yok.",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "approveAmount": "Onay miktarı"
+  },
+  "managers": {
+    "title": "Yöneticiler",
+    "revoke": "Kaldır",
+    "noRefundHint": "Personel azaltınca jeton iade edilmez.",
+    "perm": {
+      "jobs": {
+        "create": "İlan oluştur",
+        "read": "İlan görüntüle",
+        "update": "İlan düzenle",
+        "delete": "İlan kapat"
+      },
+      "branches": {
+        "create": "Şube ekle",
+        "update": "Şube düzenle",
+        "delete": "Şube kapat"
+      },
+      "tokens": {
+        "purchase": "Jeton satın al",
+        "refund": "Jeton iadesi"
+      }
     }
   }
 }

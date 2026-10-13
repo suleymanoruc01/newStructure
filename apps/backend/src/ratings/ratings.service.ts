@@ -83,7 +83,7 @@ export class RatingsService {
           jobId: shift.jobId,
           jobTitle: shift.job.title,
           branchId: shift.branchId,
-          branchName: shift.branch.name,
+          branchName: shift.branch?.name ?? 'İşyeri',
           counterpartLabel:
             shift.employer.tradingName ?? shift.employer.legalName,
           opensAt: shift.ratingOpensAt!.toISOString(),
@@ -129,7 +129,7 @@ export class RatingsService {
           jobId: shift.jobId,
           jobTitle: shift.job.title,
           branchId: shift.branchId,
-          branchName: shift.branch.name,
+          branchName: shift.branch?.name ?? 'İşyeri',
           counterpartLabel: name || 'İş arayan',
           opensAt: shift.ratingOpensAt!.toISOString(),
         });
