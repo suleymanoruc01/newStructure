@@ -18,6 +18,8 @@ import { getAccessToken } from '../../../shared/auth/session-memory';
 import { durationHours, elapsedLabel } from '../../../shared/datetime/countdown';
 import { formatPayTry } from '../../../shared/format/pay';
 import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
+import { clearActiveShift } from '../../../shared/shifts/active-shift-store';
+import { triggerHaptic } from '../../../shared/ui/haptics';
 
 type Props = NativeStackScreenProps<
   WorkerStackParamList,
@@ -68,8 +70,11 @@ export function WorkerShiftCheckOutScreen({ route, navigation }: Props) {
         { notes: notes.trim() || undefined },
         `checkout-${shiftId}`,
       );
+      triggerHaptic('success');
+      clearActiveShift();
       navigation.navigate('SharedRatingsPending');
     } catch (err) {
+      triggerHaptic('error');
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
       } else {

@@ -38,3 +38,46 @@ export const DAY_NAMES_TR = [
   'Cuma',
   'Cumartesi',
 ] as const;
+
+export function computeRangeDuration(
+  startMinute: number,
+  endMinute: number,
+  crossesMidnight?: boolean,
+): { durationMinutes: number; formatted: string } {
+  let diff = endMinute - startMinute;
+  if (diff <= 0 || crossesMidnight) {
+    diff = 1440 - startMinute + endMinute;
+  }
+  const hours = Math.floor(diff / 60);
+  const mins = diff % 60;
+  let formatted = '';
+  if (hours > 0 && mins > 0) {
+    formatted = `${hours} sa ${mins} dk`;
+  } else if (hours > 0) {
+    formatted = `${hours} saat`;
+  } else {
+    formatted = `${mins} dk`;
+  }
+  return { durationMinutes: diff, formatted };
+}
+
+export function addMinutesToTime(time: string, minutesToAdd: number): string {
+  const current = parseTimeToMinute(time);
+  const total = (current + minutesToAdd) % 1440;
+  const normalized = total < 0 ? total + 1440 : total;
+  return formatMinuteOfDay(normalized);
+}
+
+export function formatTimeRange(
+  start: string,
+  end: string,
+  crossesMidnight?: boolean,
+): string {
+  const duration = computeRangeDuration(
+    parseTimeToMinute(start),
+    parseTimeToMinute(end),
+    crossesMidnight,
+  );
+  return `${start} – ${end} (${duration.formatted})`;
+}
+

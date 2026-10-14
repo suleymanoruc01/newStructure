@@ -21,7 +21,8 @@ import { PlatformService } from '../platform/platform.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RatingsService } from '../ratings/ratings.service.js';
 import { TokensService } from '../tokens/tokens.service.js';
-import { requireJobSite } from '../common/job-location.js';
+import { jobSiteFrom, requireJobSite } from '../common/job-location.js';
+import { computeCandidateScore } from '../applications/candidate-ranking.util.js';
 import { resolveEmployerAudience } from './shift-notify.util.js';
 import {
   computeConfirmWindow,
@@ -410,6 +411,18 @@ export class ShiftsService {
           availabilityRespondedAt: new Date(),
         },
       });
+      await tx.application.update({
+        where: { id: shift.applicationId },
+        data: { status: 'withdrawn' },
+      });
+      await tx.applicationEvent.create({
+        data: {
+          applicationId: shift.applicationId,
+          eventType: 'withdrawn',
+          actorUserId: workerUserId,
+          metadata: { reason: body.reason ?? 'cannot_come' },
+        },
+      });
       await this.releaseSeat(tx, shift.jobId);
 
       const audience = await resolveEmployerAudience(
@@ -642,7 +655,10 @@ export class ShiftsService {
   }
 
   async checkOut(workerUserId: string, shiftId: string, _body: CheckOutBody) {
-    const shift = await this.prisma.shift.findUnique({ where: { id: shiftId } });
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+      include: { job: { include: { employer: true } }, branch: true },
+    });
     if (!shift || shift.workerUserId !== workerUserId) {
       throw new ApiException(
         HttpStatus.NOT_FOUND,
@@ -657,11 +673,57 @@ export class ShiftsService {
         'Check-out için aktif vardiya gerekli.',
       );
     }
-    const updated = await this.prisma.shift.update({
-      where: { id: shiftId },
-      data: { status: 'completed', completedAt: new Date() },
-      include: { job: { include: { employer: true } }, branch: true },
+
+    const completedAt = new Date();
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const res = await tx.shift.update({
+        where: { id: shiftId },
+        data: {
+          status: 'completed',
+          completedAt,
+          ratingOpensAt: completedAt,
+        },
+        include: { job: { include: { employer: true } }, branch: true },
+      });
+
+      // Early departure incident detection (>30 minutes before scheduled end)
+      const leftEarlyMinutes = Math.round(
+        (shift.endsAt.getTime() - completedAt.getTime()) / 60000,
+      );
+      if (leftEarlyMinutes > 30) {
+        await tx.shiftIncident.create({
+          data: {
+            shiftId,
+            workerUserId,
+            type: 'early_departure',
+            severity: 'medium',
+            note: `Çalışan vardiya bitiş saatinden ${leftEarlyMinutes} dakika önce check-out yaptı.`,
+          },
+        });
+      }
+
+      const audience = await resolveEmployerAudience(
+        tx,
+        shift.employerId,
+        shift.branchId,
+      );
+      const title = shift.job.title ?? shift.job.sectorCode;
+      for (const userId of audience) {
+        await this.notifications.enqueueInTransaction(tx, {
+          userId,
+          type: 'shift.worker_checked_out',
+          dedupeKey: `shift.worker_checked_out:${shiftId}:${userId}`,
+          templateInput: {
+            jobTitle: title,
+            workerDisplayName: 'İşçi',
+          },
+          data: { shiftId, jobId: shift.jobId },
+        });
+      }
+
+      return res;
     });
+
     return this.mapShift(updated, updated.job, updated.branch);
   }
 
@@ -741,6 +803,26 @@ export class ShiftsService {
           note: body.note ?? null,
         },
       });
+
+      // Escalate high and critical safety incidents to platform risk auditing
+      if (body.severity === 'high' || body.severity === 'critical') {
+        await tx.riskEvent.create({
+          data: {
+            userId: workerUserId,
+            shiftId,
+            type: `incident.${body.type}.${body.severity}`,
+            score: body.severity === 'critical' ? 10 : 5,
+            metadata: {
+              incidentId: row.id,
+              severity: body.severity,
+              employerId: shift.employerId,
+              branchId: shift.branchId,
+              note: body.note ?? null,
+            },
+          },
+        });
+      }
+
       const audience = await resolveEmployerAudience(
         tx,
         shift.employerId,
@@ -752,9 +834,19 @@ export class ShiftsService {
           type: 'shift.dispute_update',
           dedupeKey: `shift.incident:${row.id}:${userId}`,
           templateInput: { jobTitle: shift.job.title ?? shift.job.sectorCode },
-          data: { shiftId, incidentId: row.id, type: body.type },
+          data: { shiftId, incidentId: row.id, type: body.type, severity: body.severity },
         });
       }
+
+      // Worker filing acknowledgment receipt
+      await this.notifications.enqueueInTransaction(tx, {
+        userId: workerUserId,
+        type: 'shift.dispute_update',
+        dedupeKey: `shift.incident.worker_ack:${row.id}:${workerUserId}`,
+        templateInput: { jobTitle: shift.job.title ?? shift.job.sectorCode },
+        data: { shiftId, incidentId: row.id, status: 'filed' },
+      });
+
       return row;
     });
     return {
@@ -764,6 +856,76 @@ export class ShiftsService {
       severity: created.severity,
       note: created.note,
       createdAt: created.createdAt.toISOString(),
+    };
+  }
+
+  async rejectDispute(
+    actorUserId: string,
+    ctx: AuthContext,
+    shiftId: string,
+    disputeId: string,
+    _body?: { reason?: string },
+  ) {
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+      include: { job: { include: { employer: true } }, branch: true },
+    });
+    if (!shift) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Vardiya bulunamadı.',
+      );
+    }
+    await this.assertEmployerAccess(ctx, shift);
+
+    const dispute = await this.prisma.checkInDispute.findUnique({
+      where: { id: disputeId },
+    });
+    if (!dispute || dispute.shiftId !== shiftId) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'İtiraz bulunamadı.',
+      );
+    }
+    if (dispute.status !== 'open') {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        ErrorCode.CONFLICT,
+        'İtiraz zaten sonuçlandırılmış.',
+      );
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const res = await tx.checkInDispute.update({
+        where: { id: disputeId },
+        data: {
+          status: 'rejected',
+          resolvedByUserId: actorUserId,
+          resolvedAt: new Date(),
+        },
+      });
+
+      await this.notifications.enqueueInTransaction(tx, {
+        userId: shift.workerUserId,
+        type: 'shift.dispute_update',
+        dedupeKey: `shift.dispute_rejected:${disputeId}`,
+        templateInput: {
+          jobTitle: shift.job.title ?? shift.job.sectorCode,
+        },
+        data: { shiftId, disputeId, status: 'rejected' },
+      });
+
+      return res;
+    });
+
+    return {
+      id: updated.id,
+      shiftId: updated.shiftId,
+      status: 'rejected' as const,
+      note: updated.note,
+      createdAt: updated.createdAt.toISOString(),
     };
   }
 
@@ -864,7 +1026,185 @@ export class ShiftsService {
     return this.mapShift(updated!, updated!.job, updated!.branch);
   }
 
+  async promoteNextSubstitute(tx: Tx, jobId: string): Promise<string | null> {
+    const candidates = await tx.application.findMany({
+      where: { jobId, status: 'substitute' },
+      include: {
+        workerProfile: {
+          include: {
+            sectors: true,
+            occupations: true,
+          },
+        },
+        job: {
+          include: {
+            branch: true,
+            employer: true,
+          },
+        },
+      },
+    });
+
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    const firstJob = candidates[0].job;
+    const jobSite = jobSiteFrom(firstJob);
+    const jobContext = {
+      sectorCode: firstJob.sectorCode,
+      occupationCode: firstJob.occupationCode,
+      latitude: jobSite ? Number(jobSite.latitude) : null,
+      longitude: jobSite ? Number(jobSite.longitude) : null,
+    };
+
+    const candidateUserIds = candidates.map((c) => c.workerUserId);
+    const pastShifts =
+      (await tx.shift.findMany?.({
+        where: { workerUserId: { in: candidateUserIds } },
+        select: {
+          workerUserId: true,
+          status: true,
+          job: { select: { sectorCode: true } },
+        },
+      })) ?? [];
+
+    const shiftTally = new Map<
+      string,
+      { completed: number; cancelled: number; inSector: number }
+    >();
+    for (const s of pastShifts) {
+      const entry = shiftTally.get(s.workerUserId) ?? {
+        completed: 0,
+        cancelled: 0,
+        inSector: 0,
+      };
+      if (
+        s.status === 'completed' ||
+        s.status === 'checked_out' ||
+        s.status === 'attendance_confirmed'
+      ) {
+        entry.completed += 1;
+        if (s.job.sectorCode === firstJob.sectorCode) {
+          entry.inSector += 1;
+        }
+      } else if (
+        s.status === 'cancelled_by_worker' ||
+        s.status === 'cancelled_late' ||
+        s.status === 'cannot_come' ||
+        s.status === 'no_show'
+      ) {
+        entry.cancelled += 1;
+      }
+      shiftTally.set(s.workerUserId, entry);
+    }
+
+    const pastRatings =
+      (await tx.rating?.findMany?.({
+        where: {
+          targetWorkerUserId: { in: candidateUserIds },
+          moderationStatus: 'approved',
+        },
+        select: { targetWorkerUserId: true, score: true },
+      })) ?? [];
+    const ratingsByUser = new Map<string, number[]>();
+    for (const r of pastRatings) {
+      if (!r.targetWorkerUserId) continue;
+      const arr = ratingsByUser.get(r.targetWorkerUserId) ?? [];
+      arr.push(r.score);
+      ratingsByUser.set(r.targetWorkerUserId, arr);
+    }
+
+    const scored = candidates.map((app) => {
+      const history = shiftTally.get(app.workerUserId) ?? {
+        completed: 0,
+        cancelled: 0,
+        inSector: 0,
+      };
+      const ratings = ratingsByUser.get(app.workerUserId) ?? [];
+      const score = computeCandidateScore(jobContext, {
+        workerUserId: app.workerUserId,
+        sectorCodes: app.workerProfile?.sectors.map((s) => s.sectorCode) ?? [],
+        occupationCodes:
+          app.workerProfile?.occupations.map((o) => o.occupationCode) ?? [],
+        homeLatitude: app.workerProfile?.homeLatitude
+          ? Number(app.workerProfile.homeLatitude)
+          : null,
+        homeLongitude: app.workerProfile?.homeLongitude
+          ? Number(app.workerProfile.homeLongitude)
+          : null,
+        ratings,
+        completedShiftsCount: history.completed,
+        cancelledShiftsCount: history.cancelled,
+        completedSectorShiftsCount: history.inSector,
+      });
+      return { app, score };
+    });
+
+    scored.sort((a, b) => b.score.totalScore - a.score.totalScore);
+    const chosen = scored[0].app;
+
+    await tx.application.update({
+      where: { id: chosen.id },
+      data: { status: 'accepted' },
+    });
+
+    await tx.applicationEvent.create({
+      data: {
+        applicationId: chosen.id,
+        eventType: 'accepted',
+        actorUserId: chosen.workerUserId,
+        metadata: { autoPromotedFromSubstitute: true },
+      },
+    });
+
+    const shift = await this.createForAcceptedApplication(tx, {
+      applicationId: chosen.id,
+      jobId: chosen.jobId,
+      workerUserId: chosen.workerUserId,
+      employerId: chosen.job.employerId,
+      branchId: chosen.job.branchId,
+      startsAt: chosen.job.startsAt,
+      endsAt: chosen.job.endsAt,
+    });
+
+    const jobTitle = chosen.job.title ?? chosen.job.sectorCode;
+    await this.notifications.enqueueInTransaction(tx, {
+      userId: chosen.workerUserId,
+      type: 'shift.substitute_promoted',
+      dedupeKey: `shift.substitute_promoted:${shift.id}:${chosen.workerUserId}`,
+      templateInput: { jobTitle },
+      data: { shiftId: shift.id, jobId: chosen.jobId },
+    });
+
+    const audience = await resolveEmployerAudience(
+      tx,
+      chosen.job.employerId,
+      chosen.job.branchId,
+    );
+    const workerName = profileDisplayName(chosen.workerProfile);
+    for (const userId of audience) {
+      await this.notifications.enqueueInTransaction(tx, {
+        userId,
+        type: 'application.accepted',
+        dedupeKey: `substitute.assigned:${shift.id}:${userId}`,
+        templateInput: {
+          jobTitle,
+          workerDisplayName: workerName ?? 'Yedek Aday',
+          branchName: jobSite?.name,
+        },
+        data: { shiftId: shift.id, jobId: chosen.jobId },
+      });
+    }
+
+    return shift.id;
+  }
+
   async releaseSeat(tx: Tx, jobId: string) {
+    const promotedShiftId = await this.promoteNextSubstitute(tx, jobId);
+    if (promotedShiftId) {
+      return;
+    }
     const job = await tx.job.findUnique({ where: { id: jobId } });
     if (!job) {
       return;
@@ -974,5 +1314,152 @@ export class ShiftsService {
         );
       }
     }
+  }
+
+  async processCheckInNoShows(): Promise<number> {
+    const now = new Date();
+    const remote = await this.platform.getPublicRemoteConfig();
+    const lateThresholdMs = remote.checkinLateMinutes * 60 * 1000;
+
+    const staleCanCome = await this.prisma.shift.findMany({
+      where: {
+        status: 'can_come',
+        checkedInAt: null,
+      },
+      include: { job: true },
+      take: 50,
+    });
+
+    const noShowShifts = staleCanCome.filter(
+      (s) => now.getTime() > s.startsAt.getTime() + lateThresholdMs,
+    );
+
+    let processedCount = 0;
+    for (const shift of noShowShifts) {
+      await this.prisma.$transaction(async (tx) => {
+        const current = await tx.shift.findUnique({ where: { id: shift.id } });
+        if (!current || current.status !== 'can_come' || current.checkedInAt) {
+          return;
+        }
+
+        await tx.shift.update({
+          where: { id: shift.id },
+          data: { status: 'cannot_come' },
+        });
+
+        await tx.riskEvent.create({
+          data: {
+            userId: shift.workerUserId,
+            shiftId: shift.id,
+            type: 'no_show',
+            score: 5,
+            metadata: {
+              startsAt: shift.startsAt.toISOString(),
+              detectedAt: now.toISOString(),
+            },
+          },
+        });
+
+        await tx.shiftIncident.create({
+          data: {
+            shiftId: shift.id,
+            workerUserId: shift.workerUserId,
+            type: 'no_show',
+            severity: 'high',
+            note: 'Vardiya saatinde check-in yapılmadı (No-show tespit edildi).',
+          },
+        });
+
+        await this.releaseSeat(tx, shift.jobId);
+
+        const audience = await resolveEmployerAudience(
+          tx,
+          shift.employerId,
+          shift.branchId,
+        );
+        const title = shift.job.title ?? shift.job.sectorCode;
+        for (const userId of audience) {
+          await this.notifications.enqueueInTransaction(tx, {
+            userId,
+            type: 'shift.no_show',
+            dedupeKey: `shift.no_show:${shift.id}:${userId}`,
+            templateInput: { jobTitle: title, workerDisplayName: 'İşçi' },
+            data: { shiftId: shift.id, jobId: shift.jobId },
+          });
+        }
+        processedCount += 1;
+      });
+    }
+
+    return processedCount;
+  }
+
+  async reconcileStaleCheckedInShifts(): Promise<number> {
+    const now = new Date();
+    const graceMs = 2 * 60 * 60 * 1000;
+
+    const staleCheckedIn = await this.prisma.shift.findMany({
+      where: {
+        status: { in: ['checked_in', 'manual_confirmed'] },
+        endsAt: { lt: new Date(now.getTime() - graceMs) },
+      },
+      include: { job: true },
+      take: 50,
+    });
+
+    let reconciledCount = 0;
+    for (const shift of staleCheckedIn) {
+      await this.prisma.$transaction(async (tx) => {
+        const current = await tx.shift.findUnique({ where: { id: shift.id } });
+        if (
+          !current ||
+          (current.status !== 'checked_in' && current.status !== 'manual_confirmed')
+        ) {
+          return;
+        }
+
+        const completedAt = current.endsAt;
+        await tx.shift.update({
+          where: { id: shift.id },
+          data: {
+            status: 'completed',
+            completedAt,
+            ratingOpensAt: now,
+          },
+        });
+
+        await tx.shiftIncident.create({
+          data: {
+            shiftId: shift.id,
+            workerUserId: shift.workerUserId,
+            type: 'system_auto_checkout',
+            severity: 'low',
+            note: 'Vardiya bitiş süresini aştığı için sistem tarafından otomatik check-out yapıldı.',
+          },
+        });
+
+        const audience = await resolveEmployerAudience(
+          tx,
+          shift.employerId,
+          shift.branchId,
+        );
+        const title = shift.job.title ?? shift.job.sectorCode;
+        for (const userId of audience) {
+          await this.notifications.enqueueInTransaction(tx, {
+            userId,
+            type: 'shift.worker_checked_out',
+            dedupeKey: `shift.auto_checked_out:${shift.id}:${userId}`,
+            templateInput: {
+              jobTitle: title,
+              workerDisplayName: 'İşçi (Otomatik Tamamlama)',
+            },
+            data: { shiftId: shift.id, jobId: shift.jobId },
+          });
+        }
+        reconciledCount += 1;
+      });
+    }
+
+    return reconciledCount;
   }
 }

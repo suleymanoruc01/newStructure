@@ -20,7 +20,9 @@ import {
   watchDeviceCoordinates,
   type DeviceCoordinates,
 } from '../../../shared/location/device-coordinates';
+import { CoordinateFilter } from '../../../shared/location/coordinate-filter';
 import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
+import { triggerHaptic } from '../../../shared/ui/haptics';
 import {
   evaluateGeofencePreview,
   haversineM,
@@ -39,6 +41,7 @@ export function WorkerShiftCheckInScreen({ route, navigation }: Props) {
   const [device, setDevice] = useState<DeviceCoordinates | null>(null);
   const [previous, setPrevious] = useState<DeviceCoordinates | null>(null);
   const lastSample = useRef<DeviceCoordinates | null>(null);
+  const filterRef = useRef(new CoordinateFilter());
   const [radii, setRadii] = useState<GeofenceRadii | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [disputeEligible, setDisputeEligible] = useState(false);
@@ -78,9 +81,20 @@ export function WorkerShiftCheckInScreen({ route, navigation }: Props) {
       'check-in',
       (sample) => {
         setPermissionDenied(false);
+        const smoothed = filterRef.current.update(
+          sample.latitude,
+          sample.longitude,
+          sample.accuracyM,
+        );
+        const processedSample: DeviceCoordinates = {
+          ...sample,
+          latitude: smoothed.latitude,
+          longitude: smoothed.longitude,
+          accuracyM: smoothed.accuracyM,
+        };
         setPrevious(lastSample.current);
-        lastSample.current = sample;
-        setDevice(sample);
+        lastSample.current = processedSample;
+        setDevice(processedSample);
       },
       (err) => {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
@@ -143,8 +157,10 @@ export function WorkerShiftCheckInScreen({ route, navigation }: Props) {
         },
         `checkin-${shiftId}`,
       );
+      triggerHaptic('success');
       navigation.replace('WorkerShiftInShift', { shiftId });
     } catch (err) {
+      triggerHaptic('error');
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
         if (

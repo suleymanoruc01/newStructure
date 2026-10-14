@@ -1,0 +1,123 @@
+{
+  "support": {
+    "title": "Support",
+    "lead": "Contact our support team for issues with accounts, payments, or the app.",
+    "subjectLabel": "Subject",
+    "bodyLabel": "Message",
+    "subjectTooShort": "Subject must be at least 3 characters.",
+    "bodyTooShort": "Message must be at least 10 characters.",
+    "submit": "Submit Ticket",
+    "chipTokens": "Tokens & Payments",
+    "chipShift": "Shift Check-in",
+    "chipAccount": "Account & Documents"
+  },
+  "abuse": {
+    "title": "Report Incident / Abuse",
+    "lead": "Select a category and describe what happened. Reports are routed to the moderation team.",
+    "noteLabel": "Description",
+    "noteTooShort": "Description must be at least 10 characters.",
+    "categoryRequired": "Please select a category.",
+    "submit": "Submit Report",
+    "categories": {
+      "T-181": "Confirmed two overlapping shifts",
+      "T-182": "Confirmed attendance but failed to show up",
+      "T-183": "Last-minute cancellation",
+      "T-184": "Multiple accounts on the same device",
+      "T-185": "Fake job listing",
+      "T-186": "Automated/bot applications",
+      "T-187": "Rating manipulation",
+      "T-188": "Mock location / fake GPS",
+      "T-189": "Marked attending worker as absent",
+      "T-190": "Marked absent worker as attended",
+      "T-191": "False age declaration",
+      "T-192": "Re-registration of banned user"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet. Historical alerts remain stored here even if push is disabled.",
+    "readAll": "Mark All as Read",
+    "filterAll": "All",
+    "search": "Search notifications",
+    "searchEmpty": "No notifications match this search.",
+    "unread": "Unread",
+    "read": "Read",
+    "unreadEmpty": "No unread notifications.",
+    "typeEmpty": "No notifications of this type.",
+    "prefs": "Notification Preferences",
+    "prefsTitle": "Notification Preferences",
+    "prefsLead": "Push notifications are muted for disabled categories, but app inbox items are still delivered.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "earlier": "Earlier",
+    "openTarget": "Go to Record",
+    "openOsSettings": "Open Notification Settings",
+    "permissionWhy": "Push notifications are required to alert you when shifts, approvals, or replacements occur.",
+    "permissionCta": "Allow Notifications",
+    "categories": {
+      "shifts": "Shifts",
+      "applications": "Applications",
+      "matching": "Matching",
+      "favorites": "Favorites",
+      "marketing": "Announcements"
+    }
+  },
+  "forbidden": {
+    "title": "Access Denied",
+    "body": "You do not have access to this resource or are in the wrong account context.",
+    "tenantHint": "Employer and job seeker data are strictly partitioned. Switch roles in the top menu if needed."
+  },
+  "sessionExpired": {
+    "title": "Session Expired",
+    "body": "Your session has expired for your security. Please sign in again to continue.",
+    "reauth": "Sign In Again"
+  },
+  "restriction": {
+    "title": "Account Restricted",
+    "body": "Your account has been temporarily restricted. Please contact support."
+  },
+  "blocking": {
+    "title": "Account Suspended",
+    "body": "This account is permanently closed. New registrations are not permitted."
+  },
+  "settings": {
+    "title": "Account Settings",
+    "email": "Email",
+    "phone": "Phone",
+    "language": "App Language",
+    "languageModalTitle": "Language Selection",
+    "languageModalSubtitle": "Choose application language",
+    "languageValue": {
+      "tr": "Türkçe",
+      "en": "English"
+    },
+    "theme": "Theme",
+    "themeValue": {
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "deleteTitle": "Delete Account",
+    "deleteBody": "Account deletion will be submitted for GDPR/KVKK compliance processing.",
+    "deleteCta": "Request Account Deletion",
+    "deleteRequested": "Deletion request received."
+  },
+  "email": {
+    "title": "Email Address",
+    "lead": "Add an email for recovery and notifications. Sign in continues with your phone number.",
+    "label": "Email"
+  },
+  "process": {
+    "title": "Application Flow",
+    "done": "Completed",
+    "waiting": "Pending",
+    "steps": {
+      "applied": "Applied",
+      "review": "Reviewing",
+      "decision": "Decision",
+      "shift": "Shift"
+    },
+    "openShift": "Open Shift",
+    "openJob": "View Job",
+    "openApplicants": "Applicants"
+  }
+}

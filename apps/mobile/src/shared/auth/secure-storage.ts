@@ -16,7 +16,11 @@ function keychainOptions(service: string): Keychain.SetOptions {
 
 function newInstallId(): string {
   const bytes = new Uint8Array(16);
-  const cryptoApi = globalThis.crypto;
+  const cryptoApi = (
+    globalThis as unknown as {
+      crypto?: { getRandomValues?: (arr: Uint8Array) => Uint8Array };
+    }
+  ).crypto;
   if (cryptoApi?.getRandomValues) {
     cryptoApi.getRandomValues(bytes);
   } else {

@@ -48,6 +48,7 @@ export type EligibilityResult = {
   reasons: string[];
   matchReasons: string[];
   distanceKm: number | null;
+  matchScore: number;
 };
 
 export function ageYearsAt(
@@ -183,10 +184,35 @@ export function evaluateJobEligibility(
     matchReasons.push('distance_ranked');
   }
 
+  let matchScore = 0;
+  if (reasons.length === 0) {
+    let score = 50;
+    if (distanceKm !== null) {
+      const distAffinity = Math.round(30 * Math.exp(-distanceKm / 15));
+      score += distAffinity;
+    } else {
+      score += 15;
+    }
+
+    if (
+      job.occupationCode &&
+      worker.occupations.some((o) => o.occupationCode === job.occupationCode)
+    ) {
+      score += 10;
+    }
+
+    if (context?.favoredEmployerIds?.has(job.employerId)) {
+      score += 10;
+    }
+
+    matchScore = Math.min(100, Math.max(15, Math.round(score)));
+  }
+
   return {
     eligible: reasons.length === 0,
     reasons,
     matchReasons,
     distanceKm,
+    matchScore,
   };
 }

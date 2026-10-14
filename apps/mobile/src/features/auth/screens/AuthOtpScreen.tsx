@@ -34,7 +34,7 @@ export function AuthOtpScreen({ navigation, route }: Props) {
   };
   const { t } = useTranslation(['auth', 'common', 'errors']);
   const { requestPhoneOtp, verifyPhoneOtp } = useAuth();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<any>(null);
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

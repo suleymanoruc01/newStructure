@@ -47,7 +47,7 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
   const [onlyInstantApproval, setOnlyInstantApproval] = useState(false);
   const [view, setView] = useState<'list' | 'map'>('list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [sort, setSort] = useState<FeedSort>('start');
+  const [sort, setSort] = useState<FeedSort>('match');
   const [query, setQuery] = useState(route.params?.query ?? '');
   const [sectorCode, setSectorCode] = useState<string | null>(null);
   const [occupationCode, setOccupationCode] = useState<string | null>(null);
@@ -218,15 +218,18 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
           selected={onlyInstantApproval}
           onPress={() => setOnlyInstantApproval((value) => !value)}
         />
-        {(['start', 'distance', 'pay'] as const).map((value) => (
+        {(['match', 'start', 'distance', 'pay'] as const).map((value) => (
           <ClayChip
             key={value}
             label={t(
-              value === 'start'
-                ? 'worker:jobs.sortStart'
-                : value === 'distance'
-                  ? 'worker:jobs.sortDistance'
-                  : 'worker:jobs.sortPay',
+              value === 'match'
+                ? 'worker:jobs.sortMatch'
+                : value === 'start'
+                  ? 'worker:jobs.sortStart'
+                  : value === 'distance'
+                    ? 'worker:jobs.sortDistance'
+                    : 'worker:jobs.sortPay',
+              { defaultValue: value === 'match' ? 'Uygunluk' : value },
             )}
             selected={sort === value}
             onPress={() => setSort(value)}
@@ -389,6 +392,7 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
               <JobCard
                 key={job.id}
                 title={job.title ?? job.branchName ?? t('worker:jobs.untitled')}
+                matchScore={job.matchScore}
                 onPress={() =>
                   navigation.navigate('WorkerJobDetail', { jobId: job.id })
                 }
@@ -415,6 +419,7 @@ export function WorkerJobsListScreen({ navigation, route }: Props) {
             <JobCard
               key={job.id}
               title={job.title ?? job.branchName ?? t('worker:jobs.untitled')}
+              matchScore={job.matchScore}
               onPress={() =>
                 navigation.navigate('WorkerJobDetail', { jobId: job.id })
               }

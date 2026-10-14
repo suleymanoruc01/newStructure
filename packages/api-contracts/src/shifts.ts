@@ -105,6 +105,12 @@ export const disputeCreateBodySchema = z.object({
 
 export type DisputeCreateBody = z.infer<typeof disputeCreateBodySchema>;
 
+export const disputeRejectBodySchema = z.object({
+  reason: z.string().max(1000).optional(),
+});
+
+export type DisputeRejectBody = z.infer<typeof disputeRejectBodySchema>;
+
 export const disputeSchema = z.object({
   id: z.string().uuid(),
   shiftId: z.string().uuid(),

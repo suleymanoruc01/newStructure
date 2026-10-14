@@ -1,0 +1,27 @@
+{
+  "pending": {
+    "title": "Pending Reviews",
+    "lead": "Rate completed shifts to build workplace trust.",
+    "empty": "No pending reviews.",
+    "untitled": "Shift",
+    "opens": "Review window: {{time}}",
+    "search": "Search jobs or contacts",
+    "searchEmpty": "No reviews match this search.",
+    "statPending": "Pending"
+  },
+  "compose": {
+    "title": "Write a Review",
+    "comment": "Comment (optional)",
+    "score": {
+      "1": "Poor",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Very Good",
+      "5": "Excellent"
+    },
+    "submit": "Submit Review",
+    "chipOnTime": "Punctual and professional",
+    "chipClear": "Clear communication, smooth shift",
+    "chipAgain": "Would gladly work with again"
+  }
+}

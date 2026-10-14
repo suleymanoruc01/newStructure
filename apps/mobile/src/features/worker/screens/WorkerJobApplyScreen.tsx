@@ -18,6 +18,7 @@ import {
   type OverlapConflict,
 } from '../components/OverlapConflictCard';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { triggerHaptic } from '../../../shared/ui/haptics';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerJobApply'>;
 
@@ -70,17 +71,21 @@ export function WorkerJobApplyScreen({ route, navigation }: Props) {
         { acknowledgeOverlap: overlapAck },
         `apply-${jobId}`,
       );
+      triggerHaptic('success');
       navigation.popToTop();
     } catch (err) {
       if (err instanceof ApiClientError) {
         if (err.code === 'SCHEDULE_OVERLAP_WARN') {
+          triggerHaptic('medium');
           setOverlapAck(true);
           setConflicts(conflictsFromError(err));
           setError(null);
         } else {
+          triggerHaptic('error');
           setError(t(`errors:${err.code}`, { defaultValue: err.message }));
         }
       } else {
+        triggerHaptic('error');
         setError(t('common:networkError'));
       }
     } finally {

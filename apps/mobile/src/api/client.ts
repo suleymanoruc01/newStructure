@@ -5,6 +5,7 @@ import {
 import type { z } from 'zod';
 
 import { API_BASE_URL, API_REQUEST_TIMEOUT_MS } from './config';
+import { getCurrentLanguage } from '../shared/i18n/locale-manager';
 import { openSystemRoute } from '../shared/system/system-route-store';
 import { ApiClientError } from './api-error';
 
@@ -24,9 +25,15 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { method = 'GET', body, accessToken, idempotencyKey } = options;
 
+  const currentLang = getCurrentLanguage();
+  const acceptLanguage =
+    currentLang === 'en-US'
+      ? 'en-US, en;q=0.9, tr;q=0.8'
+      : 'tr-TR, tr;q=0.9, en;q=0.8';
+
   const headers: Record<string, string> = {
     Accept: 'application/json',
-    'Accept-Language': 'tr-TR, tr;q=0.9, en;q=0.8',
+    'Accept-Language': acceptLanguage,
   };
 
   if (body !== undefined) {

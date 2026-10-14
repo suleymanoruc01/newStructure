@@ -21,6 +21,7 @@ import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ModulePage } from '../../../components/ui/ScreenModules';
+import { NativeTimeRangePicker } from '../../../components/ui/NativeTimeRangePicker';
 import {
   AVAIL_HOURS,
   DAY_NAMES_TR,
@@ -214,60 +215,25 @@ export function WorkerAvailabilityEditScreen({ navigation }: Props) {
           </JobCard>
         ))}
       </View>
-      <JobCard title={t('worker:availability.addTitle')}>
-        <Text className="font-sans text-sm text-text-medium">
-          {t('worker:availability.startTime')}
-        </Text>
-        <View className="flex-row flex-wrap gap-2">
-          {AVAIL_HOURS.map((hour) => {
-            const value = `${String(hour).padStart(2, '0')}:00`;
-            return (
-              <ClayChip
-                key={`s-${hour}`}
-                label={t('worker:availability.hour', { hour })}
-                selected={newStart === value}
-                onPress={() => setNewStart(value)}
-              />
-            );
-          })}
-        </View>
-        <Text className="font-sans text-sm text-text-medium">
-          {t('worker:availability.endTime')}
-        </Text>
-        <View className="flex-row flex-wrap gap-2">
-          {AVAIL_HOURS.map((hour) => {
-            const value = `${String(hour).padStart(2, '0')}:00`;
-            return (
-              <ClayChip
-                key={`e-${hour}`}
-                label={t('worker:availability.hour', { hour })}
-                selected={newEnd === value}
-                onPress={() => setNewEnd(value)}
-              />
-            );
-          })}
-        </View>
-        <Pressable
-          accessibilityRole="switch"
-          accessibilityState={{ checked: newCrossesMidnight }}
-          className="flex-row items-center justify-between rounded-[22px] bg-surface-1 px-4 py-3"
-          style={clayCard}
-          onPress={() => setNewCrossesMidnight((v) => !v)}
-        >
-          <Text className="font-sans text-sm text-text-high">
-            {t('worker:availability.crossesMidnight')}
-          </Text>
-          <StatusBadge
-            label={newCrossesMidnight ? t('common:yes') : t('common:no')}
-            tone={newCrossesMidnight ? 'warn' : 'neutral'}
-          />
-        </Pressable>
+      <NativeTimeRangePicker
+        label={t('worker:availability.addTitle')}
+        startTime={newStart}
+        endTime={newEnd}
+        crossesMidnight={newCrossesMidnight}
+        onChange={({ startTime, endTime, crossesMidnight }) => {
+          setNewStart(startTime);
+          setNewEnd(endTime);
+          setNewCrossesMidnight(crossesMidnight);
+        }}
+      />
+      <View className="mt-3">
         <Button
           label={t('worker:availability.addWindow')}
           onPress={() => onAddWindow()}
           variant="secondary"
         />
-      </JobCard>
+      </View>
+
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}

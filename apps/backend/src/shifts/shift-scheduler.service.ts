@@ -80,6 +80,8 @@ export class ShiftSchedulerService
       await this.sendConfirm3hNotifications();
       await this.processConfirmTimeouts();
       await this.sendCheckinDueNotifications();
+      await this.shifts.processCheckInNoShows();
+      await this.shifts.reconcileStaleCheckedInShifts();
     } catch (error) {
       this.logger.warn(
         `Shift scheduler tick failed: ${error instanceof Error ? error.message : String(error)}`,

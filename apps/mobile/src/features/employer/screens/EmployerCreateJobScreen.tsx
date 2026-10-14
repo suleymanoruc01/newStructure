@@ -12,6 +12,7 @@ import { Button } from '../../../components/ui/Button';
 import { WizardShell } from '../../../components/ui/WizardShell';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
+import { NativeDatePicker } from '../../../components/ui/NativeDatePicker';
 import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
 import { listBranches } from '../../../api/branches-api';
@@ -486,9 +487,13 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
       ) : null}
       {step === 2 ? (
         <View className="gap-3">
-          <Text className="font-sans text-sm font-semibold text-text-high">
-            {t('employer:jobs.whenDay')}
-          </Text>
+          <NativeDatePicker
+            label={t('employer:jobs.whenDay')}
+            value={dayKey}
+            minDate={days[0]}
+            onChange={setDayKey}
+            presentation="sheet"
+          />
           <View className="flex-row flex-wrap gap-2">
             {days.map((key) => (
               <ClayChip

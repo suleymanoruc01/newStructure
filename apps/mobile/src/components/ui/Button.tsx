@@ -1,13 +1,16 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 import { clayButton } from './clay';
 import { Pressable } from './Pressable';
+import { triggerHaptic } from '../../shared/ui/haptics';
 
-type ButtonProps = {
+export type ButtonProps = {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  loading?: boolean;
+  icon?: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'destructive' | 'ghost';
   shape?: 'rect' | 'capsule';
   testID?: string;
@@ -18,6 +21,8 @@ export function Button({
   label,
   onPress,
   disabled = false,
+  loading = false,
+  icon,
   variant = 'primary',
   shape = 'capsule',
   testID,
@@ -44,27 +49,45 @@ export function Button({
     ? clayButton(variant === 'primary' || variant === 'destructive' ? 'primary' : 'forest')
     : undefined;
 
+  const isInteractive = !disabled && !loading;
+
+  const handlePress = () => {
+    if (!isInteractive) return;
+    triggerHaptic(variant === 'destructive' ? 'medium' : 'light');
+    onPress();
+  };
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
+      accessibilityState={{ disabled: !isInteractive }}
+      disabled={!isInteractive}
+      onPress={isInteractive ? handlePress : undefined}
       testID={testID}
       style={clayStyle}
       className={`${
         ghost ? 'min-h-12' : capsule ? 'min-h-14 rounded-full' : 'min-h-12 rounded-lg'
-      } items-center justify-center px-5 ${shell} ${disabled ? 'opacity-40' : ''} ${className ?? ''}`}
+      } items-center justify-center px-5 ${shell} ${!isInteractive ? 'opacity-40' : ''} ${className ?? ''}`}
     >
-      <Text
-        className={
-          onColor
-            ? 'text-center font-sans text-base font-semibold text-text-on'
-            : 'text-center font-sans text-base font-semibold text-action-secondary'
-        }
-      >
-        {label}
-      </Text>
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={onColor ? '#FFFFFF' : '#344A32'}
+        />
+      ) : (
+        <View className="flex-row items-center justify-center gap-2">
+          {icon ? <View>{icon}</View> : null}
+          <Text
+            className={
+              onColor
+                ? 'text-center font-sans text-base font-semibold text-text-on'
+                : 'text-center font-sans text-base font-semibold text-action-secondary'
+            }
+          >
+            {label}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }

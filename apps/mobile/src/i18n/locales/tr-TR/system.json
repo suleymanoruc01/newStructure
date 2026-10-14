@@ -84,6 +84,13 @@
     "title": "Hesap ayarları",
     "email": "E-posta",
     "phone": "Telefon",
+    "language": "Uygulama dili",
+    "languageModalTitle": "Dil Seçimi",
+    "languageModalSubtitle": "Uygulama arayüz dilini seçin",
+    "languageValue": {
+      "tr": "Türkçe",
+      "en": "English"
+    },
     "theme": "Görünüm",
     "themeValue": {
       "light": "Açık",

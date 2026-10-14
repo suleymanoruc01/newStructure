@@ -79,6 +79,9 @@ export const jobDetailSchema = jobSchema.extend({
   branchLatitude: z.number().optional(),
   branchLongitude: z.number().optional(),
   distanceKm: z.number().nullable().optional(),
+  matchScore: z.number().int().min(0).max(100).optional(),
+  surgeMultiplier: z.number().optional(),
+  feedRankScore: z.number().int().min(0).max(100).optional(),
 });
 
 export const jobResponseSchema = successEnvelopeSchema(jobDetailSchema);

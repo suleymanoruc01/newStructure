@@ -5,9 +5,10 @@ import { Platform, Text, View, type StyleProp, type ViewStyle } from 'react-nati
 import { useTranslation } from 'react-i18next';
 
 import { useDeepLink } from '../../app/navigation/use-deep-link';
-import { dockHidden } from '../../app/navigation/dock-routes';
+import { dockHidden, workerShiftRoute } from '../../app/navigation/dock-routes';
 import { listNotifications } from '../../api/notifications-api';
 import { getAccessToken } from '../../shared/auth/session-memory';
+import { ActiveShiftCapsule } from '../shifts/ActiveShiftCapsule';
 import { DockIcon, type DockIconName } from './DockIcon';
 import { Pressable } from './Pressable';
 
@@ -196,26 +197,43 @@ export function DockTabBar({
     item.key === badgeKey ? { ...item, badge: unread } : item,
   );
 
+  const isWorkerRole = screenTab.WorkerHomeRoot === 'WorkerHome';
+
   return (
-    <RoleDock
-      activeKey={focused.name}
-      bottomInset={insets.bottom}
-      items={withBadge}
-      onPress={(key) => {
-        const route = state.routes.find((entry) => entry.name === key);
-        if (!route) {
-          return;
-        }
-        const event = navigation.emit({
-          type: 'tabPress',
-          target: route.key,
-          canPreventDefault: true,
-        });
-        if (!event.defaultPrevented) {
-          navigation.navigate(route.name);
-        }
-      }}
-    />
+    <View style={{ backgroundColor: 'transparent' }}>
+      {isWorkerRole ? (
+        <ActiveShiftCapsule
+          onPress={(shift) => {
+            const targetScreen = workerShiftRoute(shift.status);
+            if (targetScreen) {
+              navigation.navigate('WorkerHome', {
+                screen: targetScreen,
+                params: { shiftId: shift.id },
+              });
+            }
+          }}
+        />
+      ) : null}
+      <RoleDock
+        activeKey={focused.name}
+        bottomInset={insets.bottom}
+        items={withBadge}
+        onPress={(key) => {
+          const route = state.routes.find((entry) => entry.name === key);
+          if (!route) {
+            return;
+          }
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+          if (!event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        }}
+      />
+    </View>
   );
 }
 

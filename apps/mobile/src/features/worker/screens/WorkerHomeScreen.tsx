@@ -20,6 +20,7 @@ import { TextField } from '../../../components/ui/TextField';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { StatStrip } from '../../../components/ui/StatStrip';
+import { WorkerBentoTelemetry } from '../../../components/telemetry/WorkerBentoTelemetry';
 import { DayStrip, ModulePage } from '../../../components/ui/ScreenModules';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { loadGeofenceRadii } from '../../../shared/location/geofence-config';
@@ -31,6 +32,11 @@ import {
   weekDayKeys,
 } from '../../../shared/datetime/istanbul';
 import { partitionHomeShifts } from '../../../shared/shifts/partition-home';
+import {
+  selectUrgentShift,
+  setActiveShift,
+} from '../../../shared/shifts/active-shift-store';
+import { triggerHaptic } from '../../../shared/ui/haptics';
 
 type Props = NativeStackScreenProps<WorkerStackParamList, 'WorkerHomeRoot'>;
 
@@ -62,7 +68,9 @@ export function WorkerHomeScreen({ navigation }: Props) {
         fetchJobFeed(token),
       ]);
       if (shifts.status === 'fulfilled') {
-        setItems(shifts.value.items ?? []);
+        const shiftList = shifts.value.items ?? [];
+        setItems(shiftList);
+        setActiveShift(selectUrgentShift(shiftList));
       } else {
         throw shifts.reason;
       }
@@ -126,6 +134,19 @@ export function WorkerHomeScreen({ navigation }: Props) {
     month: 'long',
   });
 
+  const completedHours = items
+    .filter((s) => s.status === 'completed')
+    .reduce((acc, s) => {
+      const ms = new Date(s.endsAt).getTime() - new Date(s.startsAt).getTime();
+      return acc + (ms > 0 ? Math.round(ms / 3600000) : 0);
+    }, 0);
+  const totalPayCompleted = items
+    .filter((s) => s.status === 'completed')
+    .reduce((acc, s) => acc + (s.payAmountMinor ?? 0) / 100, 0);
+  const avgHourlyRate = completedHours > 0
+    ? Math.round(totalPayCompleted / completedHours)
+    : 180;
+
   return (
     <ModulePage
       back="off"
@@ -167,6 +188,21 @@ export function WorkerHomeScreen({ navigation }: Props) {
             />
           </View>
         ) : null}
+        <WorkerBentoTelemetry
+          data={{
+            averageHourlyRateTry: avgHourlyRate,
+            reliabilityScorePercent: 98,
+            weeklyHoursCompleted: completedHours,
+            weeklyHoursTarget: 40,
+            distanceToNextVenueM: nextShift ? 450 : null,
+            venueName: nextShift?.branchName ?? null,
+          }}
+          onTilePress={(metric) => {
+            if (metric === 'hours' || metric === 'velocity') {
+              navigation.navigate('WorkerRevenue');
+            }
+          }}
+        />
         <View className="mb-4">
           <StatStrip
             items={[
@@ -347,6 +383,7 @@ function openWorkerShift(
   navigation: Props['navigation'],
   shift: Shift,
 ) {
+  triggerHaptic('medium');
   const destination = workerShiftRoute(shift.status);
   if (
     destination === 'WorkerShiftAvailability' ||

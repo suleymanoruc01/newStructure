@@ -132,7 +132,18 @@ export class NotificationsService {
       data: Record<string, string>;
     },
   ): Promise<string> {
-    const rendered = renderNotification(params.type, params.templateInput);
+    let locale = params.templateInput.locale;
+    if (!locale) {
+      const user = await tx.user.findUnique({
+        where: { id: params.userId },
+        select: { locale: true },
+      });
+      locale = user?.locale?.startsWith('en') ? 'en' : 'tr';
+    }
+    const rendered = renderNotification(params.type, {
+      ...params.templateInput,
+      locale,
+    });
     const existing = await tx.notification.findUnique({
       where: {
         userId_dedupeKey: {

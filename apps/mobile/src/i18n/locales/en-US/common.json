@@ -1,0 +1,34 @@
+{
+  "appName": "PartOn",
+  "continue": "Continue",
+  "step": "Step {{current}} / {{total}}",
+  "back": "Back",
+  "skip": "Skip",
+  "retry": "Try again",
+  "loading": "Loading…",
+  "cancel": "Cancel",
+  "refresh": "Refresh",
+  "networkError": "Connection error. Please try again.",
+  "noMatch": "No matches found.",
+  "maintenance": "PartOn is currently in maintenance mode. Please try again shortly.",
+  "forceUpdate": "You need to update your app. Please install the latest version from the store.",
+  "yes": "Yes",
+  "no": "No",
+  "signOut": "Sign Out",
+  "publicCode": "Code {{code}}",
+  "signOutBody": "You will be signed out. You can sign back in at any time.",
+  "map": {
+    "useMyLocation": "Use my location",
+    "tapToPin": "Tap on the map to place a pin",
+    "openSettings": "Open location settings",
+    "expand": "Open map"
+  },
+  "dock": {
+    "home": "Home",
+    "jobs": "Jobs",
+    "calendar": "Calendar",
+    "profile": "Profile",
+    "branches": "Branches",
+    "alerts": "Alerts"
+  }
+}

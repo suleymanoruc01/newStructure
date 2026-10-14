@@ -58,6 +58,9 @@ export const ratingCreateResponseSchema = successEnvelopeSchema(
 export const ratingAverageDataSchema = z.object({
   average: z.number().nullable(),
   count: z.number().int().nonnegative(),
+  trustScore: z.number().min(0).max(100).optional(),
+  wilsonLowerBound: z.number().min(0).max(1).optional(),
+  satisfactionRate: z.number().min(0).max(100).optional(),
 });
 
 export const ratingAverageResponseSchema = successEnvelopeSchema(

@@ -13,6 +13,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { PrismaService } from '../prisma/prisma.service.js';
 import { resolveEmployerAudience } from '../shifts/shift-notify.util.js';
 import { containsProfanity } from './profanity-filter.js';
+import { computeReputationMetrics } from './reputation-scoring.util.js';
 
 type Tx = Prisma.TransactionClient;
 
@@ -252,32 +253,40 @@ export class RatingsService {
   }
 
   async computeWorkerAverage(workerUserId: string) {
-    const agg = await this.prisma.rating.aggregate({
+    const rows = await this.prisma.rating.findMany({
       where: {
         targetWorkerUserId: workerUserId,
         moderationStatus: 'visible',
       },
-      _avg: { score: true },
-      _count: { _all: true },
+      select: { score: true },
     });
+    const scores = rows.map((r) => r.score);
+    const metrics = computeReputationMetrics(scores);
     return {
-      average: agg._avg.score ?? null,
-      count: agg._count._all,
+      average: metrics.averageRating,
+      count: metrics.ratingCount,
+      trustScore: metrics.trustScore,
+      wilsonLowerBound: metrics.wilsonLowerBound,
+      satisfactionRate: metrics.satisfactionRate,
     };
   }
 
   async computeEmployerAverage(employerId: string) {
-    const agg = await this.prisma.rating.aggregate({
+    const rows = await this.prisma.rating.findMany({
       where: {
         targetEmployerId: employerId,
         moderationStatus: 'visible',
       },
-      _avg: { score: true },
-      _count: { _all: true },
+      select: { score: true },
     });
+    const scores = rows.map((r) => r.score);
+    const metrics = computeReputationMetrics(scores);
     return {
-      average: agg._avg.score ?? null,
-      count: agg._count._all,
+      average: metrics.averageRating,
+      count: metrics.ratingCount,
+      trustScore: metrics.trustScore,
+      wilsonLowerBound: metrics.wilsonLowerBound,
+      satisfactionRate: metrics.satisfactionRate,
     };
   }
 

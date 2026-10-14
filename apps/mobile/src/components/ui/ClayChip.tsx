@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 
 import { clayChip } from './clay';
 import { Pressable } from './Pressable';
+import { triggerHaptic } from '../../shared/ui/haptics';
 
 export function ClayChip({
   label,
@@ -21,6 +22,11 @@ export function ClayChip({
   accessibilityLabel?: string;
   accessibilityRole?: 'button' | 'radio';
 }) {
+  const handlePress = () => {
+    triggerHaptic('light');
+    onPress();
+  };
+
   const fill = selected
     ? tone === 'accent'
       ? 'bg-accent-mustard'
@@ -33,7 +39,7 @@ export function ClayChip({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole={accessibilityRole}
       accessibilityState={{ selected }}
-      onPress={onPress}
+      onPress={handlePress}
       style={clayChip(selected)}
       testID={testID}
       className={`min-h-11 items-center justify-center rounded-full px-3 py-2 ${fill}`}

@@ -1,0 +1,68 @@
+{
+  "worker": {
+    "title": "Profile Setup",
+    "timeBudget": "3 quick steps; most workers finish in under 5 minutes.",
+    "step": "Step {{current}} / {{total}}",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "birthDate": "Date of Birth",
+    "gender": "Gender",
+    "sectors": "Sectors",
+    "pinPicked": "Pin: {{lat}}, {{lng}}",
+    "nightShiftOn": "Night shifts: Available",
+    "nightShiftOff": "Night shifts: Not available",
+    "latitude": "Home Location — Latitude",
+    "longitude": "Home Location — Longitude",
+    "availabilityHint": "Select your available days and working hours.",
+    "wizard": {
+      "identity": "Identity",
+      "identityHint": "Your name, birth date, and gender influence job matching.",
+      "work": "Work & Location",
+      "workHint": "Sectors and your home pin are used to surface nearby shifts.",
+      "availability": "Availability",
+      "availabilityHint": "Choose days and hours you can work."
+    },
+    "finish": "Complete Profile",
+    "identityIncomplete": "Please enter your first name, last name, and birth date.",
+    "invalidCoords": "Please provide valid coordinates."
+  },
+  "employer": {
+    "businessTitle": "Business or Brand",
+    "businessSubtitle": "Register your business or trading brand. You can add branches later.",
+    "legalName": "Legal Company Name",
+    "tradingName": "Brand Name (optional)",
+    "taxId": "Tax Identification Number (VKN)",
+    "industries": "Industries",
+    "pinPicked": "Pin: {{lat}}, {{lng}}",
+    "branchTitle": "First Branch",
+    "branchSubtitle": "A branch address is needed to verify worker GPS check-in.",
+    "branchName": "Branch Name",
+    "address": "Address",
+    "city": "Province / City",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "wizard": {
+      "identity": "Business",
+      "identityHint": "Legal business name and tax ID are required for corporate verification.",
+      "location": "Address",
+      "locationHint": "Workplace location enables proximity matching and GPS check-in.",
+      "industries": "Industries",
+      "industriesHint": "Select the sectors in which your shifts will appear.",
+      "branch": "Branch",
+      "branchHint": "Address is required to verify physical worker arrival.",
+      "pin": "Location Pin",
+      "pinHint": "Tap on the map to place your branch pin."
+    },
+    "finish": "Complete Setup",
+    "identityIncomplete": "Please enter your legal company name and tax ID.",
+    "locationIncomplete": "Please fill in address, city, and map pin.",
+    "branchIncomplete": "Please provide branch name, address, and city.",
+    "invalidCoords": "Please provide valid coordinates."
+  },
+  "manager": {
+    "title": "Manager Invite Code",
+    "subtitle": "Enter the workplace or branch manager invite code provided by your employer.",
+    "codeLabel": "Manager Code",
+    "submit": "Connect to Workplace"
+  }
+}

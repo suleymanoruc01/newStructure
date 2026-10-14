@@ -17,6 +17,8 @@ import {
 } from '../common/cursor.util.js';
 import { FavoritesService } from '../favorites/favorites.service.js';
 import { evaluateJobEligibility } from '../matching/matching.service.js';
+import { calculateShiftSurge } from './surge-pricing.util.js';
+import { rankJobFeedItems } from './feed-ranking.util.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PlatformService } from '../platform/platform.service.js';
@@ -1011,6 +1013,37 @@ export class JobsService {
     if (body.status === 'closed' && job.status === 'published') {
       await this.tokens.releaseHold(job.id, 'close', idempotencyKey);
       status = 'closed';
+
+      const pendingApps = await this.prisma.application.findMany({
+        where: { jobId: job.id, status: 'pending' },
+        select: { id: true, workerUserId: true },
+      });
+      if (pendingApps.length > 0) {
+        await this.prisma.$transaction(async (tx) => {
+          await tx.application.updateMany({
+            where: { jobId: job.id, status: 'pending' },
+            data: { status: 'rejected' },
+          });
+          const jobTitle = job.title ?? job.sectorCode;
+          for (const pendingApp of pendingApps) {
+            await tx.applicationEvent.create({
+              data: {
+                applicationId: pendingApp.id,
+                eventType: 'rejected',
+                actorUserId: userId,
+                metadata: { reason: 'job_closed_by_employer' },
+              },
+            });
+            await this.notifications.enqueueInTransaction(tx, {
+              userId: pendingApp.workerUserId,
+              type: 'application.rejected',
+              dedupeKey: `application.rejected:${pendingApp.id}`,
+              templateInput: { jobTitle },
+              data: { jobId: job.id, applicationId: pendingApp.id },
+            });
+          }
+        });
+      }
     }
 
     const headcount = body.headcount ?? job.headcount;
@@ -1283,30 +1316,46 @@ export class JobsService {
       }
     }
 
-    scored.sort((a, b) => {
-      const da = a.eligibility.distanceKm ?? 9999;
-      const db = b.eligibility.distanceKm ?? 9999;
-      return da - db;
+    const itemsWithSurge = scored.map((item) => {
+      const surge = calculateShiftSurge({
+        startsAt: item.job.startsAt,
+        endsAt: item.job.endsAt,
+        headcount: item.job.headcount,
+        remainingHeadcount: item.job.remainingHeadcount,
+        basePayAmountMinor: item.job.payAmountMinor,
+        timeZone,
+      });
+      const isFavored = favoredEmployerIdList.includes(item.job.employerId);
+      return {
+        ...item,
+        surgeMultiplier: surge.surgeMultiplier,
+        isFavored,
+      };
     });
 
+    const ranked = rankJobFeedItems(itemsWithSurge);
+
     if (cursor) {
-      const idx = scored.findIndex((row) => row.job.id === cursor.id);
+      const idx = ranked.findIndex((row) => row.job.id === cursor.id);
       startIndex = idx >= 0 ? idx + 1 : 0;
     }
 
-    const page = scored.slice(startIndex, startIndex + limitClamped);
-    const hasMore = startIndex + limitClamped < scored.length;
+    const page = ranked.slice(startIndex, startIndex + limitClamped);
+    const hasMore = startIndex + limitClamped < ranked.length;
     const last = page.at(-1);
 
     return {
-      items: page.map(({ job, eligibility }) => ({
+      items: page.map(({ job, eligibility, surgeMultiplier, feedRankScore }) => ({
         ...this.mapJob(job),
         branchName: jobSiteFrom(job)?.name ?? job.branch?.name,
         branchCity: jobSiteFrom(job)?.city ?? job.branch?.city,
         branchLatitude: jobSiteFrom(job)?.latitude,
         branchLongitude: jobSiteFrom(job)?.longitude,
         distanceKm: eligibility.distanceKm,
+        matchScore: eligibility.matchScore,
         matchReasons: eligibility.matchReasons,
+        surgeMultiplier,
+        feedRankScore,
         eligibility: {
           eligible: true,
           reasons: [],

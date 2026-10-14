@@ -26,8 +26,9 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const mode = route.params?.mode;
-  const phone = route.params?.phone ?? '';
+  const params = route.params;
+  const mode = params?.mode;
+  const phone = params && params.mode === 'login' ? params.phone : '';
 
   useEffect(() => {
     if (phase === 'booting' || phase === 'unauthenticated' || phase === 'authenticated') {
@@ -110,7 +111,7 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
   };
 
   const setting = mode === 'set';
-  const recovering = setting && route.params?.purpose === 'password_reset';
+  const recovering = params?.mode === 'set' && params.purpose === 'password_reset';
   const title = !setting
     ? t('auth:password.loginTitle')
     : recovering

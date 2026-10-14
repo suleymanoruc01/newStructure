@@ -13,6 +13,8 @@ import { ApiClientError } from '../../../api/client';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { getAccessToken } from '../../../shared/auth/session-memory';
 import { confirmDestructive } from '../../../shared/ui/confirm-destructive';
+import { LanguageSelectorModal } from '../../../components/i18n/LanguageSelectorModal';
+import { getCurrentLanguage } from '../../../shared/i18n/locale-manager';
 
 type SettingsRoute = {
   SharedSettings: undefined;
@@ -28,6 +30,8 @@ export function SharedSettingsScreen({ navigation }: Props) {
   const { t } = useTranslation(['system', 'common', 'errors']);
   const { user } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
+  const [langModalVisible, setLangModalVisible] = React.useState(false);
+  const currentLang = getCurrentLanguage();
 
   const onDelete = async () => {
     const confirmed = await confirmDestructive(
@@ -104,6 +108,12 @@ export function SharedSettingsScreen({ navigation }: Props) {
         onPress={() => navigation.navigate('SharedNotificationPrefs')}
       />
       <NavRow
+        label={t('system:settings.language')}
+        value={currentLang === 'en-US' ? 'English' : 'Türkçe'}
+        onPress={() => setLangModalVisible(true)}
+        testID="m.shared.settings.row.language"
+      />
+      <NavRow
         label={t('system:support.title')}
         onPress={() => navigation.navigate('SharedSupportRequest')}
       />
@@ -119,6 +129,10 @@ export function SharedSettingsScreen({ navigation }: Props) {
       {error ? (
         <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
       ) : null}
+      <LanguageSelectorModal
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
     </ModulePage>
   );
 }

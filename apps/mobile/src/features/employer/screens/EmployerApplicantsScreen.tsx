@@ -28,6 +28,7 @@ import { StatStrip } from '../../../components/ui/StatStrip';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
 import { getAccessToken } from '../../../shared/auth/session-memory';
+import { triggerHaptic } from '../../../shared/ui/haptics';
 
 type CatalogSector = Awaited<ReturnType<typeof fetchJobCatalog>>['sectors'][number];
 
@@ -90,21 +91,33 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
     }
   }, [initialFilter]);
 
+  const [sortMode, setSortMode] = useState<'match' | 'newest'>('match');
+
   const shown = useMemo(() => {
+    let list = items;
     const needle = query.trim().toLocaleLowerCase('tr-TR');
-    if (!needle) {
-      return items;
+    if (needle) {
+      list = list.filter((item) => {
+        const name = (
+          item.workerDisplayName ??
+          `${item.profileSnapshot?.firstName ?? ''} ${item.profileSnapshot?.lastName ?? ''}`
+        )
+          .trim()
+          .toLocaleLowerCase('tr-TR');
+        return name.includes(needle);
+      });
     }
-    return items.filter((item) => {
-      const name = (
-        item.workerDisplayName ??
-        `${item.profileSnapshot?.firstName ?? ''} ${item.profileSnapshot?.lastName ?? ''}`
-      )
-        .trim()
-        .toLocaleLowerCase('tr-TR');
-      return name.includes(needle);
+    return [...list].sort((a, b) => {
+      if (sortMode === 'match') {
+        const scoreA = a.candidateScore?.totalScore ?? 0;
+        const scoreB = b.candidateScore?.totalScore ?? 0;
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA;
+        }
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [items, query]);
+  }, [items, query, sortMode]);
 
   const run = async (fn: () => Promise<unknown>) => {
     try {
@@ -115,6 +128,35 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
       await fn();
       await load();
     } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
+      } else {
+        setError(t('common:networkError'));
+      }
+    }
+  };
+
+  const runOptimistic = async (
+    targetId: string,
+    nextStatus: ApplicationStatus,
+    hapticTone: 'light' | 'medium' | 'success',
+    fn: () => Promise<unknown>,
+  ) => {
+    triggerHaptic(hapticTone);
+    const previous = items;
+    setItems((curr) =>
+      curr.map((it) => (it.id === targetId ? { ...it, status: nextStatus } : it)),
+    );
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
+      }
+      await fn();
+      await load();
+    } catch (err) {
+      triggerHaptic('error');
+      setItems(previous);
       if (err instanceof ApiClientError) {
         setError(t(`errors:${err.code}`, { defaultValue: err.message }));
       } else {
@@ -140,6 +182,18 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
             onPress={() => setFilter(value)}
           />
         ))}
+      </View>
+      <View className="mb-3 flex-row items-center gap-2">
+        <ClayChip
+          label="🎯 En Yüksek Uyum"
+          selected={sortMode === 'match'}
+          onPress={() => setSortMode('match')}
+        />
+        <ClayChip
+          label="🕒 En Yeni"
+          selected={sortMode === 'newest'}
+          onPress={() => setSortMode('newest')}
+        />
       </View>
       <View className="mb-3">
         <TextField
@@ -197,6 +251,7 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
                 <ApplicantFacts
                   snapshot={item.profileSnapshot}
                   sectors={sectors}
+                  candidateScore={item.candidateScore}
                 />
               </JobCard>
               <ApplicantActions
@@ -207,28 +262,28 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
                   })
                 }
                 onAccept={() =>
-                  void run(async () => {
+                  void runOptimistic(item.id, 'accepted', 'success', async () => {
                     const token = getAccessToken()!;
                     await acceptApplication(item.id, token, `accept-${item.id}`);
                   })
                 }
                 onReject={() =>
-                  void run(async () => {
+                  void runOptimistic(item.id, 'rejected', 'medium', async () => {
                     await rejectApplication(item.id, getAccessToken()!);
                   })
                 }
                 onSubstitute={() =>
-                  void run(async () => {
+                  void runOptimistic(item.id, 'substitute', 'light', async () => {
                     await moveApplicationToSubstitute(item.id, getAccessToken()!);
                   })
                 }
                 onRemoveSubstitute={() =>
-                  void run(async () => {
+                  void runOptimistic(item.id, 'pending', 'light', async () => {
                     await removeApplicationSubstitute(item.id, getAccessToken()!);
                   })
                 }
                 onRevoke={() =>
-                  void run(async () => {
+                  void runOptimistic(item.id, 'pending', 'medium', async () => {
                     await revokeAcceptApplication(
                       item.id,
                       getAccessToken()!,
@@ -236,15 +291,16 @@ export function EmployerApplicantsScreen({ route, navigation }: Props) {
                     );
                   })
                 }
-                onFavorite={() =>
+                onFavorite={() => {
+                  triggerHaptic('success');
                   void run(async () => {
                     await createFavorite(
                       getAccessToken()!,
                       { type: 'worker', id: item.workerUserId },
                       `fav-worker-${item.workerUserId}`,
                     );
-                  })
-                }
+                  });
+                }}
                 labels={{
                   accept: t('employer:applicants.accept'),
                   reject: t('employer:applicants.reject'),

@@ -26,4 +26,27 @@ describe('renderNotification', () => {
     expect(unknown.title).toBe('PartOn');
     expect(unknown.body).toBe('Yeni bir bildiriminiz var.');
   });
+
+  it('renders notifications in English when locale is en', () => {
+    const accepted = renderNotification('application.accepted', {
+      jobTitle: 'Barista',
+      branchName: 'Kadıköy',
+      startLocal: '15.10.2026 09:00',
+      locale: 'en',
+    });
+    expect(accepted.category).toBe('applications');
+    expect(accepted.title).toBe('Application Accepted');
+    expect(accepted.body).toContain('Barista');
+
+    const checkIn = renderNotification('shift.checkin_due', {
+      jobTitle: 'Barista',
+      locale: 'en',
+    });
+    expect(checkIn.category).toBe('shifts');
+    expect(checkIn.title).toBe('Check-in Time');
+
+    const unknownEn = renderNotification('job.not_a_real_type', { locale: 'en' });
+    expect(unknownEn.title).toBe('PartOn');
+    expect(unknownEn.body).toBe('You have a new notification.');
+  });
 });

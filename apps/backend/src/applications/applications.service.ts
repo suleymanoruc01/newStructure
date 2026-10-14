@@ -25,6 +25,8 @@ import {
 } from './application-snapshot.util.js';
 import { intervalsOverlap } from './overlap.util.js';
 import { jobSiteFrom, requireJobSite } from '../common/job-location.js';
+import { computeCandidateScore } from './candidate-ranking.util.js';
+import { evaluateShiftFeasibility } from './schedule-feasibility.js';
 
 const ACTIVE_OVERLAP_STATUSES: ApplicationStatus[] = ['pending', 'accepted'];
 
@@ -234,10 +236,13 @@ export class ApplicationsService {
       );
     }
 
+    const site = jobSiteFrom(job);
     const overlaps = await this.findScheduleOverlaps(
       workerUserId,
       job.startsAt,
       job.endsAt,
+      site ? Number(site.latitude) : null,
+      site ? Number(site.longitude) : null,
     );
     if (overlaps.length > 0 && !body.acknowledgeOverlap) {
       throw new ApiException(
@@ -373,16 +378,128 @@ export class ApplicationsService {
         jobId: job.id,
         ...(status ? { status } : {}),
       },
+      include: {
+        workerProfile: {
+          include: {
+            sectors: true,
+            occupations: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
-    return {
-      items: rows.map((row) => ({
-        ...this.mapApplication(row),
-        workerDisplayName: workerDisplayName(
-          this.mapApplication(row).profileSnapshot,
-        ),
-      })),
+
+    const workerUserIds = [...new Set(rows.map((r) => r.workerUserId))];
+
+    // Batch fetch historical ratings and shifts to evaluate candidate quality
+    const [ratings, shifts] = await Promise.all([
+      workerUserIds.length > 0
+        ? this.prisma.rating.findMany({
+            where: {
+              targetWorkerUserId: { in: workerUserIds },
+              moderationStatus: 'visible',
+            },
+            select: { targetWorkerUserId: true, score: true },
+          })
+        : [],
+      workerUserIds.length > 0
+        ? this.prisma.shift.findMany({
+            where: {
+              workerUserId: { in: workerUserIds },
+            },
+            select: {
+              workerUserId: true,
+              status: true,
+              job: { select: { sectorCode: true } },
+            },
+          })
+        : [],
+    ]);
+
+    const ratingsByWorker = new Map<string, number[]>();
+    for (const r of ratings) {
+      if (!r.targetWorkerUserId) continue;
+      const list = ratingsByWorker.get(r.targetWorkerUserId) ?? [];
+      list.push(r.score);
+      ratingsByWorker.set(r.targetWorkerUserId, list);
+    }
+
+    const shiftsByWorker = new Map<
+      string,
+      { completed: number; cancelled: number; inSector: number }
+    >();
+    for (const s of shifts) {
+      const entry = shiftsByWorker.get(s.workerUserId) ?? {
+        completed: 0,
+        cancelled: 0,
+        inSector: 0,
+      };
+      if (s.status === 'completed' || s.status === 'checked_out') {
+        entry.completed += 1;
+        if (s.job.sectorCode === job.sectorCode) {
+          entry.inSector += 1;
+        }
+      } else if (
+        s.status === 'cancelled_by_worker' ||
+        s.status === 'no_show' ||
+        s.status === 'cannot_come' ||
+        s.status === 'cancelled_late'
+      ) {
+        entry.cancelled += 1;
+      }
+      shiftsByWorker.set(s.workerUserId, entry);
+    }
+
+    const jobSite = jobSiteFrom(job);
+    const jobContext = {
+      sectorCode: job.sectorCode,
+      occupationCode: job.occupationCode,
+      latitude: jobSite ? Number(jobSite.latitude) : null,
+      longitude: jobSite ? Number(jobSite.longitude) : null,
     };
+
+    const items = rows.map((row) => {
+      const mapped = this.mapApplication(row);
+      const workerRatings = ratingsByWorker.get(row.workerUserId) ?? [];
+      const workerShifts = shiftsByWorker.get(row.workerUserId) ?? {
+        completed: 0,
+        cancelled: 0,
+        inSector: 0,
+      };
+
+      const candidateScore = computeCandidateScore(jobContext, {
+        workerUserId: row.workerUserId,
+        sectorCodes: row.workerProfile?.sectors.map((s) => s.sectorCode) ?? [],
+        occupationCodes:
+          row.workerProfile?.occupations.map((o) => o.occupationCode) ?? [],
+        homeLatitude: row.workerProfile?.homeLatitude
+          ? Number(row.workerProfile.homeLatitude)
+          : null,
+        homeLongitude: row.workerProfile?.homeLongitude
+          ? Number(row.workerProfile.homeLongitude)
+          : null,
+        ratings: workerRatings,
+        completedShiftsCount: workerShifts.completed,
+        cancelledShiftsCount: workerShifts.cancelled,
+        completedSectorShiftsCount: workerShifts.inSector,
+      });
+
+      return {
+        ...mapped,
+        workerDisplayName: workerDisplayName(mapped.profileSnapshot),
+        candidateScore,
+      };
+    });
+
+    if (!status || status === 'pending') {
+      items.sort(
+        (a, b) =>
+          (b.candidateScore?.totalScore ?? 0) -
+          (a.candidateScore?.totalScore ?? 0),
+      );
+    }
+
+    return { items };
   }
 
   async getOne(userId: string, ctx: AuthContext | undefined, id: string) {
@@ -505,13 +622,30 @@ export class ApplicationsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const job = await tx.job.findUnique({ where: { id: application.jobId } });
-      if (!job || job.remainingHeadcount <= 0) {
+      const jobCountUpdate = await tx.job.updateMany({
+        where: { id: application.jobId, remainingHeadcount: { gt: 0 } },
+        data: {
+          remainingHeadcount: { decrement: 1 },
+        },
+      });
+      if (jobCountUpdate.count === 0) {
         throw new ApiException(
           HttpStatus.UNPROCESSABLE_ENTITY,
           ErrorCode.JOB_NOT_APPLICABLE,
           'Kontenjan dolu.',
         );
+      }
+
+      const job = await tx.job.findUniqueOrThrow({
+        where: { id: application.jobId },
+      });
+      let jobStatus = job.status;
+      if (job.remainingHeadcount <= 0 && job.status === 'published') {
+        jobStatus = 'closed';
+        await tx.job.update({
+          where: { id: job.id },
+          data: { status: 'closed' },
+        });
       }
 
       const app = await tx.application.update({
@@ -523,19 +657,6 @@ export class ApplicationsService {
           applicationId,
           eventType: 'accepted',
           actorUserId,
-        },
-      });
-
-      const remaining = job.remainingHeadcount - 1;
-      let jobStatus = job.status;
-      if (remaining <= 0) {
-        jobStatus = 'closed';
-      }
-      await tx.job.update({
-        where: { id: job.id },
-        data: {
-          remainingHeadcount: remaining,
-          status: jobStatus,
         },
       });
 
@@ -570,15 +691,26 @@ export class ApplicationsService {
       });
 
       if (jobStatus === 'closed') {
-        await this.notifications.enqueueInTransaction(tx, {
-          userId: application.workerUserId,
-          type: 'job.closed_with_accepts',
-          dedupeKey: `job.closed_with_accepts:${job.id}:${application.workerUserId}`,
-          templateInput: {
-            jobTitle: application.job.title ?? application.job.sectorCode,
+        const remainingPending = await tx.application.findMany({
+          where: {
+            jobId: job.id,
+            status: 'pending',
+            id: { not: applicationId },
           },
-          data: { jobId: job.id, applicationId },
+          select: { id: true, workerUserId: true },
         });
+
+        for (const pendingApp of remainingPending) {
+          await this.notifications.enqueueInTransaction(tx, {
+            userId: pendingApp.workerUserId,
+            type: 'job.closed_with_accepts',
+            dedupeKey: `job.closed_with_accepts:${job.id}:${pendingApp.workerUserId}`,
+            templateInput: {
+              jobTitle: application.job.title ?? application.job.sectorCode,
+            },
+            data: { jobId: job.id, applicationId: pendingApp.id },
+          });
+        }
       }
 
       return app;
@@ -881,7 +1013,10 @@ export class ApplicationsService {
   }
 
   private async assertJobAccess(ctx: AuthContext, jobId: string) {
-    const job = await this.prisma.job.findUnique({ where: { id: jobId } });
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: { branch: true, employer: true },
+    });
     if (!job) {
       throw new ApiException(
         HttpStatus.NOT_FOUND,
@@ -943,18 +1078,39 @@ export class ApplicationsService {
     workerUserId: string,
     startsAt: Date,
     endsAt: Date,
+    targetLatitude?: number | null,
+    targetLongitude?: number | null,
   ) {
     const rows = await this.prisma.application.findMany({
       where: {
         workerUserId,
         status: { in: ACTIVE_OVERLAP_STATUSES },
       },
-      include: { job: true },
+      include: { job: { include: { branch: true, employer: true } } },
     });
     return rows
-      .filter((row) =>
-        intervalsOverlap(startsAt, endsAt, row.job.startsAt, row.job.endsAt),
-      )
+      .filter((row) => {
+        const site = jobSiteFrom(row.job);
+        const res = evaluateShiftFeasibility(
+          {
+            id: row.id,
+            jobId: row.jobId,
+            startsAt: row.job.startsAt,
+            endsAt: row.job.endsAt,
+            latitude: site ? Number(site.latitude) : null,
+            longitude: site ? Number(site.longitude) : null,
+          },
+          {
+            id: 'current-apply',
+            jobId: 'current-job',
+            startsAt,
+            endsAt,
+            latitude: targetLatitude,
+            longitude: targetLongitude,
+          },
+        );
+        return res.hasConflict;
+      })
       .map((row) => ({
         applicationId: row.id,
         jobId: row.jobId,

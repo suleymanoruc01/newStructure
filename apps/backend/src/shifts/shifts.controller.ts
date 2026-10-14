@@ -13,6 +13,7 @@ import {
   checkInBodySchema,
   checkOutBodySchema,
   disputeCreateBodySchema,
+  disputeRejectBodySchema,
   shiftIncidentCreateBodySchema,
 } from '@parton/api-contracts';
 import type { Request } from 'express';
@@ -125,6 +126,26 @@ export class ShiftsController {
   ) {
     const parsed = disputeCreateBodySchema.parse(body);
     const data = await this.shifts.createDispute(req.userId!, id, parsed);
+    return successResponse(req.requestId ?? '', data);
+  }
+
+  @Post(':id/disputes/:disputeId/reject')
+  @UseGuards(RoleContextGuard)
+  @RequireRoles('employer', 'manager')
+  async rejectDispute(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Param('disputeId') disputeId: string,
+    @Body(new ZodValidationPipe(disputeRejectBodySchema)) body: unknown,
+  ) {
+    const parsed = disputeRejectBodySchema.parse(body);
+    const data = await this.shifts.rejectDispute(
+      req.userId!,
+      req.authContext!,
+      id,
+      disputeId,
+      parsed,
+    );
     return successResponse(req.requestId ?? '', data);
   }
 

@@ -62,6 +62,32 @@ export type ApplicationApplyResult = z.infer<
   typeof applicationApplyResultSchema
 >;
 
+export const candidateScoreBadgeSchema = z.enum([
+  'top_talent',
+  'verified_pro',
+  'rising_star',
+  'reliable',
+  'standard',
+]);
+
+export type CandidateScoreBadge = z.infer<typeof candidateScoreBadgeSchema>;
+
+export const candidateScoreBreakdownSchema = z.object({
+  totalScore: z.number().min(0).max(100),
+  ratingScore: z.number().min(0).max(100),
+  reliabilityScore: z.number().min(0).max(100),
+  sectorExperienceScore: z.number().min(0).max(100),
+  proximityScore: z.number().min(0).max(100),
+  completedShiftsCount: z.number().int().nonnegative(),
+  averageRating: z.number().nullable().optional(),
+  ratingCount: z.number().int().nonnegative().optional(),
+  badge: candidateScoreBadgeSchema,
+});
+
+export type CandidateScoreBreakdown = z.infer<
+  typeof candidateScoreBreakdownSchema
+>;
+
 export const applicationListItemSchema = applicationSchema.extend({
   jobTitle: z.string().nullable().optional(),
   jobStartsAt: z.string().datetime().optional(),
@@ -71,6 +97,7 @@ export const applicationListItemSchema = applicationSchema.extend({
   payAmountMinor: z.number().int().nonnegative().nullable().optional(),
   payCurrency: z.string().optional(),
   amenities: z.array(z.string()).optional(),
+  candidateScore: candidateScoreBreakdownSchema.optional(),
 });
 
 export type ApplicationListItem = z.infer<typeof applicationListItemSchema>;
