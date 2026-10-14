@@ -16,6 +16,10 @@ export const clayCard: ViewStyle = {
   borderTopColor: CREAM_EDGE,
   borderBottomWidth: 4,
   borderBottomColor: SHELF_EDGE,
+  borderLeftWidth: 0,
+  borderRightWidth: 0,
+  borderLeftColor: 'transparent',
+  borderRightColor: 'transparent',
 };
 
 /** Pressed-clay CTA — login primary / forest secondary. */

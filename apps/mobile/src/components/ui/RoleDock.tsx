@@ -65,12 +65,12 @@ export function RoleDock({ items, activeKey, onPress, bottomInset }: DockProps) 
           borderTopRightRadius: 28,
           borderTopWidth: 2,
           borderTopColor: CREAM,
-          paddingTop: 10,
+          paddingTop: 8,
           paddingBottom: Math.max(bottomInset, 8),
           paddingHorizontal: 8,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', width: '100%' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
           {items.map((item) => {
             const active = item.key === activeKey;
             const color = active ? FOREST : MUTED;
@@ -82,27 +82,26 @@ export function RoleDock({ items, activeKey, onPress, bottomInset }: DockProps) 
                   accessibilityState={{ selected: active }}
                   pressScale={false}
                   onPress={() => onPress(item.key)}
-                  style={{ alignItems: 'center', paddingBottom: 4 }}
+                  style={{ alignItems: 'center', paddingVertical: 2 }}
                 >
                   <View
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
+                      minWidth: 46,
+                      height: 32,
+                      paddingHorizontal: 12,
+                      borderRadius: 16,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: item.raised && active ? FOREST : 'transparent',
-                      borderBottomWidth: item.raised && active ? 3 : 0,
-                      borderBottomColor: CHARCOAL,
+                      backgroundColor: active ? 'rgba(28, 58, 39, 0.12)' : 'transparent',
                     }}
                   >
-                    <DockIcon color={item.raised && active ? CREAM : color} name={item.icon} />
+                    <DockIcon color={color} name={item.icon} />
                     {item.badge && item.badge > 0 ? (
                       <View
                         style={{
                           position: 'absolute',
-                          top: 0,
-                          right: 0,
+                          top: -2,
+                          right: -2,
                           minWidth: 16,
                           height: 16,
                           borderRadius: 8,
@@ -121,12 +120,12 @@ export function RoleDock({ items, activeKey, onPress, bottomInset }: DockProps) 
                   <Text
                     numberOfLines={1}
                     style={{
-                      marginTop: 2,
+                      marginTop: 3,
                       fontSize: 11,
                       lineHeight: 14,
                       textAlign: 'center',
                       color,
-                      fontWeight: active ? '600' : '500',
+                      fontWeight: active ? '700' : '500',
                     }}
                   >
                     {item.label}

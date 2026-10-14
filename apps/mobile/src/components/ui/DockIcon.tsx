@@ -18,12 +18,11 @@ export function DockIcon({ name, color }: Props) {
   switch (name) {
     case 'home':
       return (
-        <View style={{ width: 22, height: 22 }}>
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
           <View
             style={{
               position: 'absolute',
               top: 2,
-              left: 4,
               width: 12,
               height: 12,
               borderTopWidth: 2,
@@ -35,11 +34,11 @@ export function DockIcon({ name, color }: Props) {
           <View
             style={{
               position: 'absolute',
-              bottom: 1,
-              left: 5,
-              width: 12,
-              height: 9,
+              bottom: 2,
+              width: 13,
+              height: 10,
               borderWidth: 2,
+              borderTopWidth: 0,
               borderColor: color,
             }}
           />
@@ -47,30 +46,59 @@ export function DockIcon({ name, color }: Props) {
       );
     case 'jobs':
       return (
-        <View style={{ width: 22, height: 22, justifyContent: 'center', gap: 3 }}>
-          <View style={{ height: 2, backgroundColor: color }} />
-          <View style={{ height: 2, width: 16, backgroundColor: color }} />
-          <View style={{ height: 2, width: 12, backgroundColor: color }} />
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <View
+            style={{
+              width: 8,
+              height: 4,
+              borderTopWidth: 2,
+              borderLeftWidth: 2,
+              borderRightWidth: 2,
+              borderColor: color,
+              borderTopLeftRadius: 2,
+              borderTopRightRadius: 2,
+              marginBottom: -1,
+            }}
+          />
+          <View
+            style={{
+              width: 18,
+              height: 12,
+              borderWidth: 2,
+              borderColor: color,
+              borderRadius: 3,
+              justifyContent: 'center',
+            }}
+          >
+            <View style={{ height: 1.5, width: '100%', backgroundColor: color, opacity: 0.5 }} />
+          </View>
         </View>
       );
     case 'calendar':
       return (
-        <View
-          style={{
-            width: 20,
-            height: 18,
-            borderWidth: 2,
-            borderColor: color,
-            borderRadius: 3,
-            marginTop: 2,
-          }}
-        >
-          <View style={{ height: 4, backgroundColor: color }} />
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ flexDirection: 'row', width: 12, justifyContent: 'space-between', marginBottom: -2, zIndex: 1 }}>
+            <View style={{ width: 2, height: 3, backgroundColor: color, borderRadius: 1 }} />
+            <View style={{ width: 2, height: 3, backgroundColor: color, borderRadius: 1 }} />
+          </View>
+          <View
+            style={{
+              width: 18,
+              height: 14,
+              borderWidth: 2,
+              borderColor: color,
+              borderRadius: 3,
+              paddingTop: 3,
+              alignItems: 'center',
+            }}
+          >
+            <View style={{ width: 14, height: 1.5, backgroundColor: color, opacity: 0.6 }} />
+          </View>
         </View>
       );
     case 'profile':
       return (
-        <View style={{ width: 22, height: 22, alignItems: 'center' }}>
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
           <View
             style={{
               width: 8,
@@ -83,10 +111,10 @@ export function DockIcon({ name, color }: Props) {
           <View
             style={{
               marginTop: 2,
-              width: 14,
-              height: 7,
-              borderTopLeftRadius: 7,
-              borderTopRightRadius: 7,
+              width: 16,
+              height: 8,
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
               borderWidth: 2,
               borderColor: color,
             }}
@@ -95,28 +123,53 @@ export function DockIcon({ name, color }: Props) {
       );
     case 'branches':
       return (
-        <View style={{ width: 22, height: 22, flexDirection: 'row', alignItems: 'flex-end', gap: 2 }}>
-          <View style={{ width: 6, height: 14, borderWidth: 2, borderColor: color }} />
-          <View style={{ width: 6, height: 18, borderWidth: 2, borderColor: color }} />
-          <View style={{ width: 6, height: 10, borderWidth: 2, borderColor: color }} />
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <View
+            style={{
+              width: 18,
+              height: 5,
+              borderTopWidth: 2,
+              borderLeftWidth: 2,
+              borderRightWidth: 2,
+              borderTopLeftRadius: 3,
+              borderTopRightRadius: 3,
+              borderColor: color,
+            }}
+          />
+          <View
+            style={{
+              width: 18,
+              height: 10,
+              borderWidth: 2,
+              borderTopWidth: 0,
+              borderColor: color,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'flex-end',
+            }}
+          >
+            <View style={{ width: 4, height: 6, backgroundColor: color, borderTopLeftRadius: 1, borderTopRightRadius: 1 }} />
+          </View>
         </View>
       );
     case 'alerts':
       return (
-        <View style={{ width: 22, height: 22, alignItems: 'center' }}>
+        <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
           <View
             style={{
               width: 12,
-              height: 12,
+              height: 11,
               borderTopLeftRadius: 6,
               borderTopRightRadius: 6,
               borderWidth: 2,
               borderBottomWidth: 0,
               borderColor: color,
-              marginTop: 2,
             }}
           />
-          <View style={{ width: 16, height: 2, backgroundColor: color }} />
+          <View style={{ width: 16, height: 2, backgroundColor: color, borderRadius: 1 }} />
+          <View style={{ width: 4, height: 2, backgroundColor: color, marginTop: 1, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }} />
         </View>
       );
     default: {

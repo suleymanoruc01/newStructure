@@ -151,7 +151,7 @@ export function SheetModule({ title, fill = true, dock = false, children }: Shee
         flex: fill ? 1 : undefined,
         paddingHorizontal: 20,
         paddingTop: title ? 28 : 36,
-        paddingBottom: dock ? 24 : Math.max(bottom, 16),
+        paddingBottom: dock ? Math.max(bottom + 84, 100) : Math.max(bottom, 16),
         overflow: 'hidden',
         zIndex: 1,
       }}

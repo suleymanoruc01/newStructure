@@ -74,7 +74,11 @@ export function AuthPasswordScreen({ navigation, route }: Props) {
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setError(t(`errors:${err.code}`, { defaultValue: err.message }));
+        if (mode === 'login' && err.code === 'UNAUTHORIZED') {
+          setError(err.message || 'Telefon veya şifre hatalı.');
+        } else {
+          setError(t(`errors:${err.code}`, { defaultValue: err.message }));
+        }
       } else {
         setError(t('common:networkError'));
       }

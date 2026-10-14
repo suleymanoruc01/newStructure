@@ -20,21 +20,21 @@ export function StatStrip({
     <View className="flex-row flex-wrap gap-2.5">
       {items.map((item) => {
         const tone = item.tone ?? 'default';
-        const borderTone =
+        const toneStyle =
           tone === 'strong'
-            ? 'border-l-4 border-emerald-500 bg-emerald-500/5'
+            ? 'bg-emerald-500/10'
             : tone === 'accent'
-              ? 'border-l-4 border-accent-mustard bg-accent-mustard/5'
+              ? 'bg-accent-mustard/15'
               : tone === 'warn'
-                ? 'border-l-4 border-amber-500 bg-amber-500/5'
-                : 'border-l-2 border-surface-border bg-surface-1';
+                ? 'bg-amber-500/15'
+                : 'bg-surface-1';
 
         return (
           <View
             key={item.label}
             style={clayCard}
             testID={item.testID}
-            className={`min-w-[96px] flex-1 rounded-[20px] px-3.5 py-2.5 ${borderTone}`}
+            className={`min-w-[96px] flex-1 rounded-[20px] px-3.5 py-2.5 ${toneStyle}`}
           >
             <View className="flex-row items-center justify-between">
               <Text className="font-display text-xl font-bold tracking-tight text-text-high">
