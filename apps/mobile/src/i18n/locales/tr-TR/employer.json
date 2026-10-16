@@ -42,6 +42,7 @@
     "endsAt": "Bitiş",
     "whenDay": "Gün",
     "whenStart": "Başlangıç saati",
+    "whenEnd": "Bitiş saati",
     "whenHours": "Süre",
     "hour": "{{hour}}:00",
     "hours": "{{hours}} saat",
@@ -78,6 +79,8 @@
     "requiredDocuments": "Zorunlu belgeler",
     "requiredDocumentsHint": "Örn: id_card, food_hygiene — iş arayanın yüklü belgeleriyle eşleşmeli.",
     "detail": {
+      "title": "İlan Detayı",
+      "refCode": "Referans No",
       "open": "Detay / düzenle",
       "status": "Durum: {{status}}",
       "headcountHint": "Personel sayısı değişince jeton provizyonu otomatik güncellenir.",

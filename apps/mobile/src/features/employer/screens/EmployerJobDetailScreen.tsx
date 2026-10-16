@@ -8,7 +8,7 @@ import type { EmployerStackParamList } from '../../../app/navigation/employer-ty
 import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
 import { listJobApplications } from '../../../api/applications-api';
-import { fetchJobDetail, patchEmployerJob } from '../../../api/jobs-api';
+import { fetchJobCatalog, fetchJobDetail, patchEmployerJob } from '../../../api/jobs-api';
 import { JobCard } from '../../../components/job/JobCard';
 import { JobFacts } from '../../../components/job/JobFacts';
 import { LocationMap } from '../../../components/map/LocationMap';
@@ -56,9 +56,27 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
       if (!token) {
         throw new ApiClientError('Oturum bulunamadı.', 401, 'UNAUTHORIZED');
       }
-      const data = await fetchJobDetail(jobId, token);
+      const [data, catalog] = await Promise.all([
+        fetchJobDetail(jobId, token),
+        fetchJobCatalog().catch(() => ({ sectors: [], items: [] })),
+      ]);
       setJob(data);
-      setTitle(data.title ?? data.id);
+
+      const occupationTitle = (catalog.sectors ?? [])
+        .flatMap((s) => s.occupations ?? [])
+        .find((occ) => occ.code === data.occupationCode)?.title;
+      const sectorTitle = (catalog.sectors ?? []).find(
+        (s) => s.code === data.sectorCode,
+      )?.displayName;
+
+      const friendlyTitle =
+        data.title?.trim() ||
+        occupationTitle ||
+        data.branchName?.trim() ||
+        sectorTitle ||
+        t('employer:jobs.detail.title', { defaultValue: 'İlan Detayı' });
+
+      setTitle(friendlyTitle);
       setStatus(data.status);
       setHeadcount(String(data.headcount));
       let apps: Awaited<ReturnType<typeof listJobApplications>>;
@@ -150,7 +168,12 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
   const published = status === 'published';
 
   return (
-    <ModulePage title={title} testID="m.employer.jobs.detail" scroll>
+    <ModulePage
+      title={title || t('employer:jobs.detail.title', { defaultValue: 'İlan Detayı' })}
+      eyebrow={job?.branchName ? `${job.branchName} • PartOn` : 'PartOn'}
+      testID="m.employer.jobs.detail"
+      scroll
+    >
       {!job && !error ? (
         <View className="mt-4">
           <SkeletonList rows={2} />
@@ -194,7 +217,7 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
       ) : null}
       {job ? (
         <View className="mt-3">
-          <JobCard status={status || undefined} title={job.title ?? job.branchName ?? job.id}>
+          <JobCard status={status || undefined} title={title}>
             <JobFacts
               branchName={job.branchName}
               startsAt={job.startsAt}
@@ -337,6 +360,11 @@ export function EmployerJobDetailScreen({ navigation, route }: Props) {
           <Text className="font-sans mt-4 text-sm text-feedback-error">{error}</Text>
         ) : null
       )}
+      {job ? (
+        <Text className="font-sans mt-6 text-center text-xs text-text-low">
+          {t('employer:jobs.detail.refCode', { defaultValue: 'Referans No' })}: #{job.id.slice(0, 8)}
+        </Text>
+      ) : null}
     </ModulePage>
   );
 }

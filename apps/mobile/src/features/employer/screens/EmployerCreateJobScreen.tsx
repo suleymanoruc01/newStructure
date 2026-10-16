@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { ClayChip } from '../../../components/ui/ClayChip';
 import { clayCard, clayChip } from '../../../components/ui/clay';
@@ -12,7 +12,7 @@ import { Button } from '../../../components/ui/Button';
 import { WizardShell } from '../../../components/ui/WizardShell';
 import { ModulePage } from '../../../components/ui/ScreenModules';
 import { TextField } from '../../../components/ui/TextField';
-import { NativeDatePicker } from '../../../components/ui/NativeDatePicker';
+import DatePicker from 'react-native-date-picker';
 import { ApiClientError } from '../../../api/client';
 import { formErrorMessage } from '../../../api/form-error';
 import { listBranches } from '../../../api/branches-api';
@@ -23,13 +23,7 @@ import { getAccessToken } from '../../../shared/auth/session-memory';
 import { useAuth } from '../../../shared/auth/AuthProvider';
 import { formatPayTry, tryMajorToMinor } from '../../../shared/format/pay';
 import { formatIstanbul, useDisplayTimeZone } from '../../../shared/datetime/istanbul';
-import {
-  SHIFT_DURATIONS_H,
-  SHIFT_START_HOURS,
-  dayChipLabel,
-  nextIstanbulDayKeys,
-  wallToIso,
-} from '../../../shared/datetime/shift-when';
+import { SHIFT_DURATIONS_H } from '../../../shared/datetime/shift-when';
 import { JobCard } from '../../../components/job/JobCard';
 import { JobFacts } from '../../../components/job/JobFacts';
 import { LocationMap } from '../../../components/map/LocationMap';
@@ -61,6 +55,24 @@ function parseOptionalAge(raw: string, message: string): number | undefined {
   return value;
 }
 
+function formatPickerLabel(d: Date): string {
+  try {
+    const day = d.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'short',
+      weekday: 'short',
+    });
+    const time = d.toLocaleTimeString('tr-TR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    return `${day} · ${time}`;
+  } catch {
+    return d.toLocaleString('tr-TR');
+  }
+}
+
 type Props = NativeStackScreenProps<EmployerStackParamList, 'EmployerCreateJob'>;
 
 type CatalogSector = Awaited<ReturnType<typeof fetchJobCatalog>>['sectors'][number];
@@ -70,7 +82,6 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const { t } = useTranslation(['employer', 'worker', 'common', 'errors']);
   const { contexts } = useAuth();
   const timeZone = useDisplayTimeZone();
-  const days = nextIstanbulDayKeys(7, new Date(), timeZone);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [sectors, setSectors] = useState<CatalogSector[]>([]);
@@ -85,9 +96,19 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const [headcount, setHeadcount] = useState('1');
   const [payTry, setPayTry] = useState('');
   const [tokenAvailable, setTokenAvailable] = useState<number | null>(null);
-  const [dayKey, setDayKey] = useState(() => nextIstanbulDayKeys(2)[1] ?? nextIstanbulDayKeys(1)[0]!);
-  const [startHour, setStartHour] = useState<(typeof SHIFT_START_HOURS)[number]>(9);
-  const [durationH, setDurationH] = useState<(typeof SHIFT_DURATIONS_H)[number]>(8);
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(9, 0, 0, 0);
+    return d;
+  });
+  const [endDate, setEndDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(17, 0, 0, 0);
+    return d;
+  });
+  const [activeTimeTab, setActiveTimeTab] = useState<'start' | 'end'>('start');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [instantAutoApprove, setInstantAutoApprove] = useState(false);
   const [amenities, setAmenities] = useState<string[]>([]);
@@ -210,6 +231,10 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
       return;
     }
     if (step === 2) {
+      if (endDate.getTime() <= startDate.getTime()) {
+        setError(t('employer:jobs.timeOrderInvalid', { defaultValue: 'Bitiş zamanı başlangıç zamanından sonra olmalıdır.' }));
+        return;
+      }
       setStep(3);
       return;
     }
@@ -247,6 +272,13 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           'EMPLOYER_UNVERIFIED',
         );
       }
+      if (endDate.getTime() <= startDate.getTime()) {
+        throw new ApiClientError(
+          t('employer:jobs.timeOrderInvalid', { defaultValue: 'Bitiş zamanı başlangıç zamanından sonra olmalıdır.' }),
+          400,
+          'VALIDATION_FAILED',
+        );
+      }
       const parsedMinAge = parseOptionalAge(minAge, t('employer:jobs.ageInvalid'));
       const parsedMaxAge = parseOptionalAge(maxAge, t('employer:jobs.ageInvalid'));
       if (
@@ -269,12 +301,7 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
           'VALIDATION_FAILED',
         );
       }
-      const { startsAt, endsAt } = wallToIso(
-        dayKey,
-        startHour,
-        durationH,
-        timeZone,
-      );
+      const { startsAt, endsAt } = when;
       const jobBody = {
         sectorCode,
         occupationCode: occupationCode || undefined,
@@ -309,7 +336,28 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
   const branchName = selectedBranch?.name ?? (branchId ? undefined : workplaceLabel);
   const sectorName = sectorRows.find((sector) => sector.code === sectorCode)?.displayName;
   const occupationName = occupations.find((row) => row.code === occupationCode)?.title;
-  const when = wallToIso(dayKey, startHour, durationH, timeZone);
+  const when = useMemo(() => {
+    const startsAt = startDate.toISOString();
+    const endsAt = endDate.toISOString();
+    const diffMs = Math.max(0, endDate.getTime() - startDate.getTime());
+    const diffMin = Math.round(diffMs / 60000);
+    const durationHours = Math.round((diffMin / 60) * 10) / 10;
+    const h = Math.floor(diffMin / 60);
+    const m = diffMin % 60;
+    const durationFormatted = m > 0 ? `${h} sa ${m} dk` : `${h} saat`;
+    const isNextDay =
+      endDate.getFullYear() !== startDate.getFullYear() ||
+      endDate.getMonth() !== startDate.getMonth() ||
+      endDate.getDate() !== startDate.getDate();
+    return {
+      startsAt,
+      endsAt,
+      durationHours,
+      durationMinutes: diffMin,
+      isNextDay,
+      durationFormatted,
+    };
+  }, [startDate, endDate]);
   const payAmountMinor = tryMajorToMinor(payTry);
 
   const wizardCopy =
@@ -486,54 +534,157 @@ export function EmployerCreateJobScreen({ navigation }: Props) {
         </View>
       ) : null}
       {step === 2 ? (
-        <View className="gap-3">
-          <NativeDatePicker
-            label={t('employer:jobs.whenDay')}
-            value={dayKey}
-            minDate={days[0]}
-            onChange={setDayKey}
-            presentation="sheet"
-          />
-          <View className="flex-row flex-wrap gap-2">
-            {days.map((key) => (
-              <ClayChip
-                key={key}
-                label={dayChipLabel(key, timeZone)}
-                selected={dayKey === key}
-                onPress={() => setDayKey(key)}
-              />
-            ))}
+        <View className="gap-3.5">
+          {/* Segmented Switcher: Başlangıç vs Bitiş */}
+          <View
+            className="flex-row rounded-2xl bg-surface-1 p-1"
+            style={clayCard}
+          >
+            <Pressable
+              onPress={() => setActiveTimeTab('start')}
+              className={`flex-1 items-center justify-center rounded-xl py-2.5 px-2 ${
+                activeTimeTab === 'start' ? 'bg-action-primary' : 'bg-transparent'
+              }`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeTimeTab === 'start' }}
+              testID="employer.createJob.tabStart"
+            >
+              <Text
+                className={`font-sans text-xs font-semibold uppercase tracking-wider ${
+                  activeTimeTab === 'start' ? 'text-text-on' : 'text-text-low'
+                }`}
+              >
+                {t('employer:jobs.whenStart', { defaultValue: 'Başlangıç' })}
+              </Text>
+              <Text
+                className={`mt-0.5 font-display text-sm font-bold ${
+                  activeTimeTab === 'start' ? 'text-text-on' : 'text-text-high'
+                }`}
+              >
+                {formatPickerLabel(startDate)}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setActiveTimeTab('end')}
+              className={`flex-1 items-center justify-center rounded-xl py-2.5 px-2 ${
+                activeTimeTab === 'end' ? 'bg-action-primary' : 'bg-transparent'
+              }`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeTimeTab === 'end' }}
+              testID="employer.createJob.tabEnd"
+            >
+              <View className="flex-row items-center gap-1">
+                <Text
+                  className={`font-sans text-xs font-semibold uppercase tracking-wider ${
+                    activeTimeTab === 'end' ? 'text-text-on' : 'text-text-low'
+                  }`}
+                >
+                  {t('employer:jobs.whenEnd', { defaultValue: 'Bitiş' })}
+                </Text>
+                {when.isNextDay ? (
+                  <Text className="text-xs">🌙</Text>
+                ) : null}
+              </View>
+              <Text
+                className={`mt-0.5 font-display text-sm font-bold ${
+                  activeTimeTab === 'end' ? 'text-text-on' : 'text-text-high'
+                }`}
+              >
+                {formatPickerLabel(endDate)}
+              </Text>
+            </Pressable>
           </View>
-          <Text className="font-sans text-sm font-semibold text-text-high">
-            {t('employer:jobs.whenStart')}
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {SHIFT_START_HOURS.map((hour) => (
-              <ClayChip
-                key={hour}
-                label={t('employer:jobs.hour', { hour })}
-                selected={startHour === hour}
-                onPress={() => setStartHour(hour)}
-              />
-            ))}
+
+          {/* Clean Inline Wheel DatePicker matching the Android sample GIF */}
+          <View
+            className="items-center justify-center rounded-3xl bg-surface-1 py-3 px-2"
+            style={clayCard}
+          >
+            <DatePicker
+              date={activeTimeTab === 'start' ? startDate : endDate}
+              onDateChange={(newDate) => {
+                if (activeTimeTab === 'start') {
+                  const currentDurationMs = Math.max(
+                    3600 * 1000,
+                    endDate.getTime() - startDate.getTime(),
+                  );
+                  setStartDate(newDate);
+                  // Preserve shift duration when moving start date
+                  setEndDate(new Date(newDate.getTime() + currentDurationMs));
+                } else {
+                  setEndDate(newDate);
+                }
+              }}
+              mode="datetime"
+              locale="tr"
+              is24hourSource="locale"
+              theme="light"
+              dividerColor="#E97A3D"
+              testID="employer.createJob.inlinePicker"
+            />
           </View>
-          <Text className="font-sans text-sm font-semibold text-text-high">
-            {t('employer:jobs.whenHours')}
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {SHIFT_DURATIONS_H.map((hours) => (
-              <ClayChip
-                key={hours}
-                label={t('employer:jobs.hours', { hours })}
-                selected={durationH === hours}
-                onPress={() => setDurationH(hours)}
-              />
-            ))}
+
+          {/* Quick Duration Presets */}
+          <View className="gap-1.5">
+            <Text className="font-sans text-xs font-semibold text-text-low uppercase tracking-wider">
+              {t('employer:jobs.whenHours', { defaultValue: 'Hızlı Süre Seçimi' })}
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {SHIFT_DURATIONS_H.map((hours) => {
+                const isSelected = when.durationHours === hours;
+                return (
+                  <ClayChip
+                    key={hours}
+                    label={`${hours} saat`}
+                    selected={isSelected}
+                    onPress={() => {
+                      setEndDate(new Date(startDate.getTime() + hours * 3600 * 1000));
+                    }}
+                  />
+                );
+              })}
+            </View>
           </View>
-          <Text className="font-sans text-sm text-text-medium">
-            {formatIstanbul(when.startsAt, timeZone)} –{' '}
-            {formatIstanbul(when.endsAt, timeZone)}
-          </Text>
+
+          {/* Timing Summary Card */}
+          <View
+            className="gap-2 rounded-2xl bg-surface-1 px-4 py-3"
+            style={clayCard}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 pr-2">
+                <Text className="font-sans text-xs font-semibold text-text-low">
+                  {t('employer:jobs.wizard.when', { defaultValue: 'Vardiya Zamanı' })}
+                </Text>
+                <Text className="font-sans text-sm font-semibold text-text-high">
+                  {formatPickerLabel(startDate)} → {formatPickerLabel(endDate)}
+                </Text>
+              </View>
+              <View className="flex-row items-center gap-1.5">
+                {when.isNextDay ? (
+                  <StatusBadge
+                    label="Gece Vardiyası 🌙"
+                    tone="warn"
+                  />
+                ) : null}
+                <StatusBadge
+                  label={when.durationFormatted || `${when.durationHours} sa`}
+                  tone={endDate.getTime() <= startDate.getTime() ? 'error' : 'strong'}
+                />
+              </View>
+            </View>
+            {when.isNextDay ? (
+              <Text className="font-sans text-xs text-text-low">
+                Vardiya gece yarısını geçip ertesi gün sona ermektedir.
+              </Text>
+            ) : null}
+            {endDate.getTime() <= startDate.getTime() ? (
+              <Text className="font-sans text-xs font-semibold text-feedback-error">
+                Bitiş zamanı başlangıçtan sonra olmalıdır.
+              </Text>
+            ) : null}
+          </View>
         </View>
       ) : null}
       {step === 3 ? (

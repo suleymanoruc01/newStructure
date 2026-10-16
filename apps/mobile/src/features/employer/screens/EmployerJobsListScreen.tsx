@@ -204,7 +204,10 @@ export function EmployerJobsListScreen({ navigation }: Props) {
             <JobsMap
               pins={pins.map((job) => ({
                 id: job.id,
-                title: job.title ?? job.branchName ?? job.id,
+                title:
+                  job.title ??
+                  job.branchName ??
+                  t('employer:jobs.untitledShift', { defaultValue: 'Vardiya' }),
                 latitude: job.branchLatitude!,
                 longitude: job.branchLongitude!,
               }))}
@@ -267,7 +270,11 @@ function EmployerJobCard({
   onPress: () => void;
 }) {
   return (
-    <JobCard onPress={onPress} status={job.status} title={job.title ?? job.id}>
+    <JobCard
+      onPress={onPress}
+      status={job.status}
+      title={job.title ?? job.branchName ?? 'Vardiya'}
+    >
       <JobFacts
         branchName={job.branchName}
         startsAt={job.startsAt}

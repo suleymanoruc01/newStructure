@@ -41,7 +41,8 @@
     "startsAt": "Start Time",
     "endsAt": "End Time",
     "whenDay": "Day",
-    "whenStart": "Start Hour",
+    "whenStart": "Start Time",
+    "whenEnd": "End Time",
     "whenHours": "Duration",
     "hour": "{{hour}}:00",
     "hours": "{{hours}} hours",
@@ -78,6 +79,8 @@
     "requiredDocuments": "Required Documents",
     "requiredDocumentsHint": "E.g. id_card, food_hygiene — must match candidate's uploaded certificates.",
     "detail": {
+      "title": "Job Details",
+      "refCode": "Reference No",
       "open": "Details / Edit",
       "status": "Status: {{status}}",
       "headcountHint": "Token hold amounts adjust automatically when headcount is modified.",

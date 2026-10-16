@@ -13,6 +13,8 @@ module.exports = {
       '<rootDir>/src/test/react-native-firebase-messaging.mock.js',
     '^@sbaiahmed1/react-native-blur$':
       '<rootDir>/src/test/react-native-blur.mock.js',
+    '^react-native-date-picker$':
+      '<rootDir>/src/test/react-native-date-picker.mock.js',
   },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@react-navigation|react-navigation|react-native-screens|react-native-safe-area-context|react-native-reanimated|react-native-css-interop|nativewind)/)',

@@ -157,7 +157,10 @@ export function EmployerDashboardScreen({ navigation }: Props) {
               )
               .map((job) => ({
                 id: job.id,
-                title: job.title ?? job.branchName ?? job.id,
+                title:
+                  job.title ??
+                  job.branchName ??
+                  t('employer:jobs.untitledShift', { defaultValue: 'Vardiya' }),
                 latitude: job.branchLatitude!,
                 longitude: job.branchLongitude!,
               }))}
@@ -186,7 +189,11 @@ export function EmployerDashboardScreen({ navigation }: Props) {
           <JobCard
             key={job.id}
             status={job.status}
-            title={job.title ?? job.id}
+            title={
+              job.title ??
+              job.branchName ??
+              t('employer:jobs.untitledShift', { defaultValue: 'Vardiya' })
+            }
             onPress={() =>
               navigation.navigate('EmployerJobDetail', { jobId: job.id })
             }

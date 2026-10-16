@@ -68,6 +68,9 @@ describe('NativeTimePicker', () => {
     const confirmBtn = root.findByProps({ testID: 'shift-time.confirm' });
     expect(confirmBtn).toBeTruthy();
 
+    const wheelContainer = root.findByProps({ testID: 'shift-time.wheelContainer' });
+    expect(wheelContainer).toBeTruthy();
+
     ReactTestRenderer.act(() => {
       confirmBtn.props.onPress();
     });

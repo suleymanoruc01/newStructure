@@ -11,6 +11,7 @@ import { Button } from './Button';
 import { ClayCard } from './ClayCard';
 import { clayCard, clayChip, claySheet } from './clay';
 import { Pressable } from './Pressable';
+import { TimerPicker } from 'react-native-timer-picker';
 
 export interface NativeTimePickerProps {
   label?: string;
@@ -22,6 +23,8 @@ export interface NativeTimePickerProps {
   presentation?: 'sheet' | 'inline';
   testID?: string;
   error?: string | null;
+  triggerActionLabel?: string;
+  mode?: 'wheel' | 'keys';
 }
 
 const DEFAULT_HOUR_PRESETS = [6, 8, 9, 10, 12, 14, 16, 18, 20, 22] as const;
@@ -37,9 +40,12 @@ export function NativeTimePicker({
   presentation = 'sheet',
   testID,
   error,
+  triggerActionLabel = 'Değiştir',
+  mode = 'wheel',
 }: NativeTimePickerProps) {
   const { t } = useTranslation(['common', 'worker']);
   const [modalOpen, setModalOpen] = useState(false);
+  const [pickerView, setPickerView] = useState<'wheel' | 'keys'>(mode);
   const [activeSegment, setActiveSegment] = useState<'hour' | 'minute'>('hour');
 
   // Parse hour & minute
@@ -131,120 +137,214 @@ export function NativeTimePicker({
 
   const renderPickerBody = () => (
     <View className="gap-4">
-      {/* Big Digital Clock Tile */}
-      <View
-        className="flex-row items-center justify-center rounded-3xl bg-surface-1 py-4"
-        style={clayCard}
-      >
-        {/* Hour Section */}
-        <View className="items-center">
-          <Pressable
-            accessibilityLabel="Bir saat artır"
-            accessibilityRole="button"
-            className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
-            style={clayChip(false)}
-            onPress={() => stepHour(1)}
-          >
-            <Text className="font-sans text-base font-bold text-text-high">▲</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityLabel={`Saat: ${String(activeH).padStart(2, '0')}`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: activeSegment === 'hour' }}
-            className={`my-2 min-w-[76px] items-center justify-center rounded-2xl px-4 py-2 ${
-              activeSegment === 'hour' ? 'bg-action-primary' : 'bg-surface-base'
+      {/* Mode Switcher */}
+      <View className="flex-row items-center justify-center gap-2">
+        <Pressable
+          accessibilityRole="button"
+          className={`rounded-full px-3.5 py-1.5 ${
+            pickerView === 'wheel' ? 'bg-action-primary' : 'bg-surface-1'
+          }`}
+          style={clayChip(pickerView === 'wheel')}
+          onPress={() => {
+            triggerHaptic('light');
+            setPickerView('wheel');
+          }}
+          testID={`${testID ?? 'time-picker'}.modeWheel`}
+        >
+          <Text
+            className={`font-sans text-xs font-semibold ${
+              pickerView === 'wheel' ? 'text-text-on' : 'text-text-high'
             }`}
-            style={clayChip(activeSegment === 'hour')}
-            onPress={() => {
-              triggerHaptic('light');
-              setActiveSegment('hour');
-            }}
-            testID="time-picker.hourTab"
           >
-            <Text
-              className={`font-display text-4xl font-bold ${
-                activeSegment === 'hour' ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {String(activeH).padStart(2, '0')}
-            </Text>
-            <Text
-              className={`font-sans text-[11px] font-semibold uppercase tracking-wider ${
-                activeSegment === 'hour' ? 'text-text-on/80' : 'text-text-low'
-              }`}
-            >
-              Saat
-            </Text>
-          </Pressable>
+            🎡 24-Saat Çark
+          </Text>
+        </Pressable>
 
-          <Pressable
-            accessibilityLabel="Bir saat azalt"
-            accessibilityRole="button"
-            className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
-            style={clayChip(false)}
-            onPress={() => stepHour(-1)}
-          >
-            <Text className="font-sans text-base font-bold text-text-high">▼</Text>
-          </Pressable>
-        </View>
-
-        {/* Colon separator */}
-        <Text className="mx-3 font-display text-4xl font-bold text-text-high">:</Text>
-
-        {/* Minute Section */}
-        <View className="items-center">
-          <Pressable
-            accessibilityLabel="Dakika artır"
-            accessibilityRole="button"
-            className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
-            style={clayChip(false)}
-            onPress={() => stepMinute(minuteInterval)}
-          >
-            <Text className="font-sans text-base font-bold text-text-high">▲</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityLabel={`Dakika: ${String(activeM).padStart(2, '0')}`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: activeSegment === 'minute' }}
-            className={`my-2 min-w-[76px] items-center justify-center rounded-2xl px-4 py-2 ${
-              activeSegment === 'minute' ? 'bg-action-primary' : 'bg-surface-base'
+        <Pressable
+          accessibilityRole="button"
+          className={`rounded-full px-3.5 py-1.5 ${
+            pickerView === 'keys' ? 'bg-action-primary' : 'bg-surface-1'
+          }`}
+          style={clayChip(pickerView === 'keys')}
+          onPress={() => {
+            triggerHaptic('light');
+            setPickerView('keys');
+          }}
+          testID={`${testID ?? 'time-picker'}.modeKeys`}
+        >
+          <Text
+            className={`font-sans text-xs font-semibold ${
+              pickerView === 'keys' ? 'text-text-on' : 'text-text-high'
             }`}
-            style={clayChip(activeSegment === 'minute')}
-            onPress={() => {
-              triggerHaptic('light');
-              setActiveSegment('minute');
-            }}
-            testID="time-picker.minuteTab"
           >
-            <Text
-              className={`font-display text-4xl font-bold ${
-                activeSegment === 'minute' ? 'text-text-on' : 'text-text-high'
-              }`}
-            >
-              {String(activeM).padStart(2, '0')}
-            </Text>
-            <Text
-              className={`font-sans text-[11px] font-semibold uppercase tracking-wider ${
-                activeSegment === 'minute' ? 'text-text-on/80' : 'text-text-low'
-              }`}
-            >
-              Dakika
-            </Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityLabel="Dakika azalt"
-            accessibilityRole="button"
-            className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
-            style={clayChip(false)}
-            onPress={() => stepMinute(-minuteInterval)}
-          >
-            <Text className="font-sans text-base font-bold text-text-high">▼</Text>
-          </Pressable>
-        </View>
+            🔢 Tuşlar & Kadran
+          </Text>
+        </Pressable>
       </View>
+
+      {pickerView === 'wheel' ? (
+        <View
+          className="items-center justify-center rounded-3xl bg-surface-1 py-4"
+          style={clayCard}
+          testID={`${testID ?? 'time-picker'}.wheelContainer`}
+        >
+          <TimerPicker
+            padHoursWithZero
+            padMinutesWithZero
+            hideSeconds
+            hideDays
+            use12HourPicker={false}
+            hourLimit={{ max: 23, min: 0 }}
+            minuteInterval={minuteInterval}
+            initialValue={{ hours: activeH, minutes: activeM }}
+            onDurationChange={({ hours, minutes }) => {
+              setHour(hours);
+              setMinute(minutes);
+            }}
+            styles={{
+              theme: 'dark',
+              backgroundColor: 'transparent',
+              text: {
+                color: '#CBD5E1',
+                fontSize: 26,
+                fontWeight: '600',
+              },
+              selectedPickerItem: {
+                color: '#FF7A00',
+                fontSize: 32,
+                fontWeight: 'bold',
+              },
+              pickerItem: {
+                fontSize: 22,
+                color: '#64748B',
+              },
+              pickerLabel: {
+                fontSize: 14,
+                color: '#94A3B8',
+                fontWeight: 'bold',
+              },
+              pickerContainer: {
+                backgroundColor: 'transparent',
+              },
+            }}
+          />
+        </View>
+      ) : (
+        /* Big Digital Clock Tile */
+        <View
+          className="flex-row items-center justify-center rounded-3xl bg-surface-1 py-4"
+          style={clayCard}
+        >
+          {/* Hour Section */}
+          <View className="items-center">
+            <Pressable
+              accessibilityLabel="Bir saat artır"
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
+              style={clayChip(false)}
+              onPress={() => stepHour(1)}
+            >
+              <Text className="font-sans text-base font-bold text-text-high">▲</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityLabel={`Saat: ${String(activeH).padStart(2, '0')}`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeSegment === 'hour' }}
+              className={`my-2 min-w-[76px] items-center justify-center rounded-2xl px-4 py-2 ${
+                activeSegment === 'hour' ? 'bg-action-primary' : 'bg-surface-base'
+              }`}
+              style={clayChip(activeSegment === 'hour')}
+              onPress={() => {
+                triggerHaptic('light');
+                setActiveSegment('hour');
+              }}
+              testID="time-picker.hourTab"
+            >
+              <Text
+                className={`font-display text-4xl font-bold ${
+                  activeSegment === 'hour' ? 'text-text-on' : 'text-text-high'
+                }`}
+              >
+                {String(activeH).padStart(2, '0')}
+              </Text>
+              <Text
+                className={`font-sans text-[11px] font-semibold uppercase tracking-wider ${
+                  activeSegment === 'hour' ? 'text-text-on/80' : 'text-text-low'
+                }`}
+              >
+                Saat
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityLabel="Bir saat azalt"
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
+              style={clayChip(false)}
+              onPress={() => stepHour(-1)}
+            >
+              <Text className="font-sans text-base font-bold text-text-high">▼</Text>
+            </Pressable>
+          </View>
+
+          {/* Colon separator */}
+          <Text className="mx-3 font-display text-4xl font-bold text-text-high">:</Text>
+
+          {/* Minute Section */}
+          <View className="items-center">
+            <Pressable
+              accessibilityLabel="Dakika artır"
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
+              style={clayChip(false)}
+              onPress={() => stepMinute(minuteInterval)}
+            >
+              <Text className="font-sans text-base font-bold text-text-high">▲</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityLabel={`Dakika: ${String(activeM).padStart(2, '0')}`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeSegment === 'minute' }}
+              className={`my-2 min-w-[76px] items-center justify-center rounded-2xl px-4 py-2 ${
+                activeSegment === 'minute' ? 'bg-action-primary' : 'bg-surface-base'
+              }`}
+              style={clayChip(activeSegment === 'minute')}
+              onPress={() => {
+                triggerHaptic('light');
+                setActiveSegment('minute');
+              }}
+              testID="time-picker.minuteTab"
+            >
+              <Text
+                className={`font-display text-4xl font-bold ${
+                  activeSegment === 'minute' ? 'text-text-on' : 'text-text-high'
+                }`}
+              >
+                {String(activeM).padStart(2, '0')}
+              </Text>
+              <Text
+                className={`font-sans text-[11px] font-semibold uppercase tracking-wider ${
+                  activeSegment === 'minute' ? 'text-text-on/80' : 'text-text-low'
+                }`}
+              >
+                Dakika
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityLabel="Dakika azalt"
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-full bg-surface-base"
+              style={clayChip(false)}
+              onPress={() => stepMinute(-minuteInterval)}
+            >
+              <Text className="font-sans text-base font-bold text-text-high">▼</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       {/* Quick Presets Strip */}
       <View>
@@ -398,7 +498,9 @@ export function NativeTimePicker({
         </View>
 
         <View className="rounded-full bg-surface-base px-2.5 py-1" style={clayChip(false)}>
-          <Text className="font-sans text-xs font-semibold text-action-secondary">Ayarla</Text>
+          <Text className="font-sans text-xs font-semibold text-action-secondary">
+            {triggerActionLabel}
+          </Text>
         </View>
       </Pressable>
 
